@@ -1,4 +1,8 @@
+from dishka import make_async_container
+from dishka.integrations.fastapi import setup_dishka
+
 from app.api import MIDDLEWARES, ROUTERS
+from app.di import ServiceProvider
 from app.settings import create_app, middlewares_setup, routers_setup
 
 app = create_app(
@@ -9,6 +13,9 @@ app = create_app(
         "autor": "mrkazzila@gmail.com",
     },
 )
+
+container = make_async_container(ServiceProvider())
+setup_dishka(container, app)
 
 routers_setup(app=app, endpoints=ROUTERS)
 middlewares_setup(app=app, middlewares=MIDDLEWARES)
