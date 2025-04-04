@@ -21,7 +21,6 @@ class Urls(Base):
     )
     target_url: Mapped[str] = mapped_column(
         doc="The original URL.",
-        index=True,
     )
     is_active: Mapped[bool] = mapped_column(
         doc="Whether the URL is active or not.",

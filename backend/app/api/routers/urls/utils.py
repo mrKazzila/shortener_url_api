@@ -9,7 +9,7 @@ __all__ = ("generate_random_key",)
 logger = logging.getLogger(__name__)
 
 LENGTH = settings().KEY_LENGTH
-CHARS = f'{ascii_lowercase}{ascii_uppercase}{digits}'
+CHARS = f"{ascii_lowercase}{ascii_uppercase}{digits}"
 
 
 def generate_random_key() -> str:

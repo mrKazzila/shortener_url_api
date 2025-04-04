@@ -24,8 +24,8 @@ class InvalidUrlException(BaseUrlException):
 
 
 class UrlNotFoundException(BaseUrlException):
-    def __init__(self, *, detail: str) -> None:
+    def __init__(self, *, url_key: str) -> None:
         super().__init__(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=detail,
+            detail=f"URL with {url_key} key doesn't exist!",
         )
