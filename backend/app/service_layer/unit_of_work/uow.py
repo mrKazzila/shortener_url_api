@@ -20,6 +20,9 @@ class UnitOfWork(ABCUnitOfWork):
         self._session = None
         self._urls_repo = None
 
+    def __repr__(self) -> str:
+        return f"[{self.__class__.__name__} {id(self)}]"
+
     @property
     def session(self) -> AsyncSession:
         if not self._session:
@@ -33,15 +36,15 @@ class UnitOfWork(ABCUnitOfWork):
         return self._urls_repo
 
     async def __aenter__(self) -> Self:
-        logger.debug("\n[x]  Start UOW    [x]")
+        logger.debug(f"[x]  Start {self!r}  [x]")
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         await self.session.close()
-        logger.debug("[x]  Closed UOW    [x]\n")
+        logger.debug(f"[x]  Closed {self!r} [x]")
 
     async def commit(self) -> None:
-        logger.debug("[x]  Commit UOW    [x]\n")
+        logger.debug(f"[x]  Commit {self!r} [x]")
         await self.session.commit()
 
     async def rollback(self) -> None:

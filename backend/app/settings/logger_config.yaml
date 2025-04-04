@@ -32,6 +32,18 @@ loggers:
     level: INFO
     propagate: false
 
+  main:
+    handlers:
+      - console
+    level: INFO
+    propagate: false
+
+  di:
+    handlers:
+      - console
+    level: INFO
+    propagate: false
+
   app.service_layer:
     handlers:
       - console

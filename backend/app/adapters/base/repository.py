@@ -1,4 +1,4 @@
-from typing import TypeVar
+from typing import TypeAlias, TypeVar
 
 from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,7 +9,7 @@ from app.models.base import Base
 __all__ = ("SQLAlchemyRepository",)
 
 ModelType = TypeVar("ModelType", bound=Base)
-ModelFieldType = str | int | bool
+ModelFieldType: TypeAlias = str | int | bool
 
 
 class SQLAlchemyRepository(ABCRepository):

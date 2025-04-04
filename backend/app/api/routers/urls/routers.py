@@ -1,16 +1,19 @@
 import logging
 
-from fastapi import APIRouter, HTTPException, Request, status
+from dishka.integrations.fastapi import DishkaRoute, FromDishka
+from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import RedirectResponse
-from validators import url as url_validator
 
-from app.api.routers.urls._types import PathUrlKey, QueryLongUrl, Uow
+from app.api.routers.urls._types import PathUrlKey, QueryLongUrl
 from app.api.routers.urls.exceptions import (
     InvalidUrlException,
     UrlNotFoundException,
 )
-from app.schemas.urls import SReturnUrl
-from app.service_layer.services.urls import UrlsServices
+from app.api.schemas.urls.schemas import SReturnUrl
+from app.service_layer.services import (
+    UrlsServices,
+    exceptions as services_exceptions,
+)
 
 __all__ = ("router",)
 
@@ -18,6 +21,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(
     tags=["urls"],
+    route_class=DishkaRoute,
 )
 
 
@@ -28,22 +32,18 @@ router = APIRouter(
 )
 async def create_short_url(
     url: QueryLongUrl,
-    uow: Uow,
+    url_service: FromDishka[UrlsServices],
 ) -> SReturnUrl:
     """Creates a shortened URL."""
     try:
-        if not url_validator(value=str(url)):
-            raise InvalidUrlException()
-
-        return await UrlsServices.create_url(
-            target_url=url,
-            uow=uow,
+        result = await url_service.create_url(target_url=url)
+        return SReturnUrl(
+            key=result.key,
+            target_url=result.target_url,
         )
-
-    except InvalidUrlException as error_:
+    except services_exceptions.InvalidUrlException as error_:
         logger.error(error_)
-        raise error_
-
+        raise InvalidUrlException()
     except HTTPException as error_:
         logger.error(error_)
         raise error_
@@ -56,32 +56,20 @@ async def create_short_url(
 )
 async def redirect_to_target_url(
     url_key: PathUrlKey,
-    request: Request,
-    uow: Uow,
+    url_service: FromDishka[UrlsServices],
 ) -> RedirectResponse:
     """Redirects to the target URL for a given shortened URL key."""
     try:
-        db_url = await UrlsServices.get_active_long_url_by_key(
+        redirect_url: str = await url_service.update_redirect_counter_for_url(
             key=url_key,
-            uow=uow,
         )
-
-        if not db_url:
-            raise UrlNotFoundException(
-                detail=f"{request.url} doesn't exist!",
-            )
-        _redirect = RedirectResponse(
-            url=str(db_url.target_url),
+        return RedirectResponse(
+            url=redirect_url,
             status_code=status.HTTP_307_TEMPORARY_REDIRECT,
         )
-
-        await UrlsServices.update_db_clicks(url=db_url, uow=uow)
-        return _redirect
-
-    except UrlNotFoundException as error_:
+    except services_exceptions.UrlNotFoundException as error_:
         logger.error(error_)
-        raise error_
-
+        raise UrlNotFoundException(url_key=url_key)
     except HTTPException as error_:
         logger.error(error_)
         raise error_

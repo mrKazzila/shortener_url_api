@@ -1,6 +1,6 @@
 import logging
 from time import time
-from typing import Any
+from typing import Any, TypedDict
 from urllib import parse
 
 from fastapi import status
@@ -16,6 +16,15 @@ from starlette.responses import Response
 __all__ = ("ErrorMiddleware",)
 
 logger = logging.getLogger(__name__)
+
+
+class RequestInfo(TypedDict):
+    start_time: str
+    duration: str
+    method: str
+    request_path: str
+    path_params: dict[str, Any]
+    query_params: dict[str, Any]
 
 
 class ErrorMiddleware(BaseHTTPMiddleware):
@@ -51,18 +60,19 @@ class ErrorMiddleware(BaseHTTPMiddleware):
         *,
         request: Request,
         start_time: float,
-    ) -> dict[str, Any]:
+    ) -> RequestInfo:
+        duration = time() - start_time
         q_params = self._get_query_params_to_json(
             params=request.query_params,
         )
-        return {
-            "Start time": round(start_time, 0),
-            "Duration": round(time() - start_time, 3),
-            "Method": request.method,
-            "Request path": str(request.url.path),
-            "Path params": request.path_params,
-            "Query params": q_params,
-        }
+        return RequestInfo(
+            start_time=f"{start_time}",
+            duration=f"{duration:0.3f}",
+            method=request.method,
+            request_path=f"{request.url.path}",
+            path_params=request.path_params,
+            query_params=q_params,
+        )
 
     @staticmethod
     def _get_query_params_to_json(*, params: QueryParams) -> dict[str, Any]:

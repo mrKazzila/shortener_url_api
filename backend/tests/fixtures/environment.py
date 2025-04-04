@@ -2,12 +2,25 @@ from asyncio import BaseEventLoop, get_event_loop_policy
 from collections.abc import AsyncGenerator
 
 import pytest
+from dishka import make_async_container
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 
+from app.di import ServiceProvider
 from app.main import app as fastapi_app
 from app.service_layer.unit_of_work import ABCUnitOfWork, UnitOfWork
 from app.settings.database import async_session_maker
+
+
+@pytest.fixture(scope="session")
+def anyio_backend():
+    return "asyncio"
+
+
+@pytest.fixture
+async def container():
+    async with make_async_container(ServiceProvider()) as container:
+        yield container
 
 
 @pytest.fixture(scope="session")
