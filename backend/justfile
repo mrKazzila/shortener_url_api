@@ -5,16 +5,80 @@ DC_FILE := "docker-compose.yaml"
 ENV_FILE := "env/.env"
 
 
+# ===== Help =====
+help:
+    @echo "Available commands:"
+    @echo ""
+    @echo "Environment Management:"
+    @echo "  set_docker_env               - Configure environment for Docker (postgres:5432)"
+    @echo "  set_local_env                - Configure environment for localhost (localhost:5433)"
+    @echo ""
+    @echo "Docker automation:"
+    @echo "  up            - Start only required containers (without migrations)"
+    @echo "  migrate-up    - Apply database migrations"
+    @echo "  migrate-down  - Rollback last migration"
+    @echo "  start-app     - Start application container"
+    @echo "  full-up       - Complete startup (containers + migrations + app)"
+    @echo "  down          - Stop all containers"
+    @echo ""
+    @echo "Migration workflow:"
+    @echo "  1. just up          # Start database"
+    @echo "  2. just migrate-up  # Apply migrations"
+    @echo "  3. just start-app   # Start application"
+    @echo "  OR use 'just full-up' for all steps"
+    @echo ""
+    @echo "Setup automation:"
+    @echo "  poetry_setup                 - Configure poetry and install dependencies"
+    @echo ""
+    @echo "Linters & Formatters:"
+    @echo "  lint                         - Run code linters and formatters"
+    @echo ""
+    @echo "Alembic migrations:"
+    @echo "  make_migrate NAME            - Create new migration with autogenerate"
+    @echo "  make_migrate_docker NAME     - Create migration for Docker environment"
+    @echo "  make_migrate_local NAME      - Create migration for local environment"
+    @echo "  make_downgrade NAME          - Downgrade migration to specific revision"
+    @echo "  make_downgrade_docker NAME   - Downgrade migration (Docker env)"
+    @echo "  make_downgrade_local NAME    - Downgrade migration (local env)"
+    @echo ""
+    @echo "Run 'just COMMAND --help' for more information on a command."
+
+
+# ===== Environment Management =====
+set_docker_env:
+    @sed -i '' 's/^DB_HOST=.*/DB_HOST=postgres/' env/.env
+    @sed -i '' 's/^DB_PORT=.*/DB_PORT=5432/' env/.env
+    @echo "Environment set for DOCKER (postgres:5432)"
+
+set_local_env:
+    @sed -i '' 's/^DB_HOST=.*/DB_HOST=localhost/' env/.env
+    @sed -i '' 's/^DB_PORT=.*/DB_PORT=5433/' env/.env
+    @echo "Environment set for LOCAL (localhost:5433)"
+
+
 # ===== Docker automation =====
 up:
-	@echo "Run the url api Docker container ..."
-	{{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} up -d --build
-	@echo "Success up!"
+    @echo "Starting containers without migrations..."
+    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} up -d --build postgres
+    @echo "Containers started. Run migrations manually with 'just migrate-up'"
 
-down:
-	@echo "Stop the url api Docker container ..."
-	{{DC}} --env-file {{ENV_FILE}}  -p {{PROJECT_NAME}} -f {{DC_FILE}} down
-	@echo "Success down!"
+migrate-up:
+    @echo "Running migrations..."
+    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} run --rm fastapi alembic upgrade head
+    @echo "Migrations completed"
+
+migrate-down:
+    @echo "Downgrading migrations..."
+    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} run --rm fastapi alembic downgrade -1
+    @echo "Migrations downgraded"
+
+start-app:
+    @echo "Starting application..."
+    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} up -d fastapi
+    @echo "Application started"
+
+full-up: up migrate-up start-app
+    @echo "Full startup completed (containers + migrations + app)"
 
 
 # ===== Setup automation =====
@@ -32,3 +96,29 @@ lint:
 	- ruff check --fix --silent .
 	- ruff format --silent .
 	@echo "Linters done!"
+
+
+# ===== Alembic migrations =====
+make_migrate ARG:
+    @echo "Make alembic revision with name: {{ARG}}"
+    @alembic revision --autogenerate -m {{ARG}}
+
+make_migrate_docker ARG:
+    @just set_docker_env
+    @just make_migrate {{ARG}}
+
+make_migrate_local ARG:
+    @just set_local_env
+    @just make_migrate {{ARG}}
+
+make_downgrade ARG:
+    @echo "Downgrade alembic revision to {{ARG}} ..."
+    @alembic downgrade {{ARG}}
+
+make_downgrade_docker ARG:
+    @just set_docker_env
+    @just make_downgrade {{ARG}}
+
+make_downgrade_local ARG:
+    @just set_local_env
+    @just make_downgrade {{ARG}}

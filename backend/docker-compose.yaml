@@ -23,29 +23,13 @@ services:
       retries: 5
       start_period: 10s
     depends_on:
-      alembic_migrations:
-        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
     volumes:
       - ../backend:/home/unprivilegeduser/shortener
 
-  alembic_migrations:
-    container_name: alembic-migrations-urls
-    image: alembic-migrations-urls
-    build:
-      context: .
-      dockerfile: Dockerfile
-    restart: on-failure
-    env_file:
-      - env/.env
-    command: sh -c "
-      ./scripts/run_migrations.sh
-      "
-    depends_on:
-      postgres:
-        condition: service_healthy
-
   postgres:
-    container_name: postgres${APP_NAME}
+    container_name: postgres
     image: postgres:${POSTGRES_VERSION}
     restart: always
     environment:
@@ -63,7 +47,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1"
-          memory: 4G
+          cpus: "2"
+          memory: 10G
     volumes:
       - ../persistentdata/db:/var/lib/postgresql/data/
