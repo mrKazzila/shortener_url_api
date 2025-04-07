@@ -1,4 +1,5 @@
 import logging
+from typing import TYPE_CHECKING
 
 from validators import url as url_validator
 
@@ -8,7 +9,9 @@ from app.service_layer.services.exceptions import (
     InvalidUrlException,
     UrlNotFoundException,
 )
-from app.service_layer.unit_of_work import UnitOfWork
+
+if TYPE_CHECKING:
+    from app.service_layer.unit_of_work import UnitOfWork
 
 __all__ = ("UrlsServices",)
 
@@ -18,7 +21,7 @@ logger = logging.getLogger(__name__)
 class UrlsServices:
     __slots__ = ("uow",)
 
-    def __init__(self, uow: UnitOfWork) -> None:
+    def __init__(self, uow: "UnitOfWork") -> None:
         self.uow = uow
 
     def __repr__(self) -> str:
@@ -70,7 +73,7 @@ class UrlsServices:
     async def _get_active_long_url_by_key(
         *,
         key: str,
-        transaction: UnitOfWork,
+        transaction: "UnitOfWork",
     ) -> UrlInfoDTO | None:
         """Get a URL from the database by its key."""
         _reference = {"key": key}
@@ -88,7 +91,7 @@ class UrlsServices:
     async def _create_unique_random_key(
         self,
         *,
-        transaction: UnitOfWork,
+        transaction: "UnitOfWork",
     ) -> str:
         """Creates a unique random key."""
         key = generate_random_key()
@@ -105,7 +108,7 @@ class UrlsServices:
     async def _update_db_clicks(
         *,
         url: UrlInfoDTO,
-        transaction: UnitOfWork,
+        transaction: "UnitOfWork",
     ) -> None:
         """Update the clicks count for a URL in the database."""
         await transaction.urls_repo.update(
