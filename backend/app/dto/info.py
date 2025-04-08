@@ -1,23 +1,20 @@
-import platform
 from dataclasses import dataclass
-
-from app.settings.config import settings
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class HealthStatus:
+class HealthStatusDTO:
     status: str = "ok"
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class VersionInfo:
+class VersionInfoDTO:
     app_version: str
     python_version: str
     system_info: str
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class CpuInfo:
+class CpuInfoDTO:
     usage_percent: float
     cores_physical: int
     cores_logical: int
@@ -26,7 +23,7 @@ class CpuInfo:
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class MemoryInfo:
+class MemoryInfoDTO:
     usage_percent: float
     total: float  # in MB
     available: float  # in MB
@@ -34,7 +31,7 @@ class MemoryInfo:
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class DiskInfo:
+class DiskInfoDTO:
     usage_percent: float
     total: float  # in GB
     free: float  # in GB
@@ -42,17 +39,8 @@ class DiskInfo:
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class Metrics:
-    cpu: CpuInfo
-    memory: MemoryInfo
-    disk: DiskInfo
+class MetricsDTO:
+    cpu: CpuInfoDTO
+    memory: MemoryInfoDTO
+    disk: DiskInfoDTO
     uptime: float  # in seconds
-
-
-OK_STATUS = HealthStatus()
-APP_VERSION = settings().APP_VERSION
-VERSION_INFO = VersionInfo(
-    app_version=APP_VERSION,
-    python_version=platform.python_version(),
-    system_info=f"{platform.system()} {platform.release()}",
-)
