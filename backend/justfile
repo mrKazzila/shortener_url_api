@@ -27,9 +27,6 @@ help:
     @echo "  3. just start-app   # Start application"
     @echo "  OR use 'just full-up' for all steps"
     @echo ""
-    @echo "Setup automation:"
-    @echo "  poetry_setup                 - Configure poetry and install dependencies"
-    @echo ""
     @echo "Linters & Formatters:"
     @echo "  lint                         - Run code linters and formatters"
     @echo ""
@@ -38,8 +35,6 @@ help:
     @echo "  make_migrate_docker NAME     - Create migration for Docker environment"
     @echo "  make_migrate_local NAME      - Create migration for local environment"
     @echo "  make_downgrade NAME          - Downgrade migration to specific revision"
-    @echo "  make_downgrade_docker NAME   - Downgrade migration (Docker env)"
-    @echo "  make_downgrade_local NAME    - Downgrade migration (local env)"
     @echo ""
     @echo "Run 'just COMMAND --help' for more information on a command."
 
@@ -62,6 +57,11 @@ up:
     {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} up -d --build postgres
     @echo "Containers started. Run migrations manually with 'just migrate-up'"
 
+down:
+	@echo "Stop the url api Docker container ..."
+	{{DC}} --env-file {{ENV_FILE}}  -p {{PROJECT_NAME}} -f {{DC_FILE}} down
+	@echo "Success down!"
+
 migrate-up:
     @echo "Running migrations..."
     {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} run --rm fastapi alembic upgrade head
@@ -82,12 +82,6 @@ full-up: up migrate-up start-app
 
 
 # ===== Setup automation =====
-poetry_setup:
-	@echo "Run poetry setup ..."
-	poetry config virtualenvs.in-project true
-	poetry shell
-	poetry install
-	@echo "Poetry setup done!"
 
 
 # ===== Linters & Formatter automation =====
@@ -103,21 +97,9 @@ make_migrate ARG:
     @echo "Make alembic revision with name: {{ARG}}"
     @alembic revision --autogenerate -m {{ARG}}
 
-make_migrate_docker ARG:
-    @just set_docker_env
-    @just make_migrate {{ARG}}
-
 make_migrate_local ARG:
     @just set_local_env
     @just make_migrate {{ARG}}
-
-make_downgrade ARG:
-    @echo "Downgrade alembic revision to {{ARG}} ..."
-    @alembic downgrade {{ARG}}
-
-make_downgrade_docker ARG:
-    @just set_docker_env
-    @just make_downgrade {{ARG}}
 
 make_downgrade_local ARG:
     @just set_local_env
