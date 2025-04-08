@@ -1,5 +1,14 @@
 from dataclasses import dataclass
 
+__all__ = (
+    "CpuInfoDTO",
+    "DiskInfoDTO",
+    "HealthStatusDTO",
+    "MemoryInfoDTO",
+    "MetricsDTO",
+    "VersionInfoDTO",
+)
+
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class HealthStatusDTO:

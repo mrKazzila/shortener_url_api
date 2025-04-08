@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from validators import url as url_validator
 
 from app.dto.urls import CreatedUrlDTO, UrlInfoDTO
-from app.service_layer.services.exceptions import (
+from app.exceptions.urls import (
     InvalidUrlException,
     UrlNotFoundException,
 )

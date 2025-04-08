@@ -4,10 +4,11 @@ from typing import Self
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.adapters import UrlsRepository
+from app.exceptions.uow import ImproperUoWUsageError
 from app.service_layer.unit_of_work.abc_uow import ABCUnitOfWork
-from app.service_layer.unit_of_work.exceptions import ImproperUoWUsageError
 
 __all__ = ("UnitOfWork",)
+
 logger = logging.getLogger(__name__)
 NONE_OBJECT_ID = 0
 

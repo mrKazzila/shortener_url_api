@@ -1,23 +1,11 @@
 from http import HTTPStatus
 
+from app.exceptions.base import BaseCustomException
+
 __all__ = (
     "InvalidUrlException",
     "UrlNotFoundException",
-    "BaseCustomException",
 )
-
-
-class BaseCustomException(Exception):
-    """Base Exception class for custom exceptions."""
-
-    __slots__ = ("status_code", "detail")
-
-    def __init__(self, *, status_code: HTTPStatus | int, detail: str):
-        self.status_code = status_code
-        self.detail = detail
-
-    def __str__(self) -> str:
-        return f"{self.status_code}. {self.detail}"
 
 
 class InvalidUrlException(BaseCustomException):
