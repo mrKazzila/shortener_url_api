@@ -1,14 +1,16 @@
 import logging
+from random import choice
+from string import ascii_letters, digits
 from typing import TYPE_CHECKING
 
 from validators import url as url_validator
 
-from app.api.routers.urls.utils import generate_random_key
 from app.dto.urls import CreatedUrlDTO, UrlInfoDTO
 from app.service_layer.services.exceptions import (
     InvalidUrlException,
     UrlNotFoundException,
 )
+from app.settings.config import settings
 
 if TYPE_CHECKING:
     from app.service_layer.unit_of_work import UnitOfWork
@@ -16,6 +18,9 @@ if TYPE_CHECKING:
 __all__ = ("UrlsServices",)
 
 logger = logging.getLogger(__name__)
+
+CHARS = f"{ascii_letters}{digits}"
+LENGTH = settings().KEY_LENGTH
 
 
 class UrlsServices:
@@ -94,13 +99,13 @@ class UrlsServices:
         transaction: "UnitOfWork",
     ) -> str:
         """Creates a unique random key."""
-        key = generate_random_key()
+        key = self._generate_random_key()
 
         while await self._get_active_long_url_by_key(
             key=key,
             transaction=transaction,
         ):
-            key = generate_random_key()
+            key = self._generate_random_key()
 
         return key
 
@@ -116,3 +121,8 @@ class UrlsServices:
             clicks_count=url.clicks_count + 1,
         )
         await transaction.commit()
+
+    @staticmethod
+    def _generate_random_key() -> str:
+        """Generate a random key of the given length."""
+        return "".join(choice(CHARS) for _ in range(LENGTH))

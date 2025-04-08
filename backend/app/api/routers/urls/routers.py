@@ -9,7 +9,7 @@ from app.api.routers.urls.exceptions import (
     InvalidUrlException,
     UrlNotFoundException,
 )
-from app.api.schemas.urls.schemas import SReturnUrl
+from app.api.schemas.urls import SReturnUrl
 from app.service_layer.services import (
     UrlsServices,
     exceptions as services_exceptions,
