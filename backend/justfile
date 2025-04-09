@@ -50,6 +50,19 @@ set_local_env:
     @sed -i '' 's/^DB_PORT=.*/DB_PORT=5433/' env/.env
     @echo "Environment set for LOCAL (localhost:5433)"
 
+freeze-dev:
+    @echo "Generating requirements.txt for development..."
+    uv pip compile pyproject.toml --extra dev -o requirements.txt
+    @echo "requirements.txt generated for development."
+
+freeze-prod:
+    @echo "Generating requirements.txt for production..."
+    uv pip compile pyproject.toml -o requirements.txt
+    @echo "requirements.txt generated for production."
+
+rm-requirements:
+    @echo "Remove requirements.txt..."
+    rm requirements.txt
 
 # ===== Docker automation =====
 up:
@@ -64,12 +77,12 @@ down:
 
 migrate-up:
     @echo "Running migrations..."
-    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} run --rm fastapi alembic upgrade head
+    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} run --rm fastapi python -m alembic upgrade head
     @echo "Migrations completed"
 
 migrate-down:
     @echo "Downgrading migrations..."
-    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} run --rm fastapi alembic downgrade -1
+    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} run --rm fastapi python -m alembic downgrade -1
     @echo "Migrations downgraded"
 
 start-app:
@@ -77,7 +90,7 @@ start-app:
     {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} up -d fastapi
     @echo "Application started"
 
-full-up: up migrate-up start-app
+full-up: freeze-dev up migrate-up start-app rm-requirements
     @echo "Full startup completed (containers + migrations + app)"
 
 
