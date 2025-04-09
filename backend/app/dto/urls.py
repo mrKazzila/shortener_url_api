@@ -6,7 +6,7 @@ __all__ = (
 )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True, kw_only=True)
 class UrlInfoDTO:
     id: int
     target_url: str
@@ -14,7 +14,7 @@ class UrlInfoDTO:
     clicks_count: int
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True, kw_only=True)
 class CreatedUrlDTO:
     target_url: str
     key: str

@@ -1,24 +1,32 @@
 import logging
+from random import choice
+from string import ascii_letters, digits
+from typing import TYPE_CHECKING
 
 from validators import url as url_validator
 
-from app.api.routers.urls.utils import generate_random_key
 from app.dto.urls import CreatedUrlDTO, UrlInfoDTO
-from app.service_layer.services.exceptions import (
+from app.exceptions.urls import (
     InvalidUrlException,
     UrlNotFoundException,
 )
-from app.service_layer.unit_of_work import UnitOfWork
+from app.settings.config import settings
+
+if TYPE_CHECKING:
+    from app.service_layer.unit_of_work import UnitOfWork
 
 __all__ = ("UrlsServices",)
 
 logger = logging.getLogger(__name__)
 
+CHARS = f"{ascii_letters}{digits}"
+LENGTH = settings().KEY_LENGTH
+
 
 class UrlsServices:
     __slots__ = ("uow",)
 
-    def __init__(self, uow: UnitOfWork) -> None:
+    def __init__(self, uow: "UnitOfWork") -> None:
         self.uow = uow
 
     def __repr__(self) -> str:
@@ -70,7 +78,7 @@ class UrlsServices:
     async def _get_active_long_url_by_key(
         *,
         key: str,
-        transaction: UnitOfWork,
+        transaction: "UnitOfWork",
     ) -> UrlInfoDTO | None:
         """Get a URL from the database by its key."""
         _reference = {"key": key}
@@ -88,16 +96,16 @@ class UrlsServices:
     async def _create_unique_random_key(
         self,
         *,
-        transaction: UnitOfWork,
+        transaction: "UnitOfWork",
     ) -> str:
         """Creates a unique random key."""
-        key = generate_random_key()
+        key = self._generate_random_key()
 
         while await self._get_active_long_url_by_key(
             key=key,
             transaction=transaction,
         ):
-            key = generate_random_key()
+            key = self._generate_random_key()
 
         return key
 
@@ -105,7 +113,7 @@ class UrlsServices:
     async def _update_db_clicks(
         *,
         url: UrlInfoDTO,
-        transaction: UnitOfWork,
+        transaction: "UnitOfWork",
     ) -> None:
         """Update the clicks count for a URL in the database."""
         await transaction.urls_repo.update(
@@ -113,3 +121,8 @@ class UrlsServices:
             clicks_count=url.clicks_count + 1,
         )
         await transaction.commit()
+
+    @staticmethod
+    def _generate_random_key() -> str:
+        """Generate a random key of the given length."""
+        return "".join(choice(CHARS) for _ in range(LENGTH))

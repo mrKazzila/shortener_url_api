@@ -4,6 +4,8 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base
 
+__all__ = ("Urls",)
+
 int_pk = Annotated[int, mapped_column(primary_key=True)]
 
 
