@@ -41,7 +41,6 @@ async def create_short_url(
 async def redirect_to_target_url(
     url_key: PathUrlKey,
     url_service: FromDishka[UrlsServices],
-    _: str = Depends(get_user_id),
 ) -> RedirectResponse:
     """Redirects to the target URL for a given shortened URL key."""
     redirect_url = await url_service.update_redirect_counter_for_url(

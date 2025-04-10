@@ -58,7 +58,6 @@ class Settings(BaseSettings):
     )
 
 
-# @lru_cache
 def settings() -> Settings | None:
     logger.info("Loading settings from env")
 
