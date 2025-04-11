@@ -16,7 +16,7 @@ app = create_app(
     },
 )
 
-
 setup_dishka(container=container, app=app)
+
 routers_setup(app=app, endpoints=ROUTERS)
 middlewares_setup(app=app, middlewares=MIDDLEWARES)

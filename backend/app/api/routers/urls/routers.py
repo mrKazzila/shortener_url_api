@@ -1,8 +1,11 @@
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
-from fastapi import APIRouter, status
+
+from fastapi import APIRouter, Depends, status
 from fastapi.responses import RedirectResponse
 
 from app.api.routers.urls._types import PathUrlKey, QueryLongUrl
+from app.api.routers.urls.di import get_user_id
+
 from app.api.schemas.urls import SReturnUrl
 from app.service_layer.services import UrlsServices
 
@@ -22,6 +25,7 @@ router = APIRouter(
 async def create_short_url(
     url: QueryLongUrl,
     url_service: FromDishka[UrlsServices],
+    _: str = Depends(get_user_id),
 ) -> SReturnUrl:
     """Creates a shortened URL."""
     result = await url_service.create_url(target_url=url)
