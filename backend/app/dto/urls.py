@@ -1,9 +1,13 @@
 from dataclasses import dataclass
+from typing import NewType
 
 __all__ = (
     "UrlInfoDTO",
     "CreatedUrlDTO",
+    "XUserHeader",
 )
+
+XUserHeader = NewType("XUserHeader", str)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
