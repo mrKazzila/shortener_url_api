@@ -2,8 +2,8 @@ from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, status
 from fastapi.responses import RedirectResponse
 
+from app.api.routers.schemas.urls import SReturnUrl
 from app.api.routers.urls._types import PathUrlKey, QueryLongUrl
-from app.api.schemas.urls import SReturnUrl
 from app.dto.urls import XUserHeader
 from app.service_layer.services import UrlsServices
 
