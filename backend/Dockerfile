@@ -6,17 +6,15 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONHASHSEED=random
 
 WORKDIR /app/
-RUN apt-get update && \
-    apt-get install --no-install-recommends -y curl && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
 
 # ===================
 FROM base as builder
 
 COPY requirements.txt /tmp/
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir --user -r /tmp/requirements.txt
+    pip install --no-cache-dir --user -r /tmp/requirements.txt && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # ===================
 FROM python:3.11-slim
@@ -29,7 +27,8 @@ RUN groupadd -r docker && \
 ENV APP_HOME=/home/unprivilegeduser/shortener
 WORKDIR $APP_HOME
 
-COPY --from=builder --chown=unprivilegeduser:docker /root/.local/lib/python3.11/site-packages /home/unprivilegeduser/.local/lib/python3.11/site-packages
+COPY --from=builder --chown=unprivilegeduser:docker /root/.local/lib/python3.11/site-packages \
+ /home/unprivilegeduser/.local/lib/python3.11/site-packages
 COPY --from=builder --chown=unprivilegeduser:docker /root/.local/bin /home/unprivilegeduser/.local/bin
 
 ENV PATH="/home/unprivilegeduser/.local/bin:${PATH}"

@@ -1,7 +1,7 @@
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, status
 
-from app.api.schemas.info import (
+from app.api.routers.schemas.info import (
     SCpuInfo,
     SDiskInfo,
     SHealthStatus,

@@ -21,6 +21,7 @@ async def lifespan(app_: FastAPI):
     logger.info("Service started")
 
     yield
+    await app_.state.dishka_container.close()
 
     logger.info("Service exited")
 
@@ -93,7 +94,7 @@ def middlewares_setup(*, app: FastAPI, middlewares: list) -> None:
 
         app.add_middleware(
             CORSMiddleware,
-            allow_origins=settings().BASE_URL,
+            allow_origins=settings.BASE_URL,
             allow_credentials=True,
             allow_methods=["GET", "POST"],
             allow_headers=[

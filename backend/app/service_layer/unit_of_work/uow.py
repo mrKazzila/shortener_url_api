@@ -10,11 +10,11 @@ from app.service_layer.unit_of_work.abc_uow import ABCUnitOfWork
 __all__ = ("UnitOfWork",)
 
 logger = logging.getLogger(__name__)
-NONE_OBJECT_ID = 0
 
 
 class UnitOfWork(ABCUnitOfWork):
     __slots__ = ("_session", "_urls_repo")
+    NONE_OBJECT_ID = 0
 
     def __init__(
         self,
@@ -25,8 +25,12 @@ class UnitOfWork(ABCUnitOfWork):
         self._urls_repo = None
 
     def __repr__(self) -> str:
-        session_id = id(self._session) if self._session else NONE_OBJECT_ID
-        url_repo_id = id(self.urls_repo) if self._urls_repo else NONE_OBJECT_ID
+        session_id = (
+            id(self._session) if self._session else self.NONE_OBJECT_ID
+        )
+        url_repo_id = (
+            id(self.urls_repo) if self._urls_repo else self.NONE_OBJECT_ID
+        )
 
         return (
             f"[{self.__class__.__name__} object_id={id(self)} "

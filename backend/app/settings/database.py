@@ -18,7 +18,7 @@ __all__ = (
 )
 
 logger = logging.getLogger(__name__)
-ENGINE_URL: str = str(settings().dsn)
+ENGINE_URL: str = str(settings.dsn)
 
 
 # fix asyncpg.exceptions.InvalidSQLStatementNameError:

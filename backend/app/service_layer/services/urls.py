@@ -19,11 +19,11 @@ __all__ = ("UrlsServices",)
 
 logger = logging.getLogger(__name__)
 
-CHARS = f"{ascii_letters}{digits}"
-LENGTH = settings().KEY_LENGTH
-
 
 class UrlsServices:
+    CHARS = f"{ascii_letters}{digits}"
+    LENGTH = settings.KEY_LENGTH
+
     __slots__ = ("uow",)
 
     def __init__(self, uow: "UnitOfWork") -> None:
@@ -122,7 +122,6 @@ class UrlsServices:
         )
         await transaction.commit()
 
-    @staticmethod
-    def _generate_random_key() -> str:
+    def _generate_random_key(self) -> str:
         """Generate a random key of the given length."""
-        return "".join(choice(CHARS) for _ in range(LENGTH))
+        return "".join(choice(self.CHARS) for _ in range(self.LENGTH))
