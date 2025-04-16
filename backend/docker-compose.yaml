@@ -51,3 +51,17 @@ services:
           memory: 10G
     volumes:
       - ../persistentdata/db:/var/lib/postgresql/data/
+
+  redis:
+    container_name: redis
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - ../persistentdata/redis:/data
+    command:
+      - redis-server
+      - --loglevel warning
+      - --save 60 1
+      - --appendonly yes
