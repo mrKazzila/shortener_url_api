@@ -47,10 +47,7 @@ class UrlsServices:
 
         key = self._generate_random_key()
 
-        if await self._try_set_redis_key(
-            key=key,
-            target_url=target_url,
-        ):
+        if await self._try_set_redis_key(key=key):
             async with self.uow as transaction:
                 result = await transaction.urls_repo.add(
                     target_url=str(target_url),
@@ -111,7 +108,7 @@ class UrlsServices:
                 key=key,
                 transaction=transaction,
             ):
-                await self._try_set_redis_key(key=key, target_url=long_url)
+                await self._try_set_redis_key(key=key)
                 return key
 
     @staticmethod
@@ -146,8 +143,8 @@ class UrlsServices:
         )
         await transaction.commit()
 
-    async def _try_set_redis_key(self, key: str, target_url: str) -> bool:
-        return await self.redis.set(f"url:{key}", target_url, nx=True)
+    async def _try_set_redis_key(self, key: str) -> bool:
+        return await self.redis.hsetnx("urls_hash", key, "1")
 
     def _generate_random_key(self) -> str:
         """Generate a random key of the given length."""
