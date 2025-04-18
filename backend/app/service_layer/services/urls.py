@@ -13,7 +13,10 @@ from app.exceptions.urls import (
 from app.settings.config import settings
 
 if TYPE_CHECKING:
+    from redis.asyncio import Redis
+
     from app.service_layer.unit_of_work import UnitOfWork
+
 
 __all__ = ("UrlsServices",)
 
@@ -24,9 +27,10 @@ class UrlsServices:
     CHARS = f"{ascii_letters}{digits}"
     LENGTH = settings.KEY_LENGTH
 
-    __slots__ = ("uow",)
+    __slots__ = ("redis", "uow")
 
-    def __init__(self, uow: "UnitOfWork") -> None:
+    def __init__(self, redis: "Redis", uow: "UnitOfWork") -> None:
+        self.redis = redis
         self.uow = uow
 
     def __repr__(self) -> str:
@@ -41,20 +45,36 @@ class UrlsServices:
         if not url_validator(target_url):
             raise InvalidUrlException()
 
+        key = self._generate_random_key()
+
+        if await self._try_set_redis_key(key=key):
+            async with self.uow as transaction:
+                result = await transaction.urls_repo.add(
+                    target_url=str(target_url),
+                    key=key,
+                )
+                await transaction.commit()
+
+                return CreatedUrlDTO(
+                    key=result.key,
+                    target_url=result.target_url,
+                )
+
         async with self.uow as transaction:
-            key_ = await self._create_unique_random_key(
+            key = await self._create_unique_random_key(
                 transaction=transaction,
+                long_url=target_url,
             )
             result = await transaction.urls_repo.add(
                 target_url=str(target_url),
-                key=key_,
+                key=key,
             )
             await transaction.commit()
 
-        return CreatedUrlDTO(
-            key=result.key,
-            target_url=result.target_url,
-        )
+            return CreatedUrlDTO(
+                key=result.key,
+                target_url=result.target_url,
+            )
 
     async def update_redirect_counter_for_url(
         self,
@@ -73,6 +93,23 @@ class UrlsServices:
                 return str(db_url.target_url)
 
         raise UrlNotFoundException(url_key=key)
+
+    async def _create_unique_random_key(
+        self,
+        *,
+        transaction: "UnitOfWork",
+        long_url: str,
+    ) -> str:
+        """Creates a unique random key."""
+        while True:
+            key = self._generate_random_key()
+
+            if not await self._get_active_long_url_by_key(
+                key=key,
+                transaction=transaction,
+            ):
+                await self._try_set_redis_key(key=key)
+                return key
 
     @staticmethod
     async def _get_active_long_url_by_key(
@@ -93,22 +130,6 @@ class UrlsServices:
 
         return None
 
-    async def _create_unique_random_key(
-        self,
-        *,
-        transaction: "UnitOfWork",
-    ) -> str:
-        """Creates a unique random key."""
-        key = self._generate_random_key()
-
-        while await self._get_active_long_url_by_key(
-            key=key,
-            transaction=transaction,
-        ):
-            key = self._generate_random_key()
-
-        return key
-
     @staticmethod
     async def _update_db_clicks(
         *,
@@ -121,6 +142,9 @@ class UrlsServices:
             clicks_count=url.clicks_count + 1,
         )
         await transaction.commit()
+
+    async def _try_set_redis_key(self, key: str) -> bool:
+        return await self.redis.hsetnx("urls_hash", key, "1")
 
     def _generate_random_key(self) -> str:
         """Generate a random key of the given length."""

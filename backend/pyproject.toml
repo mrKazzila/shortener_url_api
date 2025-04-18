@@ -19,7 +19,8 @@ dependencies = [
     "validators~=0.20.0",
     "greenlet~=3.0.3",
     "dishka~=1.5.2",
-    "psutil~=7.0.0"
+    "psutil~=7.0.0",
+    "redis>=5.2.1",
 ]
 
 [project.optional-dependencies]
@@ -32,10 +33,6 @@ dev = [
     "pyright~=1.1.327",
     "ruff~=0.8.4"
 ]
-
-[build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
 
 
 # ==========================

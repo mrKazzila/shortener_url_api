@@ -14,7 +14,8 @@ help:
     @echo "  set_local_env                - Configure environment for localhost (localhost:5433)"
     @echo ""
     @echo "Docker automation:"
-    @echo "  up            - Start only required containers (without migrations)"
+    @echo "  up            - Start required containers (postgres + redis)"
+    @echo "  redis-cli     - Connect to Redis CLI"
     @echo "  migrate-up    - Apply database migrations"
     @echo "  migrate-down  - Rollback last migration"
     @echo "  start-app     - Start application container"
@@ -22,7 +23,7 @@ help:
     @echo "  down          - Stop all containers"
     @echo ""
     @echo "Migration workflow:"
-    @echo "  1. just up          # Start database"
+    @echo "  1. just up          # Start database and redis"
     @echo "  2. just migrate-up  # Apply migrations"
     @echo "  3. just start-app   # Start application"
     @echo "  OR use 'just full-up' for all steps"
@@ -43,12 +44,14 @@ help:
 set_docker_env:
     @sed -i '' 's/^DB_HOST=.*/DB_HOST=postgres/' env/.env
     @sed -i '' 's/^DB_PORT=.*/DB_PORT=5432/' env/.env
-    @echo "Environment set for DOCKER (postgres:5432)"
+    @sed -i '' 's/^REDIS_HOST=.*/REDIS_HOST=redis/' env/.env
+    @echo "Environment set for DOCKER (postgres:5432, redis:6379)"
 
 set_local_env:
     @sed -i '' 's/^DB_HOST=.*/DB_HOST=localhost/' env/.env
     @sed -i '' 's/^DB_PORT=.*/DB_PORT=5433/' env/.env
-    @echo "Environment set for LOCAL (localhost:5433)"
+    @sed -i '' 's/^REDIS_HOST=.*/REDIS_HOST=localhost/' env/.env
+    @echo "Environment set for LOCAL (localhost:5433, localhost:6379)"
 
 freeze-dev:
     @echo "Generating requirements.txt for development..."
@@ -66,14 +69,18 @@ rm-requirements:
 
 # ===== Docker automation =====
 up:
-    @echo "Starting containers without migrations..."
-    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} up -d --build postgres
+    @echo "Starting containers (postgres + redis)..."
+    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} up -d --build postgres redis
     @echo "Containers started. Run migrations manually with 'just migrate-up'"
 
 down:
-	@echo "Stop the url api Docker container ..."
-	{{DC}} --env-file {{ENV_FILE}}  -p {{PROJECT_NAME}} -f {{DC_FILE}} down
-	@echo "Success down!"
+    @echo "Stop the url api Docker container ..."
+    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} down
+    @echo "Success down!"
+
+redis-cli:
+    @echo "Connecting to Redis CLI..."
+    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} exec redis redis-cli
 
 migrate-up:
     @echo "Running migrations..."
@@ -94,15 +101,16 @@ full-up: freeze-dev up migrate-up start-app rm-requirements
     @echo "Full startup completed (containers + migrations + app)"
 
 
+
 # ===== Setup automation =====
 
 
 # ===== Linters & Formatter automation =====
 lint:
-	@echo "Start linters ..."
-	- ruff check --fix --silent .
-	- ruff format --silent .
-	@echo "Linters done!"
+    @echo "Start linters ..."
+    - ruff check --fix --silent .
+    - ruff format --silent .
+    @echo "Linters done!"
 
 
 # ===== Alembic migrations =====

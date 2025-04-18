@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
+from redis.asyncio import Redis
 
 from app.settings.config import settings
 
@@ -20,7 +21,12 @@ logger = logging.getLogger(__name__)
 async def lifespan(app_: FastAPI):
     logger.info("Service started")
 
+    container = app_.state.dishka_container
+    redis = await container.get(Redis)
+
     yield
+
+    await redis.save()
     await app_.state.dishka_container.close()
 
     logger.info("Service exited")

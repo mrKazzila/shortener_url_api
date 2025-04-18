@@ -19,6 +19,15 @@ class Settings(BaseSettings):
         env_file=Path(__file__).resolve().parents[2].joinpath("env/.env"),
     )
 
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    REDIS_DB: int = 0
+    REDIS_PASSWORD: str | None = None
+
+    @property
+    def redis_url(self) -> str:
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+
     POSTGRES_VERSION: str
 
     DB_PROTOCOL: str
