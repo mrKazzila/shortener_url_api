@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dto.urls import XUserHeader
 from app.exceptions.auth import UserHeaderNotFoundException
+from app.service_layer.cqrs import QueryService, UrlCommandService
 from app.service_layer.services import InfoServices, UrlsServices
 from app.service_layer.unit_of_work import UnitOfWork
 from app.settings.config import settings
@@ -15,32 +16,48 @@ __all__ = ("ServiceProvider",)
 
 
 class ServiceProvider(Provider):
-    @provide(scope=Scope.APP)
-    async def provide_redis(self) -> Redis:
-        return await get_redis()
+    @provide(scope=Scope.REQUEST)
+    async def get_user_id(self, request: Request) -> XUserHeader:
+        if not (user_id := request.headers.get(settings.USER_HEADER)):
+            raise UserHeaderNotFoundException()
+        return XUserHeader(user_id)
+
+    @provide(scope=Scope.REQUEST)
+    async def provide_async_session(self) -> AsyncSession:
+        return async_session_maker()
 
     @provide(scope=Scope.APP)
     def provide_uow(self) -> UnitOfWork:
         return UnitOfWork(session_factory=async_session_maker)
 
     @provide(scope=Scope.APP)
+    def provide_query_service(self) -> QueryService:
+        return QueryService(session_factory=async_session_maker)
+
+    @provide(scope=Scope.APP)
+    def provide_url_command_service(
+        self,
+        uow: UnitOfWork,
+    ) -> UrlCommandService:
+        return UrlCommandService(uow=uow)
+
+    @provide(scope=Scope.APP)
+    async def provide_redis(self) -> Redis:
+        return await get_redis()
+
+    @provide(scope=Scope.APP)
     def provide_url_service(
         self,
         redis: Redis,
-        uow: UnitOfWork,
+        query_service: QueryService,
+        command_service: UrlCommandService,
     ) -> UrlsServices:
-        return UrlsServices(redis=redis, uow=uow)
+        return UrlsServices(
+            redis=redis,
+            query_service=query_service,
+            command_service=command_service,
+        )
 
     @provide(scope=Scope.APP)
     def provide_info_service(self) -> InfoServices:
         return InfoServices()
-
-    @provide(scope=Scope.REQUEST)
-    async def provide_async_session(self) -> AsyncSession:
-        return async_session_maker()
-
-    @provide(scope=Scope.REQUEST)
-    async def get_user_id(self, request: Request) -> XUserHeader:
-        if not (user_id := request.headers.get(settings.USER_HEADER)):
-            raise UserHeaderNotFoundException()
-        return XUserHeader(user_id)

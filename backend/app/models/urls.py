@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Annotated
 from uuid import UUID, uuid4
 
@@ -18,7 +18,7 @@ class Urls(Base):
     """A model class for storing shortened URLs."""
 
     __tablename__ = "urls"
-    repr_cols_num = 4
+    repr_cols_num = 5
 
     id: Mapped[int_pk] = mapped_column(doc="The primary key of the model.")
 
@@ -28,7 +28,6 @@ class Urls(Base):
         primary_key=True,
         default=uuid4,
         index=True,
-        unique=True,
         nullable=False,
     )
 

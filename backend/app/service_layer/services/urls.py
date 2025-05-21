@@ -1,21 +1,21 @@
 import logging
+from datetime import UTC, datetime
 from random import choice
 from string import ascii_letters, digits
 from typing import TYPE_CHECKING
 
 from validators import url as url_validator
 
-from app.dto.urls import CreatedUrlDTO, UrlInfoDTO
-from app.exceptions.urls import (
-    InvalidUrlException,
-    UrlNotFoundException,
-)
+from app.dto.urls import CreatedUrlDTO, DBUrlDTO, UrlDTO, UrlInfoDTO
+from app.exceptions.urls import InvalidUrlException, UrlNotFoundException
 from app.settings.config import settings
 
 if TYPE_CHECKING:
+    from uuid import UUID
+
     from redis.asyncio import Redis
 
-    from app.service_layer.unit_of_work import UnitOfWork
+    from app.service_layer.cqrs import QueryService, UrlCommandService
 
 
 __all__ = ("UrlsServices",)
@@ -27,11 +27,18 @@ class UrlsServices:
     CHARS = f"{ascii_letters}{digits}"
     LENGTH = settings.KEY_LENGTH
 
-    __slots__ = ("redis", "uow")
+    __slots__ = ("redis", "query_service", "command_service")
 
-    def __init__(self, redis: "Redis", uow: "UnitOfWork") -> None:
+    def __init__(
+        self,
+        *,
+        redis: "Redis",
+        query_service: "QueryService",
+        command_service: "UrlCommandService",
+    ) -> None:
         self.redis = redis
-        self.uow = uow
+        self.query_service = query_service
+        self.command_service = command_service
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}"
@@ -39,109 +46,87 @@ class UrlsServices:
     async def create_url(
         self,
         *,
-        target_url: str,
+        url_data: UrlDTO,
     ) -> CreatedUrlDTO:
         """Create a new URL in the database."""
-        if not url_validator(target_url):
+        if not url_validator(url_data.target_url):
             raise InvalidUrlException()
 
         key = self._generate_random_key()
+        is_set_in_cache = await self._try_set_redis_key(key=key)
 
-        if await self._try_set_redis_key(key=key):
-            async with self.uow as transaction:
-                result = await transaction.urls_repo.add(
-                    target_url=str(target_url),
-                    key=key,
-                )
-                await transaction.commit()
+        if not is_set_in_cache:
+            key = await self._create_unique_random_key()
 
-                return CreatedUrlDTO(
-                    key=result.key,
-                    target_url=result.target_url,
-                )
+        await self.command_service.create_short_url(
+            url_data={
+                "user_id": url_data.user_id,
+                "key": key,
+                "target_url": url_data.target_url,
+            },
+        )
 
-        async with self.uow as transaction:
-            key = await self._create_unique_random_key(
-                transaction=transaction,
-                long_url=target_url,
-            )
-            result = await transaction.urls_repo.add(
-                target_url=str(target_url),
-                key=key,
-            )
-            await transaction.commit()
+        return CreatedUrlDTO(
+            user_id=url_data.user_id,
+            key=key,
+            target_url=url_data.target_url,
+        )
 
-            return CreatedUrlDTO(
-                key=result.key,
-                target_url=result.target_url,
-            )
-
-    async def update_redirect_counter_for_url(
+    async def update_redirect_counter(
         self,
         *,
         key: str,
     ) -> str:
-        async with self.uow as transaction:
-            if db_url := await self._get_active_long_url_by_key(
-                key=key,
-                transaction=transaction,
-            ):
-                await self._update_db_clicks(
-                    url=db_url,
-                    transaction=transaction,
-                )
-                return str(db_url.target_url)
+        if not (url := await self.query_service.get_url_by_key(url_key=key)):
+            raise UrlNotFoundException(url_key=key)
 
-        raise UrlNotFoundException(url_key=key)
+        await self.command_service.update_click_data(
+            model_id=url.id,
+            url_data={
+                "last_used": datetime.now(UTC),
+                "clicks_count": url.clicks_count + 1,
+            },
+        )
+        return url.target_url
 
-    async def _create_unique_random_key(
+    async def get_user_urls(
         self,
         *,
-        transaction: "UnitOfWork",
-        long_url: str,
-    ) -> str:
+        user_id: "UUID",
+        pagination_data: dict[str, int | None],
+    ) -> list[DBUrlDTO | None]:
+        return await self.query_service.get_all_user_urls(
+            user_id=user_id,
+            pagination_data=pagination_data,
+        )
+
+    async def _create_unique_random_key(self) -> str:
         """Creates a unique random key."""
         while True:
             key = self._generate_random_key()
+            is_key_exist = await self._get_active_long_url_by_key(key=key)
 
-            if not await self._get_active_long_url_by_key(
-                key=key,
-                transaction=transaction,
-            ):
+            if not is_key_exist:
                 await self._try_set_redis_key(key=key)
                 return key
 
-    @staticmethod
     async def _get_active_long_url_by_key(
+        self,
         *,
         key: str,
-        transaction: "UnitOfWork",
     ) -> UrlInfoDTO | None:
         """Get a URL from the database by its key."""
-        _reference = {"key": key}
+        if not (
+            long_url := await self.query_service.get_url_by_key(url_key=key)
+        ):
+            return None
 
-        if long_url := await transaction.urls_repo.get(reference=_reference):
-            return UrlInfoDTO(
-                id=long_url.id,
-                target_url=long_url.target_url,
-                is_active=long_url.is_active,
-                clicks_count=long_url.clicks_count,
-            )
-
-        return None
-
-    @staticmethod
-    async def _update_db_clicks(
-        *,
-        url: UrlInfoDTO,
-        transaction: "UnitOfWork",
-    ) -> None:
-        """Update the clicks count for a URL in the database."""
-        await transaction.urls_repo.update(
-            model_id=url.id,
-            clicks_count=url.clicks_count + 1,
+        return UrlInfoDTO(
+            id=long_url.id,
+            target_url=long_url.target_url,
+            is_active=long_url.is_active,
+            clicks_count=long_url.clicks_count,
         )
-        await transaction.commit()
 
     async def _try_set_redis_key(self, key: str) -> bool:
         return await self.redis.hsetnx("urls_hash", key, "1")
