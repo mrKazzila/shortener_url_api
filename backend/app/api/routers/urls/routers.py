@@ -1,11 +1,16 @@
+import logging
+from uuid import UUID
+
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, status
 from fastapi.responses import RedirectResponse
 
-from app.api.routers.schemas.urls import SReturnUrl
+from app.api.routers.schemas.urls import SReturnUrl, SUserUrl, SUserUrls
 from app.api.routers.urls._types import PathUrlKey, QueryLongUrl
-from app.dto.urls import XUserHeader
+from app.dto.urls import UrlDTO, XUserHeader
 from app.service_layer.services import UrlsServices
+
+logger = logging.getLogger(__name__)
 
 __all__ = ("router",)
 
@@ -24,13 +29,37 @@ router = APIRouter(
 async def create_short_url(
     url: QueryLongUrl,
     url_service: FromDishka[UrlsServices],
-    _: FromDishka[XUserHeader],
+    data: FromDishka[XUserHeader],
 ) -> SReturnUrl:
     """Creates a shortened URL."""
-    result = await url_service.create_url(target_url=url)
-    return SReturnUrl(
-        key=result.key,
-        target_url=result.target_url,
+    result = await url_service.create_url(
+        url_data=UrlDTO(
+            target_url=url,
+            user_id=UUID(data),
+        ),
+    )
+
+    return SReturnUrl(**result.to_dict())
+
+
+@router.get(
+    path="/user_urls",
+    name="Get all user urls",
+    status_code=status.HTTP_200_OK,
+)
+async def get_user_urls(
+    url_service: FromDishka[UrlsServices],
+    data: FromDishka[XUserHeader],
+) -> SUserUrls:
+    """Get all user urls."""
+    user_urls = await url_service.get_user_urls(
+        user_id=UUID(data),
+        pagination_data={},
+    )
+
+    return SUserUrls(
+        count=len(user_urls),
+        urls=[SUserUrl(**url.to_dict()) for url in user_urls],
     )
 
 
@@ -44,10 +73,7 @@ async def redirect_to_target_url(
     url_service: FromDishka[UrlsServices],
 ) -> RedirectResponse:
     """Redirects to the target URL for a given shortened URL key."""
-    redirect_url = await url_service.update_redirect_counter_for_url(
-        key=url_key,
-    )
     return RedirectResponse(
-        url=redirect_url,
+        url=await url_service.update_redirect_counter(key=url_key),
         status_code=status.HTTP_307_TEMPORARY_REDIRECT,
     )
