@@ -73,6 +73,7 @@ async def redirect_to_target_url(
     url_service: FromDishka[UrlsServices],
 ) -> RedirectResponse:
     """Redirects to the target URL for a given shortened URL key."""
+    logger.error(f"{url_key=}")
     return RedirectResponse(
         url=await url_service.update_redirect_counter(key=url_key),
         status_code=status.HTTP_307_TEMPORARY_REDIRECT,
