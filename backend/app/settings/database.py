@@ -8,7 +8,6 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
-from sqlalchemy.pool import NullPool
 
 from app.settings.config import settings
 
@@ -31,22 +30,20 @@ class SQLAlchemyConnection(Connection):
 
 
 def engine_factory() -> AsyncEngine | None:
-    logger.debug("Create engine")
-    try:
-        return create_async_engine(
-            url=ENGINE_URL,
-            echo=True,
-            connect_args={
-                "statement_cache_size": 0,  # required by asyncpg
-                "prepared_statement_cache_size": 0,  # required by asyncpg
-                "connection_class": SQLAlchemyConnection,
-            },
-            pool_pre_ping=True,
-            poolclass=NullPool,
-        )
-    except Exception as error_:
-        logger.error("Error: %s", error_)
-        return None
+    return create_async_engine(
+        url=ENGINE_URL,
+        echo=True,
+        pool_size=10,
+        max_overflow=5,
+        pool_recycle=300,
+        pool_pre_ping=True,
+        pool_use_lifo=True,
+        connect_args={
+            "statement_cache_size": 0,
+            "prepared_statement_cache_size": 0,
+            "connection_class": SQLAlchemyConnection,
+        },
+    )
 
 
 async_session_maker: async_sessionmaker[AsyncSession] = async_sessionmaker(
