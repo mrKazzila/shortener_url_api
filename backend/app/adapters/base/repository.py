@@ -27,12 +27,10 @@ class SQLAlchemyRepository(ABCRepository):
         self,
         *,
         data: dict[str, str | int | UUID | bool | datetime],
-    ) -> type(model):
+    ) -> None:
         """Add new entity."""
-        _statement = insert(self.model).values(**data).returning(self.model)
-        statement_result = await self.session.execute(statement=_statement)
-
-        return statement_result.scalar_one()
+        _statement = insert(self.model).values(**data)
+        await self.session.execute(statement=_statement)
 
     async def get(
         self,
