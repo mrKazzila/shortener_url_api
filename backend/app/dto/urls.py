@@ -5,6 +5,7 @@ from uuid import UUID
 
 __all__ = (
     "CreatedUrlDTO",
+    "ClickedUrlDTO",
     "DBUrlDTO",
     "UrlDTO",
     "UrlInfoDTO",
@@ -37,6 +38,13 @@ class CreatedUrlDTO:
 class UrlDTO:
     target_url: str
     user_id: UUID
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ClickedUrlDTO:
+    key: str
+    target_url: str
+    clicks_count: int
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

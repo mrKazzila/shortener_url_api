@@ -57,12 +57,13 @@ class UnitOfWork(ABCUnitOfWork):
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         if self._session is not None:
             if exc_type is not None:
+                logger.debug("[x]  Error %r  [x]", exc_type)
                 await self._session.rollback()
+                return
 
             logger.debug("[x]  Closing %r  [x]", self)
             await self._session.close()
             self._session = None
-
         logger.debug("[x]  Closed %r  [x]", self)
 
     async def commit(self) -> None:

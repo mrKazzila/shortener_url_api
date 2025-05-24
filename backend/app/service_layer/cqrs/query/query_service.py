@@ -19,7 +19,7 @@ class QueryService(ABCQueryService):
         *,
         user_id: UUID,
         pagination_data: dict[str, int | None],
-    ) -> list[DBUrlDTO | None]:
+    ) -> list[DBUrlDTO]:
         return await self._get_all_url(
             user_id=user_id,
             pagination_data=pagination_data,
@@ -55,7 +55,7 @@ class QueryService(ABCQueryService):
         *,
         user_id: UUID,
         pagination_data: dict[str, int | None],
-    ) -> list[DBUrlDTO | None]:
+    ) -> list[DBUrlDTO]:
         async with self.session_factory() as session:
             if not (
                 urls := await UrlsRepository(session=session).get_all(

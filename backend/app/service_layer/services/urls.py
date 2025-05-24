@@ -1,12 +1,16 @@
 import logging
-from datetime import UTC, datetime
 from random import choice
 from string import ascii_letters, digits
 from typing import TYPE_CHECKING
 
 from validators import url as url_validator
 
-from app.dto.urls import CreatedUrlDTO, DBUrlDTO, UrlDTO, UrlInfoDTO
+from app.dto.urls import (
+    CreatedUrlDTO,
+    DBUrlDTO,
+    UrlDTO,
+    UrlInfoDTO,
+)
 from app.exceptions.urls import InvalidUrlException, UrlNotFoundException
 from app.settings.config import settings
 
@@ -72,22 +76,14 @@ class UrlsServices:
             target_url=url_data.target_url,
         )
 
-    async def update_redirect_counter(
-        self,
-        *,
-        key: str,
-    ) -> str:
-        if not (url := await self.query_service.get_url_by_key(url_key=key)):
+    async def update_redirect_counter(self, *, key: str) -> str:
+        if not (
+            result := await self.command_service.update_click_data(key=key)
+        ):
             raise UrlNotFoundException(url_key=key)
 
-        await self.command_service.update_click_data(
-            model_id=url.id,
-            url_data={
-                "last_used": datetime.now(UTC),
-                "clicks_count": url.clicks_count + 1,
-            },
-        )
-        return url.target_url
+        logger.debug(f"Updated url {result.key} {result.clicks_count}")
+        return result.target_url
 
     async def get_user_urls(
         self,

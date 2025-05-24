@@ -11,7 +11,7 @@ from app.models.base import Base
 
 __all__ = ("Urls",)
 
-int_pk = Annotated[int, mapped_column(primary_key=True)]
+int_pk = Annotated[int, mapped_column(primary_key=True, autoincrement=True)]
 
 
 class Urls(Base):
@@ -25,7 +25,6 @@ class Urls(Base):
     user_id: Mapped[UUID] = mapped_column(
         PG_UUID(as_uuid=True),
         doc="Unique user identifier (UUID)",
-        primary_key=True,
         default=uuid4,
         index=True,
         nullable=False,
