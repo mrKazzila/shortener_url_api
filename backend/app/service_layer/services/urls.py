@@ -1,5 +1,5 @@
 import logging
-from random import choice
+from random import choices
 from string import ascii_letters, digits
 from typing import TYPE_CHECKING
 
@@ -77,13 +77,11 @@ class UrlsServices:
         )
 
     async def update_redirect_counter(self, *, key: str) -> str:
-        if not (
-            result := await self.command_service.update_click_data(key=key)
-        ):
+        if not (url := await self.query_service.get_url_by_key(url_key=key)):
             raise UrlNotFoundException(url_key=key)
 
-        logger.debug(f"Updated url {result.key} {result.clicks_count}")
-        return result.target_url
+        await self.command_service.update_click_data(url_id=url.id)
+        return url.target_url
 
     async def get_user_urls(
         self,
@@ -129,4 +127,4 @@ class UrlsServices:
 
     def _generate_random_key(self) -> str:
         """Generate a random key of the given length."""
-        return "".join(choice(self.CHARS) for _ in range(self.LENGTH))
+        return "".join(choices(self.CHARS, k=self.LENGTH))  # type: ignore
