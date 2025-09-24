@@ -75,7 +75,7 @@ up:
 
 down:
     @echo "Stop the url api Docker container ..."
-    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} down
+    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} down -v
     @echo "Success down!"
 
 redis-cli:
