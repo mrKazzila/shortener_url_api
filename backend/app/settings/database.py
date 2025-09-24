@@ -33,11 +33,14 @@ def engine_factory() -> AsyncEngine | None:
     return create_async_engine(
         url=ENGINE_URL,
         # echo=True,
-        pool_size=8,
-        max_overflow=8,
+        pool_size=4,
+        max_overflow=4,
+        pool_timeout=5.0,
         pool_recycle=300,
         pool_pre_ping=True,
         pool_use_lifo=True,
+        json_serializer=None,
+        json_deserializer=None,
         connect_args={
             "statement_cache_size": 0,
             "prepared_statement_cache_size": 0,
