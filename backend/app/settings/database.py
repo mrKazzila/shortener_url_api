@@ -32,9 +32,9 @@ class SQLAlchemyConnection(Connection):
 def engine_factory() -> AsyncEngine | None:
     return create_async_engine(
         url=ENGINE_URL,
-        echo=True,
-        pool_size=10,
-        max_overflow=5,
+        # echo=True,
+        pool_size=20,
+        max_overflow=20,
         pool_recycle=300,
         pool_pre_ping=True,
         pool_use_lifo=True,
