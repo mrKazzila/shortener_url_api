@@ -1,6 +1,8 @@
 import logging
 from contextlib import asynccontextmanager
 
+from dishka import AsyncContainer
+from dishka.integrations.fastapi import setup_dishka
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
@@ -10,6 +12,7 @@ from app.settings.config import settings
 
 __all__ = (
     "create_app",
+    "di_setup",
     "routers_setup",
     "middlewares_setup",
 )
@@ -76,6 +79,19 @@ def create_app(
 
     app.openapi = custom_openapi
     return app
+
+
+def di_setup(*, app: FastAPI, containers: AsyncContainer) -> None:
+    """Setup project DI."""
+    try:
+        logger.info("Start DI setup")
+
+        setup_dishka(app=app, container=containers)
+
+        logger.info("DI setup successfully done")
+    except Exception as error_:
+        logger.error(error_)
+        exit(error_)
 
 
 def routers_setup(*, app: FastAPI, endpoints: list[APIRouter]) -> None:

@@ -1,4 +1,11 @@
-from dishka import Provider, Scope, provide
+from dishka import (
+    AsyncContainer,
+    Provider,
+    Scope,
+    make_async_container,
+    provide,
+)
+from dishka.integrations.fastapi import FastapiProvider
 from fastapi import Request
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,7 +19,7 @@ from app.settings.config import settings
 from app.settings.database import async_session_maker
 from app.settings.redis_config import get_redis
 
-__all__ = ("ServiceProvider",)
+__all__ = ("container_setup",)
 
 
 class ServiceProvider(Provider):
@@ -61,3 +68,7 @@ class ServiceProvider(Provider):
     @provide(scope=Scope.APP)
     def provide_info_service(self) -> InfoServices:
         return InfoServices()
+
+
+def container_setup() -> AsyncContainer:
+    return make_async_container(ServiceProvider(), FastapiProvider())

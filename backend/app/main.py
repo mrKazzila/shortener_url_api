@@ -1,11 +1,6 @@
-from dishka import make_async_container
-from dishka.integrations.fastapi import FastapiProvider, setup_dishka
-
 from app.api import MIDDLEWARES, ROUTERS
-from app.di import ServiceProvider
-from app.settings import create_app, middlewares_setup, routers_setup
-
-container = make_async_container(ServiceProvider(), FastapiProvider())
+from app.di import container_setup
+from app.settings import create_app, di_setup, middlewares_setup, routers_setup
 
 app = create_app(
     title="ShortenerApi",
@@ -16,7 +11,6 @@ app = create_app(
     },
 )
 
-setup_dishka(container=container, app=app)
-
+di_setup(app=app, containers=container_setup())
 routers_setup(app=app, endpoints=ROUTERS)
 middlewares_setup(app=app, middlewares=MIDDLEWARES)
