@@ -28,6 +28,6 @@ PathUrlKey = Annotated[
         description="The shortened URL key",
         min_length=5,
         max_length=5,
-        example="Rlu9d",
+        example="LiNks",
     ),
 ]
