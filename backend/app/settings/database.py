@@ -33,6 +33,7 @@ def engine_factory() -> AsyncEngine | None:
     return create_async_engine(
         url=ENGINE_URL,
         # echo=True,
+        poolclass=None,
         pool_size=4,
         max_overflow=4,
         pool_timeout=5.0,
