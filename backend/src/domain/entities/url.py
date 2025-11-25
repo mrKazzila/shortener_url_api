@@ -40,13 +40,17 @@ class UrlEntity:
             raise ValidationError("Acquisition date cannot be in the future")
 
         if self.last_used < self.created_at:
-            raise ValidationError("last_used cannot be earlier than created_at")
+            raise ValidationError(
+                "last_used cannot be earlier than created_at",
+            )
 
         if len(self.key) != 5:
             raise ValidationError("Key must be exactly 5 characters long")
 
         if self.clicks_count < 0:
-            raise ValidationError("Description must be at most 1000 characters")
+            raise ValidationError(
+                "Description must be at most 1000 characters",
+            )
 
     @classmethod
     def create(

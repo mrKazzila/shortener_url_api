@@ -10,7 +10,6 @@ __all__ = ("UserPresentationMapper",)
 class UserPresentationMapper:
     @staticmethod
     def to_response(user_urls: list["UrlEntity"]) -> SUserUrls:
-
         return SUserUrls(
             count=len(user_urls),
             urls=[
@@ -24,5 +23,5 @@ class UserPresentationMapper:
                     last_used=url.last_used,
                 )
                 for url in user_urls
-            ]
+            ],
         )

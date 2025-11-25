@@ -2,23 +2,7 @@ from http import HTTPStatus
 
 from src.presentation.exceptions.base import BasePresentationError
 
-__all__ = (
-    "InvalidUrlException",
-    "UrlNotFoundException",
-)
-
-
-class InvalidUrlException(BasePresentationError):
-    def __init__(
-        self,
-        *,
-        status_code: HTTPStatus | int = HTTPStatus.BAD_REQUEST,
-    ) -> None:
-        self.status_code = status_code
-        self.detail = "Invalid url!"
-
-    def __str__(self) -> str:
-        return f"{self.status_code}. {self.detail}. "
+__all__ = ("UrlNotFoundException",)
 
 
 class UrlNotFoundException(BasePresentationError):

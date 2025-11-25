@@ -34,7 +34,9 @@ class KafkaPublisher(MessageBrokerPublisherProtocol):
 
         """
         try:
-            publish_dto: PublishUrlDTO = UrlMapper.to_publish_dto(entity) # TODO: в класс
+            publish_dto: PublishUrlDTO = UrlMapper.to_publish_dto(
+                entity,
+            )  # TODO: to class
 
             await self.broker.publish(
                 key=publish_dto.key.encode("utf-8"),
@@ -52,7 +54,9 @@ class KafkaPublisher(MessageBrokerPublisherProtocol):
         entity: UrlEntity,
     ) -> None:
         try:
-            publish_dto: PublishUrlDTO = UrlMapper.to_publish_dto(entity) # TODO: в класс
+            publish_dto: PublishUrlDTO = UrlMapper.to_publish_dto(
+                entity,
+            )  # TODO: to class
 
             await self.broker.publish(
                 key=publish_dto.key.encode("utf-8"),

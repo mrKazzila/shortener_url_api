@@ -28,13 +28,16 @@ class RedirectToOriginalUrlUseCase:
         return None
 
     async def _publish(self, *, entity: UrlEntity) -> None:
-        """Вспомогательная корутина для публикации сущности в брокер."""
         try:
-            logger.info(f'GOT FOR UPDATE: {entity.key=!r}')
+            logger.info(f"GOT FOR UPDATE: {entity.key=!r}")
             await self.publish_url_to_broker_for_update_uc(
                 entity=entity,
-                topic='update_urls',
+                topic="update_urls",
             )
-            logger.info(f'AFTER  CREATE TASK: {entity.key=!r}')
-        except Exception as exc:  # логируем ошибку, но не кидаем — публикация ненадёжна
-            logger.exception("CreateUrlUseCase._publish: failed to publish url %s: %s", entity.key, exc)
+            logger.info(f"AFTER  CREATE TASK: {entity.key=!r}")
+        except Exception as exc:
+            logger.exception(
+                "CreateUrlUseCase._publish: failed to publish url %s: %s",
+                entity.key,
+                exc,
+            )

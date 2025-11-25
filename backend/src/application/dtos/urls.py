@@ -1,8 +1,6 @@
 from dataclasses import asdict, dataclass
-from datetime import datetime
-from typing import Self, final
+from typing import Self
 from uuid import UUID
-
 
 __all__ = (
     "CreateUrlDTO",

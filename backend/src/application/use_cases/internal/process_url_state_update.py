@@ -1,6 +1,6 @@
 from collections import Counter
 from dataclasses import dataclass
-from typing import final, TYPE_CHECKING
+from typing import TYPE_CHECKING, final
 
 import structlog
 
@@ -20,6 +20,6 @@ class UpdateUrlUseCase:
         logger.info(f"GOT increments from broker: {increments}")
         async with self.uow:
             await self.uow.repository.increment_clicks_batch(
-                increments=increments
+                increments=increments,
             )
             await self.uow.commit()

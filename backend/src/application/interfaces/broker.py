@@ -12,14 +12,12 @@ class MessageBrokerPublisherProtocol(Protocol):
     @abstractmethod
     async def publish_new_url(
         self,
-        entity: UrlEntity
-    ) -> None:
-        ...
+        entity: UrlEntity,
+    ) -> None: ...
 
     @abstractmethod
     async def publish_update_url(
         self,
         entity: UrlEntity,
         topic: str | None = None,
-    ) -> None:
-        ...
+    ) -> None: ...

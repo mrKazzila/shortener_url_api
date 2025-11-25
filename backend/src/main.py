@@ -1,10 +1,9 @@
 from src.config import (
-    create_app,
     app_setup,
+    create_app,
     get_providers,
     get_settings,
 )
-
 from src.presentation.api.middleware import MIDDLEWARES
 from src.presentation.api.rest import ROUTERS
 

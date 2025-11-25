@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from typing import final, Self
+from typing import Self, final
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,7 +25,7 @@ class UnitOfWork(UnitOfWorkProtocol):
             logger.warning(
                 "Transaction rolled back due to exception: %s - %s",
                 exc_type.__name__,
-                str(exc_val)
+                str(exc_val),
             )
             await self.rollback()
         else:

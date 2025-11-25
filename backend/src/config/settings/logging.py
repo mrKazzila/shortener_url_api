@@ -21,7 +21,7 @@ def setup_logging(level: str = "INFO") -> None:
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
             structlog.processors.UnicodeDecoder(),
-            structlog.processors.JSONRenderer()
+            structlog.processors.JSONRenderer(),
         ],
         context_class=dict,
         logger_factory=structlog.stdlib.LoggerFactory(),

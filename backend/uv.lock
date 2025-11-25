@@ -213,21 +213,22 @@ pydantic = [
 
 [[package]]
 name = "fastapi"
-version = "0.102.0"
+version = "0.115.14"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
     { name = "starlette" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/6a/aa/ee69b9692d3d20b3b905dc271b8ccb7f75c46fa6a875b07c7f284110e42f/fastapi-0.102.0.tar.gz", hash = "sha256:e3652cb9bdf4df1dedda4fce9454e9f75a8c969b5cdd3faf1bd5c6f5d2daab08", size = 11146904 }
+sdist = { url = "https://files.pythonhosted.org/packages/ca/53/8c38a874844a8b0fa10dd8adf3836ac154082cf88d3f22b544e9ceea0a15/fastapi-0.115.14.tar.gz", hash = "sha256:b1de15cdc1c499a4da47914db35d0e4ef8f1ce62b624e94e0e5824421df99739", size = 296263 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a4/8b/4949ad5ff6268e2706a4cb2721af77c265326b764ced19ec80afb7eb9492/fastapi-0.102.0-py3-none-any.whl", hash = "sha256:34db27d0af54ee0d92c540e83c6ee6a11de93f63bbdf73fda54fff9a10c52569", size = 66013 },
+    { url = "https://files.pythonhosted.org/packages/53/50/b1222562c6d270fea83e9c9075b8e8600b8479150a18e4516a6138b980d1/fastapi-0.115.14-py3-none-any.whl", hash = "sha256:6c0c8bf9420bd58f565e585036d971872472b4f7d3f6c73b698e10cffdefb3ca", size = 95514 },
 ]
 
 [package.optional-dependencies]
 all = [
     { name = "email-validator" },
+    { name = "fastapi-cli", extra = ["standard"] },
     { name = "httpx" },
     { name = "itsdangerous" },
     { name = "jinja2" },
@@ -237,6 +238,25 @@ all = [
     { name = "python-multipart" },
     { name = "pyyaml" },
     { name = "ujson" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+
+[[package]]
+name = "fastapi-cli"
+version = "0.0.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "rich-toolkit" },
+    { name = "typer" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/fe/73/82a5831fbbf8ed75905bacf5b2d9d3dfd6f04d6968b29fe6f72a5ae9ceb1/fastapi_cli-0.0.7.tar.gz", hash = "sha256:02b3b65956f526412515907a0793c9094abd4bfb5457b389f645b0ea6ba3605e", size = 16753 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a1/e6/5daefc851b514ce2287d8f5d358ae4341089185f78f3217a69d0ce3a390c/fastapi_cli-0.0.7-py3-none-any.whl", hash = "sha256:d549368ff584b2804336c61f192d86ddea080c11255f375959627911944804f4", size = 10705 },
+]
+
+[package.optional-dependencies]
+standard = [
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -843,6 +863,20 @@ wheels = [
 ]
 
 [[package]]
+name = "rich-toolkit"
+version = "0.16.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "rich" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/83/8e/ab512afd71d4e67bb611a57db92a0e967304c97ec61963e99103f5a88069/rich_toolkit-0.16.0.tar.gz", hash = "sha256:2f554b00b194776639f4d80f2706980756b659ceed9f345ebbd9de77d1bdd0f4", size = 183790 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3a/04/f4bfb5d8a258d395d7fb6fbaa0e3fe7bafae17a2a3e2387e6dea9d6474df/rich_toolkit-0.16.0-py3-none-any.whl", hash = "sha256:3f4307f678c5c1e22c36d89ac05f1cd145ed7174f19c1ce5a4d3664ba77c0f9e", size = 29775 },
+]
+
+[[package]]
 name = "ruff"
 version = "0.8.6"
 source = { registry = "https://pypi.org/simple" }
@@ -936,13 +970,18 @@ dev = [
     { name = "ruff" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "ruff" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "alembic", specifier = "~=1.11.1" },
     { name = "asyncpg", specifier = "~=0.28.0" },
     { name = "coverage", marker = "extra == 'dev'", specifier = "~=7.3.0" },
     { name = "dishka", specifier = "~=1.5.2" },
-    { name = "fastapi", extras = ["all"], specifier = "~=0.102.0" },
+    { name = "fastapi", extras = ["all"], specifier = ">=0.104.1" },
     { name = "faststream", extras = ["cli", "kafka"], specifier = ">=0.6.3" },
     { name = "greenlet", specifier = "~=3.0.3" },
     { name = "gunicorn", specifier = "~=20.1.0" },
@@ -962,6 +1001,9 @@ requires-dist = [
     { name = "validators", specifier = "~=0.20.0" },
 ]
 provides-extras = ["dev"]
+
+[package.metadata.requires-dev]
+dev = [{ name = "ruff", specifier = ">=0.8.6" }]
 
 [[package]]
 name = "sniffio"
@@ -1011,14 +1053,14 @@ wheels = [
 
 [[package]]
 name = "starlette"
-version = "0.27.0"
+version = "0.46.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/06/68/559bed5484e746f1ab2ebbe22312f2c25ec62e4b534916d41a8c21147bf8/starlette-0.27.0.tar.gz", hash = "sha256:6a6b0d042acb8d469a01eba54e9cda6cbd24ac602c4cd016723117d6a7e73b75", size = 51394 }
+sdist = { url = "https://files.pythonhosted.org/packages/ce/20/08dfcd9c983f6a6f4a1000d934b9e6d626cff8d2eeb77a89a68eef20a2b7/starlette-0.46.2.tar.gz", hash = "sha256:7f7361f34eed179294600af672f565727419830b54b7b084efe44bb82d2fccd5", size = 2580846 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/58/f8/e2cca22387965584a409795913b774235752be4176d276714e15e1a58884/starlette-0.27.0-py3-none-any.whl", hash = "sha256:918416370e846586541235ccd38a474c08b80443ed31c578a418e2209b3eef91", size = 66978 },
+    { url = "https://files.pythonhosted.org/packages/8b/0c/9d30a4ebeb6db2b25a841afbb80f6ef9a854fc3b41be131d249a977b4959/starlette-0.46.2-py3-none-any.whl", hash = "sha256:595633ce89f8ffa71a015caed34a5b2dc1c0cdb3f0f1fbd1e69339cf2abeec35", size = 72037 },
 ]
 
 [[package]]

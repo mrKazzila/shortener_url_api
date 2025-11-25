@@ -1,4 +1,5 @@
 from typing import final
+
 from src.domain.exceptions.base import BaseDomainError
 
 

@@ -16,9 +16,8 @@ class PublishUrlToBrokerForUpdateUseCase:
 
     async def __call__(self, *, entity: UrlEntity, topic: str) -> None:
         try:
-            logger.info(f'Gotten update for {entity=!r} {topic=!r}')
+            logger.info(f"Gotten update for {entity=!r} {topic=!r}")
 
-            # message_broker обязан уметь принять доменную сущность
             await self.message_broker.publish_update_url(
                 entity=entity,
                 topic=topic,

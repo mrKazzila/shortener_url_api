@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Protocol
 
-from src.application.dtos.urls import DBUrlDTO, CreatedUrlDTO, PublishUrlDTO
+from src.application.dtos.urls import CreatedUrlDTO, DBUrlDTO
 from src.domain.entities.url import UrlEntity
 
 

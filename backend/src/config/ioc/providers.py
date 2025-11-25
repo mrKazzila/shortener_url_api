@@ -2,8 +2,7 @@ from collections.abc import AsyncIterator
 
 import redis.asyncio as redis
 import structlog
-from dishka import FromDishka
-from dishka import Provider, Scope, provide
+from dishka import FromDishka, Provider, Scope, provide
 from fastapi import Request
 from faststream.kafka import KafkaBroker
 from sqlalchemy.ext.asyncio import (
@@ -17,13 +16,27 @@ from src.application.interfaces.cache import CacheProtocol
 from src.application.interfaces.uow import UnitOfWorkProtocol
 from src.application.use_cases.create_short_url import CreateUrlUseCase
 from src.application.use_cases.get_user_urls import GetUserUrlsUseCase
-from src.application.use_cases.internal.add_new_url_to_cache import AddNewUrlToCacheUseCase
-from src.application.use_cases.internal.check_key_in_cashe import CheckKeyInCacheUseCase
-from src.application.use_cases.internal.create_uniq_key_in_cache import CreateUniqKeyInCacheUseCase
-from src.application.use_cases.internal.get_target_url_by_key import GetTargetByKeyUseCase
-from src.application.use_cases.internal.publish_data_to_broker import PublishUrlToBrokerUseCase
-from src.application.use_cases.internal.publish_to_broker_for_update import PublishUrlToBrokerForUpdateUseCase
-from src.application.use_cases.redirect_to_original_url import RedirectToOriginalUrlUseCase
+from src.application.use_cases.internal.add_new_url_to_cache import (
+    AddNewUrlToCacheUseCase,
+)
+from src.application.use_cases.internal.check_key_in_cashe import (
+    CheckKeyInCacheUseCase,
+)
+from src.application.use_cases.internal.create_uniq_key_in_cache import (
+    CreateUniqKeyInCacheUseCase,
+)
+from src.application.use_cases.internal.get_target_url_by_key import (
+    GetTargetByKeyUseCase,
+)
+from src.application.use_cases.internal.publish_data_to_broker import (
+    PublishUrlToBrokerUseCase,
+)
+from src.application.use_cases.internal.publish_to_broker_for_update import (
+    PublishUrlToBrokerForUpdateUseCase,
+)
+from src.application.use_cases.redirect_to_original_url import (
+    RedirectToOriginalUrlUseCase,
+)
 from src.config.settings import Settings
 from src.domain.services.key_generator import RandomKeyGenerator
 from src.infrastructures.broker.publisher import KafkaPublisher
@@ -32,9 +45,7 @@ from src.infrastructures.db.repository import SQLAlchemyRepository
 from src.infrastructures.db.session import engine_factory, get_session_factory
 from src.infrastructures.db.uow import UnitOfWork
 
-__all__ = (
-    "PROVIDERS",
-)
+__all__ = ("PROVIDERS",)
 
 logger = structlog.get_logger(__name__)
 
@@ -103,7 +114,7 @@ class BrokerProvider(Provider):
             logger.info(
                 "Kafka broker started successfully",
                 url=settings.broker_url,
-                queue=settings.broker_new_artifact_queue
+                queue=settings.broker_new_artifact_queue,
             )
             yield broker
         except Exception as e:
@@ -229,7 +240,7 @@ class CacheProvider(Provider):
 
         try:
             await redis_client.ping()
-        except Exception as e:
+        except Exception:
             raise
 
         try:
@@ -332,7 +343,7 @@ class UseCaseProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def get_user_urls_use_case(
         self,
-        uow: UnitOfWorkProtocol
+        uow: UnitOfWorkProtocol,
     ) -> GetUserUrlsUseCase:
         """
         Provides a ProcessArtifactUseCase instance.

@@ -10,17 +10,19 @@ from sqlalchemy.ext.asyncio import (
 
 from src.application.interfaces.broker import MessageBrokerPublisherProtocol
 from src.application.interfaces.uow import UnitOfWorkProtocol
-from src.application.use_cases.internal.process_new_url import ProcessNewUrlUseCase
-from src.application.use_cases.internal.process_url_state_update import UpdateUrlUseCase
+from src.application.use_cases.internal.process_new_url import (
+    ProcessNewUrlUseCase,
+)
+from src.application.use_cases.internal.process_url_state_update import (
+    UpdateUrlUseCase,
+)
 from src.config.settings import Settings
 from src.infrastructures.broker.publisher import KafkaPublisher
 from src.infrastructures.db.repository import SQLAlchemyRepository
 from src.infrastructures.db.session import engine_factory, get_session_factory
 from src.infrastructures.db.uow import UnitOfWork
 
-__all__ = (
-    "CONSUMER_PROVIDERS",
-)
+__all__ = ("CONSUMER_PROVIDERS",)
 
 logger = structlog.get_logger(__name__)
 
@@ -58,7 +60,7 @@ class BrokerProvider(Provider):
             logger.info(
                 "Kafka broker started successfully",
                 url=settings.broker_url,
-                queue=settings.broker_new_artifact_queue
+                queue=settings.broker_new_artifact_queue,
             )
             yield broker
         except Exception as e:

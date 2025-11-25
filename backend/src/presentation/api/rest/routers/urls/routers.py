@@ -12,7 +12,10 @@ from src.application.use_cases import (
     RedirectToOriginalUrlUseCase,
 )
 from src.presentation._mappers.url_mapper import UrlPresentationMapper
-from src.presentation.api.rest.routers.urls._types import PathUrlKey, QueryLongUrl
+from src.presentation.api.rest.routers.urls._types import (
+    PathUrlKey,
+    QueryLongUrl,
+)
 from src.presentation.api.rest.schemas.urls import SUrlResponse
 
 logger = logging.getLogger(__name__)
@@ -41,7 +44,7 @@ async def create_short_url(
             target_url=url,
             # user_id=UUID(header.x_user_id),
             user_id=UUID("3b0e3fe7-e753-4e14-9ff4-0a200c2cbdcf"),
-        )
+        ),
     )
 
     return UrlPresentationMapper.to_response(dto=created_dto)

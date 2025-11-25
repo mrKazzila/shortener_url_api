@@ -42,7 +42,7 @@ async def get_user_urls(
                 offset=0,
                 skip=0,
             ),
-        )
+        ),
     )
 
     return UserPresentationMapper.to_response(user_urls=user_urls)

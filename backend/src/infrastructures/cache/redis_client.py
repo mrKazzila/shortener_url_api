@@ -30,13 +30,20 @@ class RedisCacheClient(CacheProtocol):
             logger.error("Redis get operation failed", key=key, error=str(e))
             return None
 
-    async def set(self, key: str, value: dict[str, Any] | str, ttl: int | None = None) -> bool:
+    async def set(
+        self,
+        key: str,
+        value: dict[str, Any] | str,
+        ttl: int | None = None,
+    ) -> bool:
         """
         Set a key-value pair. Supports dict (serialized to JSON) or str.
         TTL can be overridden per call.
         """
         try:
-            serialized = json.dumps(value) if isinstance(value, dict) else str(value)
+            serialized = (
+                json.dumps(value) if isinstance(value, dict) else str(value)
+            )
             expire = ttl or self.ttl
             if expire:
                 await self.client.setex(key, expire, serialized)
@@ -44,7 +51,12 @@ class RedisCacheClient(CacheProtocol):
                 await self.client.set(key, serialized)
             return True
         except (redis.exceptions.RedisError, TypeError, ValueError) as e:
-            logger.error("Redis set operation failed", key=key, value=value, error=str(e))
+            logger.error(
+                "Redis set operation failed",
+                key=key,
+                value=value,
+                error=str(e),
+            )
             return False
 
     async def exists(self, key: str) -> bool:
@@ -52,7 +64,11 @@ class RedisCacheClient(CacheProtocol):
         try:
             return bool(await self.client.exists(key))
         except redis.exceptions.RedisError as e:
-            logger.error("Redis exists operation failed", key=key, error=str(e))
+            logger.error(
+                "Redis exists operation failed",
+                key=key,
+                error=str(e),
+            )
             return False
 
     async def delete(self, key: str) -> bool:
@@ -60,7 +76,11 @@ class RedisCacheClient(CacheProtocol):
         try:
             return bool(await self.client.delete(key))
         except redis.exceptions.RedisError as e:
-            logger.error("Redis delete operation failed", key=key, error=str(e))
+            logger.error(
+                "Redis delete operation failed",
+                key=key,
+                error=str(e),
+            )
             return False
 
     async def clear(self, pattern: str) -> int:
@@ -69,11 +89,19 @@ class RedisCacheClient(CacheProtocol):
             keys = [key async for key in self.client.scan_iter(match=pattern)]
             if keys:
                 deleted_count = await self.client.delete(*keys)
-                logger.info("Cleared keys matching pattern", pattern=pattern, count=deleted_count)
+                logger.info(
+                    "Cleared keys matching pattern",
+                    pattern=pattern,
+                    count=deleted_count,
+                )
                 return deleted_count
             return 0
         except redis.exceptions.RedisError as e:
-            logger.error("Redis clear operation failed", pattern=pattern, error=str(e))
+            logger.error(
+                "Redis clear operation failed",
+                pattern=pattern,
+                error=str(e),
+            )
             return 0
 
     async def close(self) -> None:

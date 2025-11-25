@@ -2,7 +2,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from dishka import AsyncContainer, Provider, make_async_container
-from dishka.integrations.fastapi import setup_dishka, FastapiProvider
+from dishka.integrations.fastapi import FastapiProvider, setup_dishka
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi

@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING, final
 from src.application._mappers.url_mapper import UrlMapper
 
 if TYPE_CHECKING:
-    from src.domain.entities.url import UrlEntity
     from src.application.interfaces.cache import CacheProtocol
+    from src.domain.entities.url import UrlEntity
 
 __all__ = ("AddNewUrlToCacheUseCase",)
 

@@ -1,6 +1,6 @@
 from functools import lru_cache
-from src.config.settings.base import Settings
 
+from src.config.settings.base import Settings
 
 __all__ = ("get_settings",)
 
