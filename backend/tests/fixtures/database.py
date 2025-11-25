@@ -1,8 +1,8 @@
 import pytest
 
-from app.models import Base
-from app.settings.config import settings
-from app.settings.database import engine_factory
+from infrastructures.db.models import Base
+from src.config.settings import settings
+from infrastructures.db.session import engine_factory
 
 
 @pytest.fixture(scope="session", autouse=True)

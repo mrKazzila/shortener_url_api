@@ -1,0 +1,40 @@
+import asyncio
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, final
+
+import structlog
+
+from src.domain.entities.url import UrlEntity
+
+if TYPE_CHECKING:
+    from src.application.use_cases.internal import GetTargetByKeyUseCase
+    from src.application.use_cases.internal.publish_to_broker_for_update import (
+        PublishUrlToBrokerForUpdateUseCase,
+    )
+
+logger = structlog.get_logger(__name__)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class RedirectToOriginalUrlUseCase:
+    get_target_url_by_key_uc: "GetTargetByKeyUseCase"
+    publish_url_to_broker_for_update_uc: "PublishUrlToBrokerForUpdateUseCase"
+
+    async def execute(self, key: str) -> str | None:
+        if entity := await self.get_target_url_by_key_uc.execute(key=key):
+            asyncio.create_task(self._publish(entity=entity))
+            return entity.target_url
+        return None
+
+    async def _publish(self, *, entity: UrlEntity) -> None:
+        """Вспомогательная корутина для публикации сущности в брокер."""
+        try:
+            logger.info(f'GOT FOR UPDATE: {entity.key=!r}')
+            await self.publish_url_to_broker_for_update_uc(
+                entity=entity,
+                topic='update_urls',
+            )
+            logger.info(f'AFTER  CREATE TASK: {entity.key=!r}')
+        except Exception as exc:  # логируем ошибку, но не кидаем — публикация ненадёжна
+            logger.exception("CreateUrlUseCase._publish: failed to publish url %s: %s", entity.key, exc)

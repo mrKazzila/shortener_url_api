@@ -16,7 +16,7 @@ PY
 case "${MODE:-DEV}" in
   "DEV")
     echo "Running uvicorn in DEV mode (workers=4)"
-    exec python -m uvicorn app.main:app \
+    exec python -m uvicorn src.main:app \
       --workers 4 \
       --host "$HOST" \
       --port "$PORT" \
@@ -25,13 +25,12 @@ case "${MODE:-DEV}" in
       --no-use-colors \
       --no-access-log \
       --timeout-keep-alive 5 \
-      --backlog 2048 \
-      --log-config ./app/settings/logger_config.yaml
+      --backlog 2048
     ;;
 
   "PROD")
     echo "Running gunicorn in PROD mode (workers=$WORKERS)"
-    exec python -m gunicorn app.main:app \
+    exec python -m gunicorn src.main:app \
       --worker-class uvicorn.workers.UvicornWorker \
       --workers "$WORKERS" \
       --bind "$HOST:$PORT" \

@@ -6,10 +6,10 @@ from dishka import make_async_container
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession
 
-from app.di import ServiceProvider
-from app.main import app as fastapi_app
-from app.service_layer.unit_of_work import ABCUnitOfWork, UnitOfWork
-from app.settings.database import async_session_maker
+from src.di import ServiceProvider
+from src.main import app as fastapi_app
+from src.z_old_service_layer.unit_of_work import ABCUnitOfWork, UnitOfWork
+from infrastructures.db.session import async_session_maker
 
 
 @pytest.fixture(scope="session")
