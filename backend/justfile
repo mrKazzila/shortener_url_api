@@ -1,127 +1,169 @@
-# ===== Base variables =====
+# =====================
+# Base variables
+# =====================
 PROJECT_NAME := "shortener_url"
 DC := "docker-compose"
 DC_FILE := "docker-compose.yaml"
 ENV_FILE := "env/.env"
 
 
-# ===== Help =====
+# =====================
+# Help (automatic)
+# =====================
+# Show available commands
 help:
-    @echo "Available commands:"
-    @echo ""
-    @echo "Environment Management:"
-    @echo "  set_docker_env               - Configure environment for Docker (postgres:5432)"
-    @echo "  set_local_env                - Configure environment for localhost (localhost:5433)"
-    @echo ""
-    @echo "Docker automation:"
-    @echo "  up            - Start required containers (postgres + redis)"
-    @echo "  redis-cli     - Connect to Redis CLI"
-    @echo "  migrate-up    - Apply database migrations"
-    @echo "  migrate-down  - Rollback last migration"
-    @echo "  start-app     - Start application container"
-    @echo "  full-up       - Complete startup (containers + migrations + app)"
-    @echo "  down          - Stop all containers"
-    @echo ""
-    @echo "Migration workflow:"
-    @echo "  1. just up          # Start database and redis"
-    @echo "  2. just migrate-up  # Apply migrations"
-    @echo "  3. just start-app   # Start application"
-    @echo "  OR use 'just full-up' for all steps"
-    @echo ""
-    @echo "Linters & Formatters:"
-    @echo "  lint                         - Run code linters and formatters"
-    @echo ""
-    @echo "Alembic migrations:"
-    @echo "  make_migrate NAME            - Create new migration with autogenerate"
-    @echo "  make_migrate_docker NAME     - Create migration for Docker environment"
-    @echo "  make_migrate_local NAME      - Create migration for local environment"
-    @echo "  make_downgrade NAME          - Downgrade migration to specific revision"
-    @echo ""
-    @echo "Run 'just COMMAND --help' for more information on a command."
+    @just --list
 
 
-# ===== Environment Management =====
-set_docker_env:
-    @sed -i '' 's/^DB_HOST=.*/DB_HOST=postgres/' env/.env
-    @sed -i '' 's/^DB_PORT=.*/DB_PORT=5432/' env/.env
-    @sed -i '' 's/^REDIS_HOST=.*/REDIS_HOST=redis/' env/.env
-    @echo "Environment set for DOCKER (postgres:5432, redis:6379)"
+# =====================
+# Environment Management
+# =====================
 
+# Configures the local environment (DB localhost:5433)
 set_local_env:
     @sed -i '' 's/^DB_HOST=.*/DB_HOST=localhost/' env/.env
     @sed -i '' 's/^DB_PORT=.*/DB_PORT=5433/' env/.env
     @sed -i '' 's/^REDIS_HOST=.*/REDIS_HOST=localhost/' env/.env
-    @echo "Environment set for LOCAL (localhost:5433, localhost:6379)"
+    @echo "Environment set for LOCAL"
 
+# Creates a requirements.txt file for dev
 freeze-dev:
-    @echo "Generating requirements.txt for development..."
+    @echo "Generating requirements.txt (dev)..."
     uv pip compile pyproject.toml --extra dev -o requirements.txt
-    @echo "requirements.txt generated for development."
 
+# Creates a requirements.txt file for production
 freeze-prod:
-    @echo "Generating requirements.txt for production..."
+    @echo "Generating requirements.txt (prod)..."
     uv pip compile pyproject.toml -o requirements.txt
-    @echo "requirements.txt generated for production."
 
+# Deletes requirements.txt
 rm-requirements:
     @echo "Remove requirements.txt..."
     rm requirements.txt
 
-# ===== Docker automation =====
+
+# =====================
+# Docker environment
+# =====================
+
+# Configures environment variables for Docker
+set_docker_env:
+    @sed -i '' 's/^DB_HOST=.*/DB_HOST=postgres/' env/.env
+    @sed -i '' 's/^DB_PORT=.*/DB_PORT=5432/' env/.env
+    @sed -i '' 's/^REDIS_HOST=.*/REDIS_HOST=redis/' env/.env
+    @echo "Environment set for DOCKER"
+
+# Puts up containers kafka + postgres + redis
 up:
-    @echo "Starting containers (postgres + redis)..."
-    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} up -d --build postgres redis
-    @echo "Containers started. Run migrations manually with 'just migrate-up'"
+    @echo "Starting containers..."
+    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} up -d --build kafka kafka-ui postgres redis
+    @echo "Containers started"
 
+# Stops containers and cleans volume
 down:
-    @echo "Stop the url api Docker container ..."
+    @echo "Stopping containers..."
     {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} down -v
-    @echo "Success down!"
+    @echo "Containers stopped"
 
-redis-cli:
-    @echo "Connecting to Redis CLI..."
-    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} exec redis redis-cli
 
+# =====================
+# Kafka topics
+# =====================
+
+# Creates Kafka topics with the specified number of partitions
+create_kafka_topics ARG:
+    @echo "Creating Kafka topics with {{ARG}} partitions..."
+    @docker exec kafka /opt/kafka/bin/kafka-topics.sh \
+        --bootstrap-server kafka:9092 \
+        --create --topic new_urls --partitions {{ARG}} --replication-factor 1 || true
+    @docker exec kafka /opt/kafka/bin/kafka-topics.sh \
+        --bootstrap-server kafka:9092 \
+        --create --topic update_urls --partitions {{ARG}} --replication-factor 1 || true
+    @echo "Kafka topics created."
+
+
+# =====================
+# Database migrations
+# =====================
+
+# Applies alembic migrations (upgrade head)
 migrate-up:
     @echo "Running migrations..."
     {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} run --rm fastapi python -m alembic upgrade head
-    @echo "Migrations completed"
 
+# Rolls back migration by one step
 migrate-down:
     @echo "Downgrading migrations..."
     {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} run --rm fastapi python -m alembic downgrade -1
-    @echo "Migrations downgraded"
 
+
+# =====================
+# Application
+# =====================
+
+# Runs the fastapi application in docker
 start-app:
-    @echo "Starting application..."
+    @echo "Starting app..."
     {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} up -d fastapi
-    @echo "Application started"
-
-full-up: freeze-dev up migrate-up start-app rm-requirements
-    @echo "Full startup completed (containers + migrations + app)"
 
 
+# =====================
+# Consumers
+# =====================
 
-# ===== Setup automation =====
+# Scaling consumer and consumer_update
+scale-consumers ARG:
+    @echo "Scaling consumers to {{ARG}} replicas..."
+    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} up -d \
+        --scale consumer={{ARG}} \
+        --scale consumer_update={{ARG}}
+    @echo "Consumers scaled."
 
 
-# ===== Linters & Formatter automation =====
+# =====================
+# Full startup
+# =====================
+
+# Full launch: env + deps + containers + themes + migrations + scaling + application
+full-up partitions replicas:
+    @echo "Running full-up..."
+    @just set_docker_env
+    @just freeze-dev
+    @just up
+    @just migrate-up
+    @just create_kafka_topics {{partitions}}
+    @just scale-consumers {{replicas}}
+    @just start-app
+    @just rm-requirements
+    @echo "Full startup completed."
+
+
+# =====================
+# Linters
+# =====================
+
+# Runs ruff (lint + format)
 lint:
-    @echo "Start linters ..."
+    @echo "Running linters..."
     - ruff check --fix --silent .
     - ruff format --silent .
-    @echo "Linters done!"
 
 
-# ===== Alembic migrations =====
+# =====================
+# Alembic: migrations creation
+# =====================
+
+# Create migration with autogeneration
 make_migrate ARG:
-    @echo "Make alembic revision with name: {{ARG}}"
+    @echo "Create alembic revision: {{ARG}}"
     @alembic revision --autogenerate -m {{ARG}}
 
+# Creates migration in the local environment
 make_migrate_local ARG:
     @just set_local_env
     @just make_migrate {{ARG}}
 
+# Rolls back to the specified revision locally
 make_downgrade_local ARG:
     @just set_local_env
     @just make_downgrade {{ARG}}
