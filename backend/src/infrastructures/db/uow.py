@@ -1,3 +1,5 @@
+__all__ = ("UnitOfWork",)
+
 import logging
 from dataclasses import dataclass
 from typing import Self, final

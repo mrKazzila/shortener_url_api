@@ -106,6 +106,10 @@ start-app:
     @echo "Starting app..."
     {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} up -d fastapi
 
+# Redis CLI
+redis-cli:
+    @echo "Connecting to Redis CLI..."
+    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} exec redis redis-cli
 
 # =====================
 # Consumers

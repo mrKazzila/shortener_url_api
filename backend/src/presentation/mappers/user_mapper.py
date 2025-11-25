@@ -1,12 +1,14 @@
+__all__ = ("UserPresentationMapper",)
+
+from dataclasses import dataclass
 from typing import final
 
 from src.domain.entities.url import UrlEntity
-from src.presentation.api.rest.schemas.users import SUserUrl, SUserUrls
-
-__all__ = ("UserPresentationMapper",)
+from src.presentation.api.schemas.users import SUserUrl, SUserUrls
 
 
 @final
+@dataclass(frozen=True, slots=True)
 class UserPresentationMapper:
     @staticmethod
     def to_response(user_urls: list["UrlEntity"]) -> SUserUrls:

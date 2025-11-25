@@ -1,3 +1,6 @@
+__all__ = ("RedirectToOriginalUrlUseCase",)
+
+
 import asyncio
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, final
@@ -7,8 +10,8 @@ import structlog
 from src.domain.entities.url import UrlEntity
 
 if TYPE_CHECKING:
-    from src.application.use_cases.internal import GetTargetByKeyUseCase
-    from src.application.use_cases.internal.publish_to_broker_for_update import (
+    from src.application.use_cases.internal import (
+        GetTargetByKeyUseCase,
         PublishUrlToBrokerForUpdateUseCase,
     )
 

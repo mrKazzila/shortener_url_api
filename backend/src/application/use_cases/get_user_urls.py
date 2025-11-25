@@ -1,3 +1,5 @@
+__all__ = ("GetUserUrlsUseCase",)
+
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, final
 
@@ -6,8 +8,6 @@ from src.application.dtos.users import GetUserUrlsDTO
 if TYPE_CHECKING:
     from src.application.interfaces.uow import UnitOfWorkProtocol
     from src.domain.entities.url import UrlEntity
-
-__all__ = ("GetUserUrlsUseCase",)
 
 
 @final

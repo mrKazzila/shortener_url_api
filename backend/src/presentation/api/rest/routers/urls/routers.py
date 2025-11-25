@@ -1,3 +1,5 @@
+__all__ = ("router",)
+
 import logging
 from uuid import UUID
 
@@ -11,16 +13,16 @@ from src.application.use_cases import (
     CreateUrlUseCase,
     RedirectToOriginalUrlUseCase,
 )
-from src.presentation._mappers.url_mapper import UrlPresentationMapper
 from src.presentation.api.rest.routers.urls._types import (
     PathUrlKey,
     QueryLongUrl,
 )
-from src.presentation.api.rest.schemas.urls import SUrlResponse
+from src.presentation.api.schemas.urls import SUrlResponse
+from src.presentation.exceptions.urls import UrlNotFoundException
+from src.presentation.mappers.url_mapper import UrlPresentationMapper
 
 logger = logging.getLogger(__name__)
 
-__all__ = ("router",)
 
 router: APIRouter = APIRouter(
     tags=["urls"],
@@ -37,6 +39,7 @@ async def create_short_url(
     url: QueryLongUrl,
     # header: FromDishka[XUserHeaderDTO],
     use_case: FromDishka[CreateUrlUseCase],
+    mapper: FromDishka[UrlPresentationMapper],
 ) -> SUrlResponse:
     """Creates a shortened URL."""
     created_dto = await use_case.execute(
@@ -47,7 +50,7 @@ async def create_short_url(
         ),
     )
 
-    return UrlPresentationMapper.to_response(dto=created_dto)
+    return mapper.to_response(dto=created_dto)
 
 
 @router.get(
@@ -66,4 +69,4 @@ async def redirect_to_target_url(
             status_code=status.HTTP_307_TEMPORARY_REDIRECT,
         )
 
-    raise Exception("URL not found")
+    raise UrlNotFoundException(url_key=url_key)

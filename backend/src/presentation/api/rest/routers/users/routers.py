@@ -10,8 +10,8 @@ from src.application.dtos.users import (
     PaginationDTO,
 )
 from src.application.use_cases import GetUserUrlsUseCase
-from src.presentation._mappers.user_mapper import UserPresentationMapper
-from src.presentation.api.rest.schemas.users import SUserUrls
+from src.presentation.api.schemas.users import SUserUrls
+from src.presentation.mappers.user_mapper import UserPresentationMapper
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +31,7 @@ router: APIRouter = APIRouter(
 async def get_user_urls(
     # header: FromDishka[XUserHeaderDTO],
     use_case: FromDishka[GetUserUrlsUseCase],
+    mapper: FromDishka[UserPresentationMapper],
 ) -> SUserUrls:
     """Get all user urls."""
     user_urls = await use_case.execute(
@@ -45,4 +46,4 @@ async def get_user_urls(
         ),
     )
 
-    return UserPresentationMapper.to_response(user_urls=user_urls)
+    return mapper.to_response(user_urls=user_urls)

@@ -1,3 +1,5 @@
+__all__ = ("CONSUMER_PROVIDERS",)
+
 from collections.abc import AsyncIterator
 
 import structlog
@@ -8,21 +10,25 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
 )
 
-from src.application.interfaces.broker import MessageBrokerPublisherProtocol
-from src.application.interfaces.uow import UnitOfWorkProtocol
-from src.application.use_cases.internal.process_new_url import (
-    ProcessNewUrlUseCase,
+from src.application.interfaces import (
+    MessageBrokerPublisherProtocol,
+    RepositoryProtocol,
+    UnitOfWorkProtocol,
 )
-from src.application.use_cases.internal.process_url_state_update import (
+from src.application.mappers import UrlMapper
+from src.application.use_cases.internal import (
+    ProcessNewUrlUseCase,
     UpdateUrlUseCase,
 )
 from src.config.settings import Settings
-from src.infrastructures.broker.publisher import KafkaPublisher
-from src.infrastructures.db.repository import SQLAlchemyRepository
-from src.infrastructures.db.session import engine_factory, get_session_factory
-from src.infrastructures.db.uow import UnitOfWork
-
-__all__ = ("CONSUMER_PROVIDERS",)
+from src.infrastructures.broker import KafkaPublisher
+from src.infrastructures.db import (
+    SQLAlchemyRepository,
+    UnitOfWork,
+    engine_factory,
+    get_session_factory,
+)
+from src.infrastructures.mappers import UrlDBMapper
 
 logger = structlog.get_logger(__name__)
 
@@ -106,20 +112,38 @@ class DatabaseProvider(Provider):
             yield session
 
 
+class MapperProvider(Provider):
+    """
+    Provides various mapper implementations for different layers.
+    """
+
+    @provide(scope=Scope.APP)
+    def get_url_mapper(self) -> UrlMapper:
+        return UrlMapper()
+
+    @provide(scope=Scope.APP)
+    def get_db_mapper(self) -> UrlDBMapper:
+        return UrlDBMapper()
+
+
 class RepositoryProvider(Provider):
     """
     Provides repository implementations.
     """
 
     @provide(scope=Scope.APP)
-    def get_artifact_repository(
+    def get_repository(
         self,
         session: AsyncSession,
-    ) -> SQLAlchemyRepository:
+        mapper: UrlDBMapper,
+    ) -> RepositoryProtocol:
         """
         Provides an ArtifactRepositoryProtocol implementation.
         """
-        return SQLAlchemyRepository(session=session)
+        return SQLAlchemyRepository(
+            session=session,
+            mapper=mapper,
+        )
 
 
 class UnitOfWorkProvider(Provider):
@@ -131,7 +155,7 @@ class UnitOfWorkProvider(Provider):
     def get_unit_of_work(
         self,
         session: AsyncSession,
-        repository: SQLAlchemyRepository,
+        repository: RepositoryProtocol,
     ) -> UnitOfWorkProtocol:
         """
         Provides a UnitOfWorkProtocol implementation.
@@ -151,11 +175,15 @@ class ServiceProvider(Provider):
     def get_message_broker(
         self,
         broker: KafkaBroker,
+        mapper: UrlMapper,
     ) -> MessageBrokerPublisherProtocol:
         """
         Provides a MessageBrokerPublisherProtocol implementation.
         """
-        return KafkaPublisher(broker=broker)
+        return KafkaPublisher(
+            broker=broker,
+            mapper=mapper,
+        )
 
 
 class UseCaseProvider(Provider):
@@ -187,6 +215,7 @@ class UseCaseProvider(Provider):
 CONSUMER_PROVIDERS: list[Provider] = [
     BrokerProvider(),
     DatabaseProvider(),
+    MapperProvider(),
     RepositoryProvider(),
     ServiceProvider(),
     SettingsProvider(),

@@ -1,3 +1,5 @@
+__all__ = ("PublishUrlToBrokerForUpdateUseCase",)
+
 from dataclasses import dataclass
 from typing import final
 
@@ -14,7 +16,12 @@ logger = structlog.get_logger(__name__)
 class PublishUrlToBrokerForUpdateUseCase:
     message_broker: MessageBrokerPublisherProtocol
 
-    async def __call__(self, *, entity: UrlEntity, topic: str) -> None:
+    async def __call__(
+        self,
+        *,
+        entity: UrlEntity,
+        topic: str,
+    ) -> None:
         try:
             logger.info(f"Gotten update for {entity=!r} {topic=!r}")
 

@@ -1,13 +1,14 @@
+__all__ = ("PublishUrlToBrokerUseCase",)
+
 import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, final
-
-from src.domain.entities.url import UrlEntity
 
 if TYPE_CHECKING:
     from src.application.interfaces.broker import (
         MessageBrokerPublisherProtocol,
     )
+    from src.domain.entities.url import UrlEntity
 
 logger = logging.getLogger(__name__)
 
@@ -15,14 +16,9 @@ logger = logging.getLogger(__name__)
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class PublishUrlToBrokerUseCase:
-    """
-    Use-case отвечает только за то, чтобы передать доменную сущность брокеру.
-    Сериализация, формирование payload и протоколы — ответственность инфраструктуры.
-    """
-
     message_broker: "MessageBrokerPublisherProtocol"
 
-    async def execute(self, *, entity: UrlEntity) -> None:
+    async def execute(self, *, entity: "UrlEntity") -> None:
         logger.info("PublishUrlToBrokerUseCase: received entity %r", entity)
 
         try:

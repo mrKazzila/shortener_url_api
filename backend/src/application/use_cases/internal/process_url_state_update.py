@@ -1,3 +1,5 @@
+__all__ = ("UpdateUrlUseCase",)
+
 from collections import Counter
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, final
@@ -8,7 +10,6 @@ if TYPE_CHECKING:
     from src.application.interfaces.uow import UnitOfWorkProtocol
 
 logger = structlog.get_logger(__name__)
-__all__ = ("UpdateUrlUseCase",)
 
 
 @final

@@ -1,10 +1,10 @@
+__all__ = ("CheckKeyInCacheUseCase",)
+
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, final
 
 if TYPE_CHECKING:
     from src.application.interfaces.cache import CacheProtocol
-
-__all__ = ("CheckKeyInCacheUseCase",)
 
 
 @final

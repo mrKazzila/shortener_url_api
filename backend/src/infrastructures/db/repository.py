@@ -1,26 +1,31 @@
+__all__ = ("SQLAlchemyRepository",)
+
 from collections import Counter
+from dataclasses import dataclass
 from datetime import datetime
-from typing import TypeVar
+from typing import TypeVar, final
 from uuid import UUID
 
+import structlog
 from sqlalchemy import func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.interfaces.repository import RepositoryProtocol
 from src.domain.entities import UrlEntity
-from src.infrastructures._mappers.url_db_mapper import UrlDBMapper
-from src.infrastructures.db.models import Urls
+from src.infrastructures.db.models.urls import Urls
+from src.infrastructures.mappers.url_db_mapper import UrlDBMapper
 
 ModelType = TypeVar("ModelType", bound=Urls)
 
+logger = structlog.get_logger(__name__)
 
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
 class SQLAlchemyRepository(RepositoryProtocol):
-    __slots__ = ("session",)
-    model = Urls
-
-    def __init__(self, *, session: AsyncSession) -> None:
-        self.session = session
-        self.mapper = UrlDBMapper()  # TODO: to clacc
+    model: ModelType = Urls
+    mapper: UrlDBMapper
+    session: AsyncSession
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__} for model: {self.model}"
@@ -114,7 +119,8 @@ class SQLAlchemyRepository(RepositoryProtocol):
         *,
         entities: list[UrlEntity],
     ) -> None:
-        db_objects = [self.mapper.to_model(entity) for entity in entities]
-        stmt = insert(self.model).values([obj.__dict__ for obj in db_objects])
+        dicts = [self.mapper.to_model(entity) for entity in entities]
+        logger.info(f"ADD BULK: {dicts=!r}")
+        stmt = insert(self.model).values(dicts)
 
         await self.session.execute(stmt)

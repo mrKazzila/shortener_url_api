@@ -5,10 +5,6 @@ from src.domain.entities.url import UrlEntity
 
 
 class MessageBrokerPublisherProtocol(Protocol):
-    """
-    Protocol for publishing messages to a message broker.
-    """
-
     @abstractmethod
     async def publish_new_url(
         self,

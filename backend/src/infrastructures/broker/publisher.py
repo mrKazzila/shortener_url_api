@@ -5,9 +5,9 @@ from typing import final
 import structlog
 from faststream.kafka import KafkaBroker
 
-from src.application._mappers.url_mapper import UrlMapper
 from src.application.dtos.urls import PublishUrlDTO
 from src.application.interfaces.broker import MessageBrokerPublisherProtocol
+from src.application.mappers.url_mapper import UrlMapper
 from src.domain.entities import UrlEntity
 
 __all__ = ("KafkaPublisher",)
@@ -23,6 +23,7 @@ class KafkaPublisher(MessageBrokerPublisherProtocol):
 
     broker: KafkaBroker
     default_topic: str = field(default="new_urls")
+    mapper: UrlMapper
 
     async def publish_update_url(
         self,
@@ -34,9 +35,9 @@ class KafkaPublisher(MessageBrokerPublisherProtocol):
 
         """
         try:
-            publish_dto: PublishUrlDTO = UrlMapper.to_publish_dto(
+            publish_dto: PublishUrlDTO = self.mapper.to_publish_dto(
                 entity,
-            )  # TODO: to class
+            )
 
             await self.broker.publish(
                 key=publish_dto.key.encode("utf-8"),
@@ -54,9 +55,9 @@ class KafkaPublisher(MessageBrokerPublisherProtocol):
         entity: UrlEntity,
     ) -> None:
         try:
-            publish_dto: PublishUrlDTO = UrlMapper.to_publish_dto(
+            publish_dto: PublishUrlDTO = self.mapper.to_publish_dto(
                 entity,
-            )  # TODO: to class
+            )
 
             await self.broker.publish(
                 key=publish_dto.key.encode("utf-8"),
