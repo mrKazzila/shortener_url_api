@@ -1,3 +1,5 @@
+__all__ = ("KafkaPublisher",)
+
 import json
 from dataclasses import dataclass, field
 from typing import final
@@ -6,11 +8,11 @@ import structlog
 from faststream.kafka import KafkaBroker
 
 from src.application.dtos.urls import PublishUrlDTO
-from src.application.interfaces.broker import MessageBrokerPublisherProtocol
-from src.application.mappers.url_mapper import UrlMapper
+from src.application.interfaces import MessageBrokerPublisherProtocol
+from src.application.mappers import UrlMapper
 from src.domain.entities import UrlEntity
 
-__all__ = ("KafkaPublisher",)
+logger = structlog.get_logger(__name__)
 
 
 @final
@@ -30,10 +32,6 @@ class KafkaPublisher(MessageBrokerPublisherProtocol):
         entity: UrlEntity,
         topic: str | None = None,
     ) -> None:
-        """
-        Publishes a update url admission notification to Kafka.
-
-        """
         try:
             publish_dto: PublishUrlDTO = self.mapper.to_publish_dto(
                 entity,
@@ -46,7 +44,6 @@ class KafkaPublisher(MessageBrokerPublisherProtocol):
             )
 
         except Exception as e:
-            logger = structlog.get_logger(__name__)
             logger.error("Failed to publish artifact", error=str(e))
             raise
 
@@ -66,6 +63,5 @@ class KafkaPublisher(MessageBrokerPublisherProtocol):
             )
 
         except Exception as e:
-            logger = structlog.get_logger(__name__)
             logger.error("Failed to publish artifact", error=str(e))
             raise

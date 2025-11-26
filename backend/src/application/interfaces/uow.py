@@ -1,7 +1,7 @@
+__all__ = ("UnitOfWorkProtocol",)
+
 from abc import abstractmethod
 from typing import Protocol, Self
-
-__all__ = ("UnitOfWorkProtocol",)
 
 from src.application.interfaces.repository import RepositoryProtocol
 

@@ -7,9 +7,7 @@ from dishka import make_async_container
 from faststream import FastStream
 from faststream.kafka import KafkaBroker, KafkaMessage
 
-from src.application.use_cases.internal.process_url_state_update import (
-    UpdateUrlUseCase,
-)
+from src.application.use_cases.internal import UpdateUrlUseCase
 from src.config.ioc.di import get_providers
 
 logger = structlog.get_logger(__name__)

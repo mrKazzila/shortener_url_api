@@ -1,9 +1,10 @@
 __all__ = ("CreateUrlUseCase",)
 
 import asyncio
-import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, final
+
+import structlog
 
 from src.application.dtos.urls import CreatedUrlDTO, CreateUrlDTO
 from src.domain.entities.url import UrlEntity
@@ -16,7 +17,7 @@ if TYPE_CHECKING:
     )
 
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 @final

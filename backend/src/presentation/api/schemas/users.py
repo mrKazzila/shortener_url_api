@@ -1,12 +1,12 @@
-from datetime import datetime
-from typing import final
-
-from pydantic import BaseModel
-
 __all__ = (
     "SUserUrl",
     "SUserUrls",
 )
+
+from datetime import datetime
+from typing import final
+
+from pydantic import BaseModel
 
 
 @final

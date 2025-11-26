@@ -1,12 +1,12 @@
-import re
-from typing import Annotated
-
-from fastapi import Path, Query
-
 __all__ = (
     "PathUrlKey",
     "QueryLongUrl",
 )
+
+import re
+from typing import Annotated
+
+from fastapi import Path, Query
 
 _URL_REGEX = re.compile(
     r"^https?://[^\s/$.?#].[^\s]*$",

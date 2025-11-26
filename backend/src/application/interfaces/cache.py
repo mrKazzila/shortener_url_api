@@ -1,3 +1,5 @@
+__all__ = ("CacheProtocol",)
+
 from abc import abstractmethod
 from typing import Any, Protocol
 

@@ -3,11 +3,15 @@ __all__ = ("GetUserUrlsUseCase",)
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, final
 
-from src.application.dtos.users import GetUserUrlsDTO
+import structlog
 
 if TYPE_CHECKING:
-    from src.application.interfaces.uow import UnitOfWorkProtocol
+    from src.application.dtos.users import GetUserUrlsDTO
+    from src.application.interfaces import UnitOfWorkProtocol
     from src.domain.entities.url import UrlEntity
+
+
+logger = structlog.get_logger(__name__)
 
 
 @final
@@ -18,7 +22,7 @@ class GetUserUrlsUseCase:
     async def execute(
         self,
         *,
-        user_dto: GetUserUrlsDTO,
+        user_dto: "GetUserUrlsDTO",
     ) -> list["UrlEntity"]:
         return await self.uow.repository.get_all(
             reference={"user_id": user_dto.user_id},

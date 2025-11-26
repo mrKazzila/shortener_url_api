@@ -1,18 +1,17 @@
+__all__ = ("UrlDBMapper",)
+
 from dataclasses import dataclass
 from typing import final
 
 from src.domain.entities.url import UrlEntity
-from src.infrastructures.db.models.urls import Urls
+from src.infrastructures.db.models import Urls
 
 
 @final
 @dataclass(frozen=True, slots=True)
 class UrlDBMapper:
-    """
-    Mapper for converting between UrlEntity (Domain) and UrlModel (SQLAlchemy).
-    """
-
-    def to_entity(self, model: Urls) -> UrlEntity:
+    @staticmethod
+    def to_entity(model: Urls) -> UrlEntity:
         return UrlEntity(
             id=model.id,
             user_id=model.user_id,
@@ -24,18 +23,6 @@ class UrlDBMapper:
             created_at=model.created_at,
             last_used=model.last_used,
         )
-
-    # def to_model(self, entity: UrlEntity) -> Urls:
-    #     return Urls(
-    #         user_id=entity.user_id,
-    #         key=entity.key,
-    #         target_url=entity.target_url,
-    #         name=entity.name,
-    #         is_active=entity.is_active,
-    #         clicks_count=entity.clicks_count,
-    #         created_at=entity.created_at,
-    #         last_used=entity.last_used,
-    #     )
 
     @staticmethod
     def to_model(entity: UrlEntity) -> dict:

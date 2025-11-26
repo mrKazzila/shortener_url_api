@@ -1,12 +1,12 @@
-from dataclasses import dataclass
-from typing import final
-from uuid import UUID
-
 __all__ = (
     "GetUserUrlsDTO",
     "PaginationDTO",
     "XUserHeaderDTO",
 )
+
+from dataclasses import dataclass
+from typing import final
+from uuid import UUID
 
 
 @final

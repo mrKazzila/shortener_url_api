@@ -1,9 +1,9 @@
+__all__ = ("RandomKeyGenerator",)
+
 from dataclasses import dataclass
 from random import choices
 from string import ascii_letters, digits
 from typing import final
-
-__all__ = ("RandomKeyGenerator",)
 
 
 @final

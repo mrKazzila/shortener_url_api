@@ -1,16 +1,15 @@
 __all__ = ("PublishUrlToBrokerUseCase",)
 
-import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, final
 
+import structlog
+
 if TYPE_CHECKING:
-    from src.application.interfaces.broker import (
-        MessageBrokerPublisherProtocol,
-    )
+    from src.application.interfaces import MessageBrokerPublisherProtocol
     from src.domain.entities.url import UrlEntity
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 @final

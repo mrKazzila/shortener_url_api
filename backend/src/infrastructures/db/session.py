@@ -3,7 +3,6 @@ __all__ = (
     "engine_factory",
 )
 
-import logging
 import uuid
 
 from asyncpg import Connection
@@ -13,8 +12,6 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
-
-logger = logging.getLogger(__name__)
 
 
 def engine_factory(

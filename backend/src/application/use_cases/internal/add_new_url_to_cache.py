@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, final
 
 if TYPE_CHECKING:
-    from src.application.interfaces.cache import CacheProtocol
-    from src.application.mappers.url_mapper import UrlMapper
+    from src.application.interfaces import CacheProtocol
+    from src.application.mappers import UrlMapper
     from src.domain.entities.url import UrlEntity
 
 

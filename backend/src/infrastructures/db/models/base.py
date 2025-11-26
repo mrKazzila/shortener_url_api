@@ -1,3 +1,5 @@
+__all__ = ("Base",)
+
 from typing import Annotated
 
 from sqlalchemy import MetaData, String

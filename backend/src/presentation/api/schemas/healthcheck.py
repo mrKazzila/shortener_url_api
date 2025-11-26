@@ -1,11 +1,12 @@
-from enum import StrEnum
-
-from pydantic import BaseModel
-
 __all__ = (
     "StatusEnum",
     "SHealthStatus",
 )
+
+
+from enum import StrEnum
+
+from pydantic import BaseModel
 
 
 class StatusEnum(StrEnum):

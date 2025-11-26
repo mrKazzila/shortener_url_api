@@ -1,3 +1,5 @@
+__all__ = ("MessageBrokerPublisherProtocol",)
+
 from abc import abstractmethod
 from typing import Protocol
 

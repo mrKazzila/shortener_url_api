@@ -1,6 +1,5 @@
 __all__ = ("router",)
 
-import logging
 from uuid import UUID
 
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
@@ -20,9 +19,6 @@ from src.presentation.api.rest.routers.urls._types import (
 from src.presentation.api.schemas.urls import SUrlResponse
 from src.presentation.exceptions.urls import UrlNotFoundException
 from src.presentation.mappers.url_mapper import UrlPresentationMapper
-
-logger = logging.getLogger(__name__)
-
 
 router: APIRouter = APIRouter(
     tags=["urls"],

@@ -1,6 +1,11 @@
-import logging
+__all__ = (
+    "app_setup",
+    "create_app",
+)
+
 from contextlib import asynccontextmanager
 
+import structlog
 from dishka import AsyncContainer, Provider, make_async_container
 from dishka.integrations.fastapi import FastapiProvider, setup_dishka
 from fastapi import APIRouter, FastAPI
@@ -9,13 +14,10 @@ from fastapi.openapi.utils import get_openapi
 
 from src.application.interfaces.cache import CacheProtocol
 from src.config.settings.base import Settings
+from src.config.settings.logging import setup_logging
 
-__all__ = (
-    "app_setup",
-    "create_app",
-)
-
-logger = logging.getLogger(__name__)
+setup_logging()
+logger = structlog.get_logger(__name__)
 
 
 @asynccontextmanager
@@ -66,6 +68,10 @@ def create_app(
         {
             "name": "urls",
             "description": "Urls logic",
+        },
+        {
+            "name": "users",
+            "description": "Users url logic",
         },
         {
             "name": "healthcheck",

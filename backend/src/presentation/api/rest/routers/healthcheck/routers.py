@@ -1,8 +1,8 @@
+__all__ = ("router",)
+
 from fastapi import APIRouter, status
 
-from src.presentation.api.schemas.info import SHealthStatus, StatusEnum
-
-__all__ = ("router",)
+from src.presentation.api.schemas.healthcheck import SHealthStatus, StatusEnum
 
 router: APIRouter = APIRouter(
     prefix="/healthcheck",

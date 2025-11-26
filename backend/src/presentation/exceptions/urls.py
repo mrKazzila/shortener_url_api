@@ -1,8 +1,8 @@
+__all__ = ("UrlNotFoundException",)
+
 from http import HTTPStatus
 
 from src.presentation.exceptions.base import BasePresentationError
-
-__all__ = ("UrlNotFoundException",)
 
 
 class UrlNotFoundException(BasePresentationError):

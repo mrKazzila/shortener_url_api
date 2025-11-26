@@ -1,3 +1,5 @@
+__all__ = ("RepositoryProtocol",)
+
 from abc import abstractmethod
 from collections import Counter
 from datetime import datetime
@@ -5,8 +7,6 @@ from typing import Protocol
 from uuid import UUID
 
 from src.domain.entities.url import UrlEntity
-
-__all__ = ("RepositoryProtocol",)
 
 
 class RepositoryProtocol(Protocol):

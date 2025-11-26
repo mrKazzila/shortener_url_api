@@ -3,11 +3,13 @@ __all__ = ("CreateUniqKeyUseCase",)
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, final
 
+import structlog
+
 if TYPE_CHECKING:
-    from src.application.use_cases.internal.check_key_in_cashe import (
-        CheckKeyInCacheUseCase,
-    )
+    from src.application.use_cases.internal import CheckKeyInCacheUseCase
     from src.domain.services import RandomKeyGenerator
+
+logger = structlog.get_logger(__name__)
 
 
 @final
@@ -23,3 +25,5 @@ class CreateUniqKeyUseCase:
 
             if not is_key_exist:
                 return key
+
+            logger.debug("Key already exist")

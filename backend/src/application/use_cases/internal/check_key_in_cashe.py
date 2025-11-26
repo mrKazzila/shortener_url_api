@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, final
 
 if TYPE_CHECKING:
-    from src.application.interfaces.cache import CacheProtocol
+    from src.application.interfaces import CacheProtocol
 
 
 @final

@@ -1,8 +1,8 @@
+__all__ = ("UserHeaderNotFoundException",)
+
 from http import HTTPStatus
 
 from src.presentation.exceptions.base import BasePresentationError
-
-__all__ = ("UserHeaderNotFoundException",)
 
 
 class UserHeaderNotFoundException(BasePresentationError):

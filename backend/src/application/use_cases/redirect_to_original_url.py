@@ -1,19 +1,17 @@
 __all__ = ("RedirectToOriginalUrlUseCase",)
 
-
 import asyncio
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, final
 
 import structlog
 
-from src.domain.entities.url import UrlEntity
-
 if TYPE_CHECKING:
     from src.application.use_cases.internal import (
         GetTargetByKeyUseCase,
         PublishUrlToBrokerForUpdateUseCase,
     )
+    from src.domain.entities.url import UrlEntity
 
 logger = structlog.get_logger(__name__)
 
@@ -30,7 +28,7 @@ class RedirectToOriginalUrlUseCase:
             return entity.target_url
         return None
 
-    async def _publish(self, *, entity: UrlEntity) -> None:
+    async def _publish(self, *, entity: "UrlEntity") -> None:
         try:
             logger.info(f"GOT FOR UPDATE: {entity.key=!r}")
             await self.publish_url_to_broker_for_update_uc(

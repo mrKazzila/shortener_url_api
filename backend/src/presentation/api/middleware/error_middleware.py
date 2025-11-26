@@ -1,8 +1,10 @@
-import logging
+__all__ = ("ErrorMiddleware",)
+
 from time import time
 from typing import Any, TypedDict
 from urllib import parse
 
+import structlog
 from fastapi.responses import JSONResponse
 from starlette.datastructures import QueryParams
 from starlette.middleware.base import (
@@ -17,9 +19,7 @@ from src.domain.exceptions import BaseDomainError
 from src.infrastructures.exceptions import BaseInfraError
 from src.presentation.exceptions import BasePresentationError
 
-__all__ = ("ErrorMiddleware",)
-
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class RequestInfo(TypedDict):

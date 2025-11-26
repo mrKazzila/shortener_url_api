@@ -7,9 +7,7 @@ from dishka import make_async_container
 from faststream import FastStream
 from faststream.kafka import KafkaBroker, KafkaMessage
 
-from src.application.use_cases.internal.process_new_url import (
-    ProcessNewUrlUseCase,
-)
+from src.application.use_cases.internal import ProcessNewUrlUseCase
 from src.config.ioc.di import get_providers
 from src.domain.entities.url import UrlEntity
 

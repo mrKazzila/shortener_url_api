@@ -1,4 +1,5 @@
-import logging
+__all__ = ("router",)
+
 from uuid import UUID
 
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
@@ -12,10 +13,6 @@ from src.application.dtos.users import (
 from src.application.use_cases import GetUserUrlsUseCase
 from src.presentation.api.schemas.users import SUserUrls
 from src.presentation.mappers.user_mapper import UserPresentationMapper
-
-logger = logging.getLogger(__name__)
-
-__all__ = ("router",)
 
 router: APIRouter = APIRouter(
     tags=["users"],

@@ -1,6 +1,6 @@
-from pydantic import BaseModel
-
 __all__ = ("SUrlResponse",)
+
+from pydantic import BaseModel
 
 
 class SUrlResponse(BaseModel):

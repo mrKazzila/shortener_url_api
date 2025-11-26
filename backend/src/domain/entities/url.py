@@ -1,11 +1,11 @@
+__all__ = ("UrlEntity",)
+
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import final
 from uuid import UUID
 
 from src.domain.exceptions.domain import ValidationError
-
-__all__ = ("UrlEntity",)
 
 
 @final

@@ -1,3 +1,5 @@
+__all__ = ("get_providers",)
+
 from functools import lru_cache
 
 from dishka import Provider

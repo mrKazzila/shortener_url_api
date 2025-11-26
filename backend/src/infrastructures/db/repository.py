@@ -10,10 +10,10 @@ import structlog
 from sqlalchemy import func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.application.interfaces.repository import RepositoryProtocol
+from src.application.interfaces import RepositoryProtocol
 from src.domain.entities import UrlEntity
-from src.infrastructures.db.models.urls import Urls
-from src.infrastructures.mappers.url_db_mapper import UrlDBMapper
+from src.infrastructures.db.models import Urls
+from src.infrastructures.mappers import UrlDBMapper
 
 ModelType = TypeVar("ModelType", bound=Urls)
 

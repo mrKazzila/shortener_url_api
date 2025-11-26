@@ -1,12 +1,13 @@
 __all__ = ("PublishUrlToBrokerForUpdateUseCase",)
 
 from dataclasses import dataclass
-from typing import final
+from typing import TYPE_CHECKING, final
 
 import structlog
 
-from src.application.interfaces.broker import MessageBrokerPublisherProtocol
-from src.domain.entities.url import UrlEntity
+if TYPE_CHECKING:
+    from src.application.interfaces import MessageBrokerPublisherProtocol
+    from src.domain.entities.url import UrlEntity
 
 logger = structlog.get_logger(__name__)
 
@@ -14,12 +15,12 @@ logger = structlog.get_logger(__name__)
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class PublishUrlToBrokerForUpdateUseCase:
-    message_broker: MessageBrokerPublisherProtocol
+    message_broker: "MessageBrokerPublisherProtocol"
 
     async def __call__(
         self,
         *,
-        entity: UrlEntity,
+        entity: "UrlEntity",
         topic: str,
     ) -> None:
         try:

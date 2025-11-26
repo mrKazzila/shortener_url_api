@@ -1,15 +1,14 @@
 __all__ = ("UnitOfWork",)
 
-import logging
 from dataclasses import dataclass
 from typing import Self, final
 
+import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.application.interfaces.repository import RepositoryProtocol
-from src.application.interfaces.uow import UnitOfWorkProtocol
+from src.application.interfaces import RepositoryProtocol, UnitOfWorkProtocol
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 @final

@@ -1,12 +1,12 @@
-from dataclasses import asdict, dataclass
-from typing import Self
-from uuid import UUID
-
 __all__ = (
     "CreateUrlDTO",
     "CreatedUrlDTO",
     "PublishUrlDTO",
 )
+
+from dataclasses import asdict, dataclass
+from typing import Self
+from uuid import UUID
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

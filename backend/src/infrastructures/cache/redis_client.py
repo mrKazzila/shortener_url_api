@@ -1,3 +1,5 @@
+__all__ = ("RedisCacheClient",)
+
 import json
 from dataclasses import dataclass
 from typing import Any, final
@@ -6,11 +8,9 @@ import redis.exceptions
 import structlog
 from redis.asyncio import Redis
 
-from src.application.interfaces.cache import CacheProtocol
+from src.application.interfaces import CacheProtocol
 
 logger = structlog.get_logger(__name__)
-
-__all__ = ("RedisCacheClient",)
 
 
 @final

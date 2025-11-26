@@ -353,8 +353,14 @@ class UseCaseProvider(Provider):
     def get_target_url_by_key_use_case(
         self,
         cache: CacheProtocol,
+        uow: UnitOfWorkProtocol,
+        mapper: UrlMapper,
     ) -> GetTargetByKeyUseCase:
-        return GetTargetByKeyUseCase(cache=cache)
+        return GetTargetByKeyUseCase(
+            cache=cache,
+            uow=uow,
+            mapper=mapper,
+        )
 
     @provide(scope=Scope.REQUEST)
     def get_publish_url_to_broker_for_update_use_case(

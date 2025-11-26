@@ -1,12 +1,14 @@
 __all__ = ("ProcessNewUrlUseCase",)
 
 from dataclasses import dataclass
-from typing import final
+from typing import TYPE_CHECKING, final
 
 import structlog
 
-from src.application.interfaces.uow import UnitOfWorkProtocol
-from src.domain.entities import UrlEntity
+if TYPE_CHECKING:
+    from src.application.interfaces import UnitOfWorkProtocol
+    from src.domain.entities import UrlEntity
+
 
 logger = structlog.get_logger(__name__)
 
@@ -14,9 +16,9 @@ logger = structlog.get_logger(__name__)
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ProcessNewUrlUseCase:
-    uow: UnitOfWorkProtocol
+    uow: "UnitOfWorkProtocol"
 
-    async def execute(self, *, entities: list[UrlEntity]) -> None:
+    async def execute(self, *, entities: list["UrlEntity"]) -> None:
         logger.info(f"GOTTEN {entities=!r} FROM BROKER")
 
         async with self.uow:
