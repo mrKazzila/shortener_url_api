@@ -11,12 +11,13 @@ from dishka.integrations.fastapi import FastapiProvider, setup_dishka
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from src.application.interfaces.cache import CacheProtocol
 from src.config.settings.base import Settings
 from src.config.settings.logging import setup_logging
 
-setup_logging()
+setup_logging(json_format=True)
 logger = structlog.get_logger(__name__)
 
 
@@ -109,6 +110,8 @@ def app_setup(
     try:
         logger.info("Start application setup")
 
+        _setup_prometheus(app=app)
+
         _di_setup(app=app, providers=providers)
         _routers_setup(app=app, routers=endpoints)
         _middlewares_setup(app=app, middlewares=middlewares)
@@ -179,3 +182,29 @@ def _middlewares_setup(
     except Exception as error_:
         logger.error(error_)
         exit(error_)
+
+
+def _setup_prometheus(app: FastAPI):
+    try:
+        logger.info("Setting up Prometheus metrics")
+
+        instrumentator = Instrumentator(
+            should_group_status_codes=False,
+            should_ignore_untemplated=False,
+            should_respect_env_var=False,
+            excluded_handlers=["/metrics"],
+            inprogress_name="http_requests_inprogress",
+            inprogress_labels=True,
+        )
+
+        instrumentator.instrument(app).expose(
+            app,
+            endpoint="/metrics",
+            include_in_schema=False,
+        )
+
+        logger.info("Prometheus metrics setup completed")
+
+    except Exception as e:
+        logger.error(f"Failed to setup Prometheus: {e}")
+        raise
