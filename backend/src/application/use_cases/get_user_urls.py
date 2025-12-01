@@ -27,6 +27,5 @@ class GetUserUrlsUseCase:
         return await self.uow.repository.get_all(
             reference={"user_id": user_dto.user_id},
             limit=user_dto.pagination_data.limit,
-            skip=user_dto.pagination_data.skip,
-            offset=user_dto.pagination_data.offset,
+            last_id=user_dto.pagination_data.last_id,
         )
