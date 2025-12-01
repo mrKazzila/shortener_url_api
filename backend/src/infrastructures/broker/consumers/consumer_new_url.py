@@ -9,8 +9,10 @@ from faststream.kafka import KafkaBroker, KafkaMessage
 
 from src.application.use_cases.internal import ProcessNewUrlUseCase
 from src.config.ioc.di import get_providers
+from src.config.settings.logging import setup_logging
 from src.domain.entities.url import UrlEntity
 
+setup_logging(json_format=True)
 logger = structlog.get_logger(__name__)
 
 container = make_async_container(*get_providers(is_consumer=True))
