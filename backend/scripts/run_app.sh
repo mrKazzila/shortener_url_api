@@ -15,9 +15,9 @@ PY
 
 case "${MODE:-DEV}" in
   "DEV")
-    echo "Running uvicorn in DEV mode (workers=4)"
+    echo "Running uvicorn in DEV mode (workers=1)"
     exec python -m uvicorn src.main:app \
-      --workers 4 \
+      --workers 1 \
       --host "$HOST" \
       --port "$PORT" \
       --loop uvloop \
