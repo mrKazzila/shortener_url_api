@@ -88,7 +88,7 @@ async def main():
 
         asyncio.create_task(periodic_flusher())
 
-        @broker.subscriber("new_urls", group_id="new_urls_consumers")
+        @broker.subscriber("new-urls", group_id="new-urls-consumers")
         async def consumer(msg: KafkaMessage):
             async with lock:
                 buffer.append(msg)

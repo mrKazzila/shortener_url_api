@@ -9,6 +9,7 @@ from faststream.kafka import KafkaBroker, KafkaMessage
 
 from src.application.use_cases.internal import UpdateUrlUseCase
 from src.config.ioc.di import get_providers
+from src.config.settings.logging import setup_logging
 
 setup_logging(json_format=True)
 logger = structlog.get_logger(__name__)
@@ -68,8 +69,8 @@ async def main() -> None:
         asyncio.create_task(batch_worker(queue, update_url_uc))
 
         @broker.subscriber(
-            "update_urls",
-            group_id="update_urls_consumers",
+            "update-urls",
+            group_id="update-urls-consumers",
         )
         async def update_url(msg: KafkaMessage):
             try:
