@@ -23,8 +23,7 @@ class RepositoryProtocol(Protocol):
         *,
         reference: dict[str, str | int | UUID],
         limit: int | None = None,
-        skip: int | None = None,
-        offset: int | None = None,
+        last_id: int | UUID | None = None,
     ) -> list[UrlEntity]: ...
 
     @abstractmethod

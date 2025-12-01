@@ -10,6 +10,7 @@ from faststream.kafka import KafkaBroker, KafkaMessage
 from src.application.use_cases.internal import UpdateUrlUseCase
 from src.config.ioc.di import get_providers
 
+setup_logging(json_format=True)
 logger = structlog.get_logger(__name__)
 
 container = make_async_container(*get_providers(is_consumer=True))

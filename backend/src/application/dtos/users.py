@@ -25,6 +25,5 @@ class GetUserUrlsDTO:
 @final
 @dataclass(frozen=True, slots=True)
 class PaginationDTO:
-    limit: int = 0
-    skip: int = 0
-    offset: int = 0
+    limit: int = 10
+    last_id: int | None = None

@@ -21,6 +21,7 @@ from src.presentation.exceptions.urls import UrlNotFoundException
 from src.presentation.mappers.url_mapper import UrlPresentationMapper
 
 router: APIRouter = APIRouter(
+    prefix="/urls",
     tags=["urls"],
     route_class=DishkaRoute,
 )
@@ -66,3 +67,35 @@ async def redirect_to_target_url(
         )
 
     raise UrlNotFoundException(url_key=url_key)
+
+
+@router.patch(
+    path="/{url_key}",
+    name="Update url information",
+    status_code=status.HTTP_201_CREATED,
+)
+async def update_url(
+    url: QueryLongUrl,
+    # header: FromDishka[XUserHeaderDTO],
+    # use_case: FromDishka[CreateUrlUseCase],
+    # mapper: FromDishka[UrlPresentationMapper],
+) -> SUrlResponse:
+    """Creates a shortened URL."""
+    # Fixme: implement update logic
+    raise NotImplementedError("TODO: implement update logic")
+
+
+@router.delete(
+    path="/{url_key}",
+    name="Remove url",
+    status_code=status.HTTP_201_CREATED,
+)
+async def delete_url(
+    url: QueryLongUrl,
+    # header: FromDishka[XUserHeaderDTO],
+    # use_case: FromDishka[CreateUrlUseCase],
+    # mapper: FromDishka[UrlPresentationMapper],
+) -> SUrlResponse:
+    """Creates a shortened URL."""
+    # Fixme: implement delete logic
+    raise NotImplementedError("TODO: implement delete logic")

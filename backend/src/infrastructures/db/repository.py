@@ -45,15 +45,15 @@ class SQLAlchemyRepository(RepositoryProtocol):
         *,
         reference: dict[str, str | int | UUID],
         limit: int | None = None,
-        skip: int | None = None,
-        offset: int | None = None,
+        last_id: int | UUID | None = None,
     ) -> list[UrlEntity]:
-        actual_offset = skip if skip is not None else offset
+        stmt = (
+            select(self.model).filter_by(**reference).order_by(self.model.id)
+        )
 
-        stmt = select(self.model).filter_by(**reference)
+        if last_id is not None:
+            stmt = stmt.where(self.model.id > last_id)  # keyset pagination
 
-        if actual_offset is not None:
-            stmt = stmt.offset(actual_offset)
         if limit is not None:
             stmt = stmt.limit(limit)
 

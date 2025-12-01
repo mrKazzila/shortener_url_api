@@ -6,7 +6,6 @@ DC := "docker-compose"
 DC_FILE := "docker-compose.yaml"
 ENV_FILE := "env/.env"
 
-
 # =====================
 # Help (automatic)
 # =====================
@@ -45,6 +44,9 @@ rm-requirements:
 # =====================
 # Docker environment
 # =====================
+
+create-global-net:
+    @docker network create global_net || true
 
 # Configures environment variables for Docker
 set_docker_env:
@@ -131,6 +133,7 @@ scale-consumers ARG:
 # Full launch: env + deps + containers + themes + migrations + scaling + application
 full-up partitions replicas:
     @echo "Running full-up..."
+    @just create-global-net
     @just set_docker_env
     @just freeze-dev
     @just up
@@ -140,6 +143,16 @@ full-up partitions replicas:
     @just start-app
     @just rm-requirements
     @echo "Full startup completed."
+
+
+
+restart-app:
+    @just set_docker_env
+    @just freeze-dev
+    @echo "Restarting fastapi and consumer containers..."
+    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} up -d --build fastapi consumer consumer_update
+    @echo "FastAPI and consumers restarted"
+
 
 
 # =====================
@@ -171,3 +184,21 @@ make_migrate_local ARG:
 make_downgrade_local ARG:
     @just set_local_env
     @just make_downgrade {{ARG}}
+
+
+
+
+MONITORING_DC_FILE := "docker/monitoring/docker-compose.yml"
+
+# Starts monitoring stack
+monitoring-up:
+    @echo "Starting monitoring stack..."
+    {{DC}} --env-file {{ENV_FILE}} -p monitoring_{{PROJECT_NAME}} -f {{MONITORING_DC_FILE}} up -d --build
+    @echo "Monitoring stack started"
+
+# Stops monitoring stack
+monitoring-down:
+    @echo "Stopping monitoring stack..."
+    {{DC}} --env-file {{ENV_FILE}} -p monitoring_{{PROJECT_NAME}} -f {{MONITORING_DC_FILE}} down -v
+    @echo "Monitoring stack stopped"
+
