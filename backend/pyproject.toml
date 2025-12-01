@@ -22,6 +22,11 @@ dependencies = [
     "redis>=5.2.1",
     "structlog>=25.5.0",
     "faststream[cli,kafka]>=0.6.3",
+    "opentelemetry-api>=1.38.0",
+    "opentelemetry-sdk>=1.38.0",
+    "opentelemetry-instrumentation-fastapi>=0.59b0",
+    "opentelemetry-exporter-otlp>=1.38.0",
+    "prometheus-client>=0.21.1",
 ]
 
 [project.optional-dependencies]
