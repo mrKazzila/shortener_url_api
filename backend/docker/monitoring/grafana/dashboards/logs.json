@@ -1,0 +1,117 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Loki Stack Monitoring adapted for Docker Compose (Promtail + Loki) with container filtering in logs.",
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "title": "Recent Promtail Logs",
+      "type": "logs",
+      "targets": [
+        {
+          "expr": "{job=\"docker-logs\", container_name=~\"$container_name\"}",
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "name": "Loki"
+          }
+        }
+      ],
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 14}
+    },
+    {
+      "title": "Promtail CPU Usage",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(process_cpu_seconds_total{job=\"promtail\"}[1m]) * 100",
+          "legendFormat": "CPU Usage (%)",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "name": "Prometheus"
+          }
+        }
+      ],
+      "gridPos": {"h": 6, "w": 6, "x": 0, "y": 8}
+    },
+    {
+      "title": "Promtail Memory Usage",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "process_resident_memory_bytes{job=\"promtail\"}",
+          "legendFormat": "Memory (Bytes)",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "name": "Prometheus"
+          }
+        }
+      ],
+      "gridPos": {"h": 6, "w": 6, "x": 6, "y": 8}
+    },
+    {
+      "title": "Loki CPU Usage",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(process_cpu_seconds_total{job=\"loki\"}[1m]) * 100",
+          "legendFormat": "CPU Usage (%)",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "name": "Prometheus"
+          }
+        }
+      ],
+      "gridPos": {"h": 6, "w": 6, "x": 12, "y": 8}
+    },
+    {
+      "title": "Loki Memory Usage",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "process_resident_memory_bytes{job=\"loki\"}",
+          "legendFormat": "Memory (Bytes)",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "name": "Prometheus"
+          }
+        }
+      ],
+      "gridPos": {"h": 6, "w": 6, "x": 18, "y": 8}
+    }
+  ],
+  "schemaVersion": 36,
+  "style": "dark",
+  "tags": ["loki", "docker-compose", "promtail"],
+  "templating": {
+    "list": [
+      {
+        "name": "container_name",
+        "type": "query",
+        "datasource": "Loki",
+        "query": "label_values({job=\"docker-logs\"}, container_name)",
+        "multi": true,
+        "includeAll": true,
+        "refresh": 1,
+        "label": "Container",
+        "allValue": ".*"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "version": 1
+}
