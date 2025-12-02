@@ -35,7 +35,7 @@ services:
     <<: *consumer_base
     command: ["-m", "src.infrastructures.broker.consumers.consumer_new_url"]
 
-  consumer_update:
+  consumer-update:
     <<: *consumer_base
     command: ["-m", "src.infrastructures.broker.consumers.consumer_update_url"]
 
