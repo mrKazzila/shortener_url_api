@@ -12,6 +12,7 @@ __pycache__/
 .DS_Store
 env/*
 !env/.env.example
+docker/infra/pgbouncer/userlist.txt
 
 # ===== test data =====
 .pytest_cache/

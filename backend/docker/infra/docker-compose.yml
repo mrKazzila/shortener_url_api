@@ -1,0 +1,123 @@
+version: "3.9"
+
+services:
+  pgbouncer:
+    container_name: pgbouncer
+    image: edoburu/pgbouncer:latest
+    restart: always
+    environment:
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "6432:6432"
+    volumes:
+      - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+      - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 6432 -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  postgres:
+    container_name: postgres
+    image: postgres:${POSTGRES_VERSION}
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 10G
+    volumes:
+      - ../../../persistentdata/db:/var/lib/postgresql/data/
+
+  redis:
+    container_name: redis
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - ../../../persistentdata/redis:/data
+    command:
+      - redis-server
+      - --loglevel warning
+      - --save 60 1
+      - --appendonly yes
+      - --requirepass redis_password
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli -a redis_password ping | grep PONG" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  kafka:
+    image: apache/kafka:3.7.0
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+
+    healthcheck:
+      test: [ "CMD-SHELL", "bash -c '</dev/tcp/localhost/9092'" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    depends_on:
+      kafka:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      LOGGING_LEVEL_ROOT: ERROR
+      LOGGING_LEVEL_COM_PROVECTUS: ERROR
+
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO- http://localhost:8080/ | grep -q '<title>'" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+
+networks:
+  default:
+    external: true
+    name: global_net
