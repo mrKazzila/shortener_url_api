@@ -94,6 +94,7 @@ indent-style = "space"
 
 [dependency-groups]
 dev = [
+    "pylint>=4.0.4",
     "ruff>=0.8.6",
 ]
 
