@@ -3,88 +3,92 @@ import json
 from collections import Counter
 
 import structlog
-from dishka import make_async_container
 from faststream import FastStream
-from faststream.kafka import KafkaBroker, KafkaMessage
+from faststream.kafka import KafkaMessage
 
 from src.application.use_cases.internal import UpdateUrlUseCase
-from src.config.ioc.di import get_providers
+from src.config.settings.logging import setup_logging
+from src.infrastructures.broker.consumers.common import (
+    UC,
+    init_container,
+    init_dependencies,
+)
 
 setup_logging(json_format=True)
 logger = structlog.get_logger(__name__)
 
-container = make_async_container(*get_providers(is_consumer=True))
-
-BATCH_SIZE = 200
-BATCH_INTERVAL = 0.2
-
-
-async def batch_worker(
-    queue: asyncio.Queue,
-    update_url_uc: "UpdateUrlUseCase",
-) -> None:
-    buffer = []
-    last_flush = asyncio.get_event_loop().time()
-
-    while True:
-        timeout = BATCH_INTERVAL - (
-            asyncio.get_event_loop().time() - last_flush
-        )
-        if timeout < 0:
-            timeout = 0
-
-        try:
-            item = await asyncio.wait_for(queue.get(), timeout=timeout)
-            buffer.append(item)
-
-            if len(buffer) >= BATCH_SIZE:
-                await flush_buffer(buffer, update_url_uc)
-                buffer.clear()
-                last_flush = asyncio.get_event_loop().time()
-
-        except TimeoutError:
-            if buffer:
-                await flush_buffer(buffer, update_url_uc)
-                buffer.clear()
-            last_flush = asyncio.get_event_loop().time()
-
-
-async def flush_buffer(
-    buffer: list[str],
-    update_url_uc: "UpdateUrlUseCase",
-) -> None:
-    counter = Counter(buffer)
-    logger.info("Flushing batch", size=len(buffer), unique=len(counter))
-    await update_url_uc.execute(increments=counter)
-
 
 async def main() -> None:
+    container = await init_container()
+
     async with container() as app_container:
-        broker: KafkaBroker = await app_container.get(KafkaBroker)
-        app = FastStream(broker)
-        update_url_uc = await app_container.get(UpdateUrlUseCase)
-
-        queue: asyncio.Queue[str] = asyncio.Queue(maxsize=5000)
-        asyncio.create_task(batch_worker(queue, update_url_uc))
-
-        @broker.subscriber(
-            "update_urls",
-            group_id="update_urls_consumers",
+        broker, update_uc = await init_dependencies(
+            container=app_container,
+            us=UpdateUrlUseCase,
         )
-        async def update_url(msg: KafkaMessage):
+        app = FastStream(broker)
+
+        manager = KeyBatchManager(update_uc=update_uc)
+        asyncio.create_task(manager.start_periodic_flusher())
+
+        async def _update_url(msg: KafkaMessage):
             try:
-                logger.info(f"SAVE in Queue {msg=!r}")
-
-                data_dict = json.loads(msg.body.decode("utf-8"))
-                key = data_dict.get("key")
-
-                await queue.put(key)
+                data = json.loads(msg.body.decode("utf-8"))
+                key = data.get("key")
                 logger.info("Queued key for batch processing", key=key)
-
+                await manager.add_key(key)
             except Exception as e:
                 logger.error("Failed to process update URL", error=str(e))
 
+        broker.subscriber(
+            "update-urls",
+            group_id="update-urls-consumers",
+        )(_update_url)
+
         await app.run()
+
+
+class KeyBatchManager:
+    BATCH_SIZE = 200
+    BATCH_INTERVAL = 0.2
+
+    def __init__(self, update_uc: UC):
+        self.update_uc = update_uc
+        self.buffer: list[str] = []
+        self.lock = asyncio.Lock()
+
+    async def start_periodic_flusher(self):
+        while True:
+            await asyncio.sleep(self.BATCH_INTERVAL)
+            await self._flush()
+
+    async def add_key(self, key: str):
+        async with self.lock:
+            self.buffer.append(key)
+            if len(self.buffer) >= self.BATCH_SIZE:
+                asyncio.create_task(self._flush())
+
+    async def _flush(self):
+        async with self.lock:
+            if not self.buffer:
+                return
+
+            batch = self.buffer.copy()
+            self.buffer.clear()
+
+        await self._process_batch(batch)
+
+    async def _process_batch(self, batch: list[str]):
+        try:
+            counter = Counter(batch)
+            logger.info(
+                "Flushing batch",
+                size=len(batch),
+                unique=len(counter),
+            )
+            await self.update_uc.execute(increments=counter)
+        except Exception as e:
+            logger.error("Failed to flush keys batch", error=str(e))
 
 
 if __name__ == "__main__":

@@ -33,7 +33,7 @@ class RedirectToOriginalUrlUseCase:
             logger.info(f"GOT FOR UPDATE: {entity.key=!r}")
             await self.publish_url_to_broker_for_update_uc(
                 entity=entity,
-                topic="update_urls",
+                topic="update-urls",
             )
             logger.info(f"AFTER  CREATE TASK: {entity.key=!r}")
         except Exception as exc:

@@ -24,7 +24,7 @@ class KafkaPublisher(MessageBrokerPublisherProtocol):
     """
 
     broker: KafkaBroker
-    default_topic: str = field(default="new_urls")
+    default_topic: str = field(default="new-urls")
     mapper: UrlMapper
 
     async def publish_update_url(
