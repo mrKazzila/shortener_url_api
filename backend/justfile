@@ -1,204 +1,178 @@
 # =====================
 # Base variables
 # =====================
-PROJECT_NAME := "shortener_url"
-DC := "docker-compose"
-DC_FILE := "docker-compose.yaml"
 ENV_FILE := "env/.env"
 
-# =====================
-# Help (automatic)
-# =====================
+APP_COMMAND := "docker-compose --env-file env/.env -p shortener-url -f docker-compose.yaml"
+INFRA_COMMAND := "docker-compose --env-file env/.env -p shortener-infra -f docker/infra/docker-compose.yml"
+MONITORING_COMMAND := "docker-compose --env-file env/.env -p shortener-monitoring -f docker/monitoring/docker-compose.yml"
+
+
 # Show available commands
 help:
     @just --list
 
-
-# =====================
-# Environment Management
-# =====================
+# Runs ruff (lint + format)
+lint:
+    @echo "[ruff] Running linters..."
+    - ruff check --fix --silent .
+    - ruff format --silent .
 
 # Configures the local environment (DB localhost:5433)
-set_local_env:
+set-local-env:
     @sed -i '' 's/^DB_HOST=.*/DB_HOST=localhost/' env/.env
     @sed -i '' 's/^DB_PORT=.*/DB_PORT=5433/' env/.env
     @sed -i '' 's/^REDIS_HOST=.*/REDIS_HOST=localhost/' env/.env
     @echo "Environment set for LOCAL"
 
-# Creates a requirements.txt file for dev
-freeze-dev:
-    @echo "Generating requirements.txt (dev)..."
-    uv pip compile pyproject.toml --extra dev -o requirements.txt
-
-# Creates a requirements.txt file for production
-freeze-prod:
-    @echo "Generating requirements.txt (prod)..."
-    uv pip compile pyproject.toml -o requirements.txt
-
-# Deletes requirements.txt
-rm-requirements:
-    @echo "Remove requirements.txt..."
-    rm requirements.txt
-
-
-# =====================
-# Docker environment
-# =====================
-
-create-global-net:
-    @docker network create global_net || true
-
 # Configures environment variables for Docker
-set_docker_env:
+set-docker-env:
     @sed -i '' 's/^DB_HOST=.*/DB_HOST=postgres/' env/.env
     @sed -i '' 's/^DB_PORT=.*/DB_PORT=5432/' env/.env
     @sed -i '' 's/^REDIS_HOST=.*/REDIS_HOST=redis/' env/.env
-    @echo "Environment set for DOCKER"
+    @echo "[docker_env] Environment set for DOCKER"
 
-# Puts up containers kafka + postgres + redis
-up:
-    @echo "Starting containers..."
-    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} up -d --build kafka kafka-ui postgres redis
-    @echo "Containers started"
+# Creates a requirements.txt file for dev
+freeze-dev:
+    @echo "[req.txt] Generating requirements.txt (dev)..."
+    uv pip compile pyproject.toml --extra dev -o requirements.txt
 
-# Stops containers and cleans volume
-down:
-    @echo "Stopping containers..."
-    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} down -v
-    @echo "Containers stopped"
+# Creates a requirements.txt file for prod
+freeze-prod:
+    @echo "[req.txt] Generating requirements.txt (prod)..."
+    uv pip compile pyproject.toml -o requirements.txt
 
+# Remove req.txt file
+clean-requirements:
+    @echo "[req.txt] Removing requirements.txt..."
+    rm -f requirements.txt
 
-# =====================
-# Kafka topics
-# =====================
+# Create docker network
+create-global-net:
+    @if docker network inspect global_net >/dev/null 2>&1; then \
+        echo "[global_net] the network already exists — skipping creation"; \
+    else \
+        echo "[global_net] No network - creating..."; \
+        docker network create global_net >/dev/null && \
+        echo "[global_net] created"; \
+    fi
+
+# Check file
+ensure-pgbouncer-userlist:
+    @if [ ! -f docker/infra/pgbouncer/userlist.txt ]; then \
+        echo "[pgbouncer] The file docker/infra/pgbouncer/userlist.txt is missing."; \
+        echo "[pgbouncer] Create it manually and fill it with user entries for pgbouncer."; \
+        exit 1; \
+    fi
+    @echo "[pgbouncer] The userlist.txt file has been found — everything is OK."
 
 # Creates Kafka topics with the specified number of partitions
-create_kafka_topics ARG:
-    @echo "Creating Kafka topics with {{ARG}} partitions..."
+create-kafka-topics ARG:
+    @echo "[broker] Creating Kafka topics with {{ARG}} partitions..."
     @docker exec kafka /opt/kafka/bin/kafka-topics.sh \
-        --bootstrap-server kafka:9092 \
-        --create --topic new_urls --partitions {{ARG}} --replication-factor 1 || true
+        --bootstrap-server kafka:9092 --create --topic new-urls --partitions {{ARG}} --replication-factor 1 || true
     @docker exec kafka /opt/kafka/bin/kafka-topics.sh \
-        --bootstrap-server kafka:9092 \
-        --create --topic update_urls --partitions {{ARG}} --replication-factor 1 || true
-    @echo "Kafka topics created."
-
-
-# =====================
-# Database migrations
-# =====================
-
-# Applies alembic migrations (upgrade head)
-migrate-up:
-    @echo "Running migrations..."
-    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} run --rm fastapi python -m alembic upgrade head
-
-# Rolls back migration by one step
-migrate-down:
-    @echo "Downgrading migrations..."
-    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} run --rm fastapi python -m alembic downgrade -1
-
-
-# =====================
-# Application
-# =====================
-
-# Runs the fastapi application in docker
-start-app:
-    @echo "Starting app..."
-    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} up -d fastapi
-
-# Redis CLI
-redis-cli:
-    @echo "Connecting to Redis CLI..."
-    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} exec redis redis-cli
-
-# =====================
-# Consumers
-# =====================
+        --bootstrap-server kafka:9092 --create --topic update-urls --partitions {{ARG}} --replication-factor 1 || true
+    @echo "[broker] Kafka topics created."
 
 # Scaling consumer and consumer_update
 scale-consumers ARG:
     @echo "Scaling consumers to {{ARG}} replicas..."
-    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} up -d \
+    {{APP_COMMAND}} up -d \
         --scale consumer={{ARG}} \
-        --scale consumer_update={{ARG}}
+        --scale consumer-update={{ARG}}
     @echo "Consumers scaled."
 
-
-# =====================
-# Full startup
-# =====================
-
-# Full launch: env + deps + containers + themes + migrations + scaling + application
-full-up partitions replicas:
-    @echo "Running full-up..."
-    @just create-global-net
-    @just set_docker_env
-    @just freeze-dev
-    @just up
-    @just migrate-up
-    @just create_kafka_topics {{partitions}}
-    @just scale-consumers {{replicas}}
-    @just start-app
-    @just rm-requirements
-    @echo "Full startup completed."
-
-
-
-restart-app:
-    @just set_docker_env
-    @just freeze-dev
-    @echo "Restarting fastapi and consumer containers..."
-    {{DC}} --env-file {{ENV_FILE}} -p {{PROJECT_NAME}} -f {{DC_FILE}} up -d --build fastapi consumer consumer_update
-    @echo "FastAPI and consumers restarted"
-
-
-
-# =====================
-# Linters
-# =====================
-
-# Runs ruff (lint + format)
-lint:
-    @echo "Running linters..."
-    - ruff check --fix --silent .
-    - ruff format --silent .
-
-
-# =====================
-# Alembic: migrations creation
-# =====================
-
 # Create migration with autogeneration
-make_migrate ARG:
+make-migration ARG:
     @echo "Create alembic revision: {{ARG}}"
     @alembic revision --autogenerate -m {{ARG}}
 
 # Creates migration in the local environment
-make_migrate_local ARG:
-    @just set_local_env
-    @just make_migrate {{ARG}}
+make-migrate-local ARG:
+    @just set-local-env
+    @just make-migration {{ARG}}
 
 # Rolls back to the specified revision locally
-make_downgrade_local ARG:
-    @just set_local_env
-    @just make_downgrade {{ARG}}
+make-downgrade-local:
+    @just set-local-env
+    @alembic downgrade -1
+
+# Applies alembic migrations (upgrade head)
+migrate-up:
+    @echo "Running migrations..."
+    {{APP_COMMAND}} run --rm fastapi python -m alembic upgrade head
+
+# Rolls back migration by one step
+migrate-down:
+    @echo "Downgrading migrations..."
+    {{APP_COMMAND}} run --rm fastapi python -m alembic downgrade -1
 
 
 
+############################
+# Entry points
+############################
 
-MONITORING_DC_FILE := "docker/monitoring/docker-compose.yml"
+# Starts infrastructure stack
+infra-up:
+    @echo "[infra] Starting infrastructure stack..."
+    @just create-global-net
+    @just ensure-pgbouncer-userlist
+    {{INFRA_COMMAND}} up -d --build
+    @echo "[infra] Infrastructure stack started!"
+
+# Stops infrastructure stack
+infra-down:
+    @echo "[infra] Stopping infrastructure stack..."
+    {{INFRA_COMMAND}} down -v
+    @echo "[infra] Infrastructure stack stopped!"
+
+# Runs the fastapi application in docker
+start-app:
+    @echo "Starting app..."
+    {{APP_COMMAND}} up -d fastapi
+
+# Full launch: env + deps + containers + themes + migrations + scaling + application
+run-app partitions replicas:
+    @echo "[app] Running full-up..."
+    @just create-global-net
+    @just set-docker-env
+    @just freeze-dev
+    @just migrate-up
+    @just create-kafka-topics {{partitions}}
+    @just scale-consumers {{replicas}}
+    @just start-app
+    @just clean-requirements
+    @echo "[app] Full startup completed."
+
+# Restart application containers
+restart-app:
+    @just set-docker-env
+    @just freeze-dev
+    @echo "Restarting fastapi and consumer containers..."
+    {{APP_COMMAND}} up -d --build fastapi consumer consumer-update
+    @echo "FastAPI and consumers restarted"
+
+# Stops containers and cleans volume
+down-app:
+    @echo "Stopping containers..."
+    {{APP_COMMAND}} down -v
+    @echo "Containers stopped"
 
 # Starts monitoring stack
 monitoring-up:
-    @echo "Starting monitoring stack..."
-    {{DC}} --env-file {{ENV_FILE}} -p monitoring_{{PROJECT_NAME}} -f {{MONITORING_DC_FILE}} up -d --build
-    @echo "Monitoring stack started"
+    @echo "[monitoring] Starting monitoring stack..."
+    {{MONITORING_COMMAND}} up -d --build
+    @echo "[monitoring] Monitoring stack started!"
 
 # Stops monitoring stack
 monitoring-down:
-    @echo "Stopping monitoring stack..."
-    {{DC}} --env-file {{ENV_FILE}} -p monitoring_{{PROJECT_NAME}} -f {{MONITORING_DC_FILE}} down -v
-    @echo "Monitoring stack stopped"
+    @echo "[monitoring] Stopping monitoring stack..."
+    {{MONITORING_COMMAND}} down -v
+    @echo "[monitoring] Monitoring stack stopped!"
 
+# Redis CLI
+redis-cli:
+    @echo "Connecting to Redis CLI..."
+    {{INFRA_COMMAND}} exec redis redis-cli
