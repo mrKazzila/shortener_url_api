@@ -18,19 +18,18 @@ class PublishUrlToBrokerUseCase:
     message_broker: "MessageBrokerPublisherProtocol"
 
     async def execute(self, *, entity: "UrlEntity") -> None:
-        logger.info("PublishUrlToBrokerUseCase: received entity %r", entity)
-
         try:
             await self.message_broker.publish_new_url(entity=entity)
-
             logger.info(
                 "PublishUrlToBrokerUseCase: published event for key=%s",
                 entity.key,
             )
-
         except Exception as exc:
             logger.warning(
                 "PublishUrlToBrokerUseCase: failed publishing url key=%s error=%s",
                 entity.key,
                 exc,
             )
+
+    async def execute_batch(self, *, entities: list["UrlEntity"]) -> None:
+        await self.message_broker.publish_new_urls_batch(entities=entities)

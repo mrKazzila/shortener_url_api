@@ -7,12 +7,23 @@ from typing import TypeVar, final
 from uuid import UUID
 
 import structlog
-from sqlalchemy import func, insert, select, update
+from sqlalchemy import (
+    Integer,
+    String,
+    column,
+    func,
+    insert,
+    select,
+    update,
+    values,
+)
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.interfaces import RepositoryProtocol
 from src.domain.entities import UrlEntity
 from src.infrastructures.db.models import Urls
+from src.infrastructures.db.models.click_inbox import ClickInbox
 from src.infrastructures.mappers import UrlDBMapper
 
 ModelType = TypeVar("ModelType", bound=Urls)
@@ -37,7 +48,6 @@ class SQLAlchemyRepository(RepositoryProtocol):
     ) -> ModelType | None:
         _statement = select(self.model).filter_by(**reference)
         statement_result = await self.session.execute(statement=_statement)
-
         return statement_result.scalar_one_or_none()
 
     async def get_all(  # type: ignore
@@ -70,6 +80,25 @@ class SQLAlchemyRepository(RepositoryProtocol):
         _statement = insert(self.model).values(**data)
         await self.session.execute(statement=_statement)
 
+    async def add_bulk(  # type: ignore
+        self,
+        *,
+        entities: list[UrlEntity],
+    ) -> None:
+        if not entities:
+            return
+
+        dicts = [self.mapper.to_model(entity) for entity in entities]
+        logger.info(f"ADD BULK: {dicts=!r}")
+
+        stmt = (
+            pg_insert(self.model)
+            .values(dicts)
+            .on_conflict_do_nothing(index_elements=[self.model.key])
+        )
+
+        await self.session.execute(stmt)
+
     async def update(  # type: ignore
         self,
         *,
@@ -81,46 +110,62 @@ class SQLAlchemyRepository(RepositoryProtocol):
         )
         await self.session.execute(_statement)
 
-    async def increment_clicks(  # type: ignore
+    async def apply_click_events(  # type: ignore
         self,
         *,
-        key: str,
-    ) -> None:
-        _statement = (
-            update(self.model)
-            .where(self.model.key == key)
-            .values(
-                clicks_count=self.model.clicks_count + 1,
-                last_used=func.now(),
-            )
-        )
-        await self.session.execute(_statement)
+        events: list[tuple[UUID, str]],
+    ) -> int:
+        if not events:
+            return 0
 
-    async def increment_clicks_batch(  # type: ignore
+        rows = [
+            {"event_id": event_id, "url_key": key} for event_id, key in events
+        ]
+
+        stmt_ins = (
+            pg_insert(ClickInbox)
+            .values(rows)
+            .on_conflict_do_nothing(index_elements=[ClickInbox.event_id])
+            .returning(ClickInbox.url_key)
+        )
+        stmt_result = await self.session.execute(stmt_ins)
+        inserted_keys = list(stmt_result.scalars().all())
+
+        if not inserted_keys:
+            return 0
+
+        increments = Counter(inserted_keys)
+
+        await self._increment_clicks_batch(increments=increments)
+        return len(inserted_keys)
+
+    async def _increment_clicks_batch(  # type: ignore
         self,
         *,
         increments: Counter[str],
     ) -> None:
+        if not increments:
+            return
+
         now = func.now()
 
-        for key, amount in increments.items():
-            stmt = (
-                update(self.model)
-                .where(self.model.key == key)
-                .values(
-                    clicks_count=self.model.clicks_count + amount,
-                    last_used=now,
-                )
+        values_ = (
+            values(
+                column("url_key", String),
+                column("cnt", Integer),
+                name="v",
             )
-            await self.session.execute(stmt)
+            .data(list(increments.items()))
+            .alias("v")
+        )
 
-    async def add_bulk(  # type: ignore
-        self,
-        *,
-        entities: list[UrlEntity],
-    ) -> None:
-        dicts = [self.mapper.to_model(entity) for entity in entities]
-        logger.info(f"ADD BULK: {dicts=!r}")
-        stmt = insert(self.model).values(dicts)
+        stmt = (
+            update(self.model)
+            .where(self.model.key == values_.c.url_key)
+            .values(
+                clicks_count=self.model.clicks_count + values_.c.cnt,
+                last_used=now,
+            )
+        )
 
         await self.session.execute(stmt)

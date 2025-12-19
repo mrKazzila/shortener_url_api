@@ -34,39 +34,28 @@ logger = structlog.get_logger(__name__)
 
 
 class SettingsProvider(Provider):
-    """
-    Provides application config.
-    """
-
     @provide(scope=Scope.APP)
     def get_settings(self) -> Settings:
-        """
-        Provides the Settings instance.
-        """
         return Settings()
 
 
 class BrokerProvider(Provider):
-    """
-    Provides a Kafka message broker instance.
-    """
 
     @provide(scope=Scope.APP)
     async def get_broker(
         self,
         settings: Settings,
     ) -> AsyncIterator[KafkaBroker]:
-        """
-        Provides a KafkaBroker instance.
-        """
-        broker = KafkaBroker([settings.broker_url])
+        broker = KafkaBroker(
+            [settings.broker_url],
+            enable_idempotence=True,
+        )
 
         try:
             await broker.start()
             logger.info(
                 "Kafka broker started successfully",
                 url=settings.broker_url,
-                queue=settings.broker_new_artifact_queue,
             )
             yield broker
         except Exception as e:
@@ -77,18 +66,11 @@ class BrokerProvider(Provider):
 
 
 class DatabaseProvider(Provider):
-    """
-    Provides database-related dependencies, such as session factory and sessions.
-    """
-
     @provide(scope=Scope.APP)
     async def get_session_factory(
         self,
         settings: Settings,
     ) -> AsyncIterator[async_sessionmaker[AsyncSession]]:
-        """
-        Provides an asynchronous session factory for SQLAlchemy.
-        """
         engine = engine_factory(
             dsn=str(settings.database_url),
             is_echo=settings.debug,
@@ -105,18 +87,11 @@ class DatabaseProvider(Provider):
         self,
         factory: async_sessionmaker[AsyncSession],
     ) -> AsyncIterator[AsyncSession]:
-        """
-        Provides an asynchronous SQLAlchemy session.
-        """
         async with factory() as session:
             yield session
 
 
 class MapperProvider(Provider):
-    """
-    Provides various mapper implementations for different layers.
-    """
-
     @provide(scope=Scope.APP)
     def get_url_mapper(self) -> UrlMapper:
         return UrlMapper()
@@ -127,9 +102,6 @@ class MapperProvider(Provider):
 
 
 class RepositoryProvider(Provider):
-    """
-    Provides repository implementations.
-    """
 
     @provide(scope=Scope.APP)
     def get_repository(
@@ -137,9 +109,6 @@ class RepositoryProvider(Provider):
         session: AsyncSession,
         mapper: UrlDBMapper,
     ) -> RepositoryProtocol:
-        """
-        Provides an ArtifactRepositoryProtocol implementation.
-        """
         return SQLAlchemyRepository(
             session=session,
             mapper=mapper,
@@ -147,9 +116,6 @@ class RepositoryProvider(Provider):
 
 
 class UnitOfWorkProvider(Provider):
-    """
-    Provides Unit of Work implementations.
-    """
 
     @provide(scope=Scope.APP)
     def get_unit_of_work(
@@ -157,9 +123,6 @@ class UnitOfWorkProvider(Provider):
         session: AsyncSession,
         repository: RepositoryProtocol,
     ) -> UnitOfWorkProtocol:
-        """
-        Provides a UnitOfWorkProtocol implementation.
-        """
         return UnitOfWork(
             session=session,
             repository=repository,
@@ -167,9 +130,6 @@ class UnitOfWorkProvider(Provider):
 
 
 class ServiceProvider(Provider):
-    """
-    Provides service clients for external integrations.
-    """
 
     @provide(scope=Scope.APP)
     def get_message_broker(
@@ -177,9 +137,6 @@ class ServiceProvider(Provider):
         broker: KafkaBroker,
         mapper: UrlMapper,
     ) -> MessageBrokerPublisherProtocol:
-        """
-        Provides a MessageBrokerPublisherProtocol implementation.
-        """
         return KafkaPublisher(
             broker=broker,
             mapper=mapper,
@@ -187,18 +144,12 @@ class ServiceProvider(Provider):
 
 
 class UseCaseProvider(Provider):
-    """
-    Provides application use cases.
-    """
 
     @provide(scope=Scope.APP)
     def process_new_url_use_case(
         self,
         uow: UnitOfWorkProtocol,
     ) -> ProcessNewUrlUseCase:
-        """
-        Provides a GetArtifactFromRepoUseCase instance.
-        """
         return ProcessNewUrlUseCase(uow=uow)
 
     @provide(scope=Scope.APP)
@@ -206,9 +157,6 @@ class UseCaseProvider(Provider):
         self,
         uow: UnitOfWorkProtocol,
     ) -> UpdateUrlUseCase:
-        """
-        Provides a GetArtifactFromRepoUseCase instance.
-        """
         return UpdateUrlUseCase(uow=uow)
 
 

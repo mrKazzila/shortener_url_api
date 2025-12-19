@@ -1,8 +1,7 @@
 __all__ = ("KafkaPublisher",)
 
-import json
 from dataclasses import dataclass, field
-from typing import final
+from typing import Any, final
 
 import structlog
 from faststream.kafka import KafkaBroker
@@ -20,48 +19,47 @@ logger = structlog.get_logger(__name__)
 class KafkaPublisher(MessageBrokerPublisherProtocol):
     """
     Kafka implementation of the MessageBrokerPublisherProtocol.
-    Publishes artifact admission notifications to a Kafka topic.
     """
 
     broker: KafkaBroker
-    default_topic: str = field(default="new-urls")
+    new_urls_topic: str = field(default="new-urls")
+    update_urls_update_topic: str = field(default="update-urls")
     mapper: UrlMapper
 
-    async def publish_update_url(
-        self,
-        entity: UrlEntity,
-        topic: str | None = None,
-    ) -> None:
+    async def publish_new_url(self, entity: UrlEntity) -> None:
         try:
-            publish_dto: PublishUrlDTO = self.mapper.to_publish_dto(
-                entity,
-            )
+            publish_dto: PublishUrlDTO = self.mapper.to_publish_dto(entity)
+            payload = publish_dto.to_dict()
 
             await self.broker.publish(
+                topic=self.new_urls_topic,
                 key=publish_dto.key.encode("utf-8"),
-                message=json.dumps(publish_dto.to_dict(), ensure_ascii=False),
-                topic=topic,
+                message=payload,
+                headers={"content-type": "application/json"},
             )
-
         except Exception as e:
-            logger.error("Failed to publish artifact", error=str(e))
+            logger.error("Failed to publish new_url event", error=str(e))
             raise
 
-    async def publish_new_url(
-        self,
-        entity: UrlEntity,
-    ) -> None:
+    async def publish_update_url(self, payload: dict[str, Any]) -> None:
         try:
-            publish_dto: PublishUrlDTO = self.mapper.to_publish_dto(
-                entity,
-            )
+            url_key = payload.get("key")
+            event_id = payload.get("event_id")
 
             await self.broker.publish(
-                key=publish_dto.key.encode("utf-8"),
-                message=json.dumps(publish_dto.to_dict(), ensure_ascii=False),
-                topic=self.default_topic,
+                topic=self.update_urls_update_topic,
+                key=url_key.encode("utf-8"),
+                message=payload,
+                headers={
+                    "content-type": "application/json",
+                    "event_id": str(event_id),
+                    "event_type": "UrlClicked",
+                },
             )
-
         except Exception as e:
-            logger.error("Failed to publish artifact", error=str(e))
+            logger.error("Failed to publish update_url event", error=str(e))
             raise
+
+    async def publish_new_urls_batch(self, entities: list[UrlEntity]) -> None:
+        msgs = [self.mapper.to_publish_dto(e).to_dict() for e in entities]
+        await self.broker.publish_batch(*msgs, topic=self.new_urls_topic)

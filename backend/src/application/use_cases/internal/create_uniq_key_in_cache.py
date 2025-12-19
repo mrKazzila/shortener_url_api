@@ -3,27 +3,33 @@ __all__ = ("CreateUniqKeyUseCase",)
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, final
 
-import structlog
-
 if TYPE_CHECKING:
-    from src.application.use_cases.internal import CheckKeyInCacheUseCase
     from src.domain.services import RandomKeyGenerator
-
-logger = structlog.get_logger(__name__)
+    from src.application.interfaces import CacheProtocol
 
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class CreateUniqKeyUseCase:
     key_generator: "RandomKeyGenerator"
-    check_key_in_cache_uc: "CheckKeyInCacheUseCase"
+    cache: "CacheProtocol"
+    max_attempts: int = 50
+    ttl_seconds: int | None = None
 
-    async def execute(self) -> str:
-        while True:
+    async def execute(
+        self,
+        *,
+        target_url: str,
+    ) -> str:
+        for _ in range(self.max_attempts):
             key = self.key_generator()
-            is_key_exist = await self.check_key_in_cache_uc.execute(key=key)
 
-            if not is_key_exist:
+            if await self.cache.set_nx(
+                f"short:{key}",
+                {"target_url": target_url},
+                ttl_seconds=self.ttl_seconds,
+            ):
                 return key
 
-            logger.debug("Key already exist")
+        # TODO: CustomError
+        raise RuntimeError("Failed to allocate unique key (too many collisions)")
