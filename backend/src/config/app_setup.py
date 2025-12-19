@@ -17,7 +17,7 @@ from src.application.interfaces.cache import CacheProtocol
 from src.config.settings.base import Settings
 from src.config.settings.logging import setup_logging
 
-setup_logging(json_format=True)
+setup_logging(json_format=False)
 logger = structlog.get_logger(__name__)
 
 

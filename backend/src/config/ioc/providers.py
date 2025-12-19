@@ -26,8 +26,6 @@ from src.application.use_cases import (
     RedirectToOriginalUrlUseCase,
 )
 from src.application.use_cases.internal import (
-    AddNewUrlToCacheUseCase,
-    CheckKeyInCacheUseCase,
     CreateUniqKeyUseCase,
     GetTargetByKeyUseCase,
     PublishUrlToBrokerForUpdateUseCase,
@@ -35,7 +33,7 @@ from src.application.use_cases.internal import (
 )
 from src.config.settings import Settings
 from src.domain.services.key_generator import RandomKeyGenerator
-from src.infrastructures.broker import KafkaPublisher
+from src.infrastructures.broker import KafkaPublisher, NewUrlPublishQueue
 from src.infrastructures.cache import RedisCacheClient
 from src.infrastructures.db import (
     SQLAlchemyRepository,
@@ -53,21 +51,13 @@ logger = structlog.get_logger(__name__)
 
 
 class SettingsProvider(Provider):
-    """
-    Provides application config.
-    """
 
     @provide(scope=Scope.APP)
     def get_settings(self) -> Settings:
-        """
-        Provides the Settings instance.
-        """
         return Settings()
 
 
 class AuthProvider(Provider):
-    """Provides current user from headers."""
-
     # TODO: Refactor
 
     def __init__(self):
@@ -87,9 +77,6 @@ class AuthProvider(Provider):
 
 
 class RandomKeyGeneratorProvider(Provider):
-    """
-    Provides RandomKeyGenerator.
-    """
 
     @provide(scope=Scope.APP)
     def get_random_key_generator(self) -> RandomKeyGenerator:
@@ -97,26 +84,23 @@ class RandomKeyGeneratorProvider(Provider):
 
 
 class BrokerProvider(Provider):
-    """
-    Provides a Kafka message broker instance.
-    """
 
     @provide(scope=Scope.APP)
     async def get_broker(
         self,
         settings: Settings,
     ) -> AsyncIterator[KafkaBroker]:
-        """
-        Provides a KafkaBroker instance.
-        """
-        broker = KafkaBroker([settings.broker_url])
+        broker = KafkaBroker(
+            [settings.broker_url],
+            enable_idempotence=True,
+            linger_ms=20,
+        )
 
         try:
             await broker.start()
             logger.info(
                 "Kafka broker started successfully",
                 url=settings.broker_url,
-                queue=settings.broker_new_artifact_queue,
             )
             yield broker
         except Exception as e:
@@ -127,18 +111,12 @@ class BrokerProvider(Provider):
 
 
 class DatabaseProvider(Provider):
-    """
-    Provides database-related dependencies, such as session factory and sessions.
-    """
 
     @provide(scope=Scope.APP)
     async def get_session_factory(
         self,
         settings: Settings,
     ) -> AsyncIterator[async_sessionmaker[AsyncSession]]:
-        """
-        Provides an asynchronous session factory for SQLAlchemy.
-        """
         engine = engine_factory(
             dsn=str(settings.database_url),
             is_echo=settings.debug,
@@ -155,17 +133,11 @@ class DatabaseProvider(Provider):
         self,
         factory: async_sessionmaker[AsyncSession],
     ) -> AsyncIterator[AsyncSession]:
-        """
-        Provides an asynchronous SQLAlchemy session.
-        """
         async with factory() as session:
             yield session
 
 
 class MapperProvider(Provider):
-    """
-    Provides various mapper implementations for different layers.
-    """
 
     @provide(scope=Scope.APP)
     def get_url_mapper(self) -> UrlMapper:
@@ -185,9 +157,6 @@ class MapperProvider(Provider):
 
 
 class RepositoryProvider(Provider):
-    """
-    Provides repository implementations.
-    """
 
     @provide(scope=Scope.REQUEST)
     def get_repository(
@@ -195,9 +164,6 @@ class RepositoryProvider(Provider):
         session: AsyncSession,
         db_mapper: UrlDBMapper,
     ) -> RepositoryProtocol:
-        """
-        Provides an ArtifactRepositoryProtocol implementation.
-        """
         return SQLAlchemyRepository(
             session=session,
             mapper=db_mapper,
@@ -205,9 +171,6 @@ class RepositoryProvider(Provider):
 
 
 class UnitOfWorkProvider(Provider):
-    """
-    Provides Unit of Work implementations.
-    """
 
     @provide(scope=Scope.REQUEST)
     def get_unit_of_work(
@@ -215,9 +178,6 @@ class UnitOfWorkProvider(Provider):
         session: AsyncSession,
         repository: RepositoryProtocol,
     ) -> UnitOfWorkProtocol:
-        """
-        Provides a UnitOfWorkProtocol implementation.
-        """
         return UnitOfWork(
             session=session,
             repository=repository,
@@ -225,19 +185,13 @@ class UnitOfWorkProvider(Provider):
 
 
 class ServiceProvider(Provider):
-    """
-    Provides service clients for external integrations.
-    """
 
-    @provide(scope=Scope.REQUEST)
+    @provide(scope=Scope.APP)
     def get_message_broker(
         self,
         broker: KafkaBroker,
         url_mapper: UrlMapper,
     ) -> MessageBrokerPublisherProtocol:
-        """
-        Provides a MessageBrokerPublisherProtocol implementation.
-        """
         return KafkaPublisher(
             broker=broker,
             mapper=url_mapper,
@@ -245,25 +199,36 @@ class ServiceProvider(Provider):
 
 
 class CacheProvider(Provider):
+
+    << << << < HEAD
     """
     Provides caching services using Redis.
     """
+== == == =
+>> >> >> > dev
 
     @provide(scope=Scope.APP)
     async def get_cache_service(
         self,
         settings: Settings,
     ) -> AsyncIterator[CacheProtocol]:
+
+<< << << < HEAD
         """
         Provides a CacheProtocol implementation.
         """
         redis_client = await redis.from_url(
+                       == == == =
+        redis_client = redis.from_url(
+                       >> >> >> > dev
             str(settings.redis_url),
             encoding="utf-8",
             decode_responses=False,
             retry_on_timeout=True,
-            max_connections=50,
             health_check_interval=60,
+            max_connections=200,
+            socket_connect_timeout=1.0,
+            socket_timeout=1.0,
         )
         cache_service = RedisCacheClient(
             client=redis_client,
@@ -282,53 +247,23 @@ class CacheProvider(Provider):
 
 
 class UseCaseProvider(Provider):
-    """
-    Provides application use cases.
-    """
-
-    @provide(scope=Scope.REQUEST)
-    def get_check_key_in_cache_use_case(
-        self,
-        cache: CacheProtocol,
-    ) -> CheckKeyInCacheUseCase:
-        """
-        Provides a GetArtifactFromRepoUseCase instance.
-        """
-        return CheckKeyInCacheUseCase(cache=cache)
-
-    @provide(scope=Scope.REQUEST)
-    def add_new_url_to_cache_use_case(
-        self,
-        cache: CacheProtocol,
-        mapper: UrlMapper,
-    ) -> AddNewUrlToCacheUseCase:
-        return AddNewUrlToCacheUseCase(
-            cache=cache,
-            mapper=mapper,
-        )
 
     @provide(scope=Scope.REQUEST)
     def get_create_uniq_key_use_case(
         self,
         key_generator: RandomKeyGenerator,
-        get_check_key_in_cache_use_case: CheckKeyInCacheUseCase,
+        cache: CacheProtocol,
     ) -> CreateUniqKeyUseCase:
-        """
-        Provides a SaveArtifactToRepoUseCase instance.
-        """
         return CreateUniqKeyUseCase(
             key_generator=key_generator,
-            check_key_in_cache_uc=get_check_key_in_cache_use_case,
+            cache=cache,
         )
 
-    @provide(scope=Scope.REQUEST)
+    @provide(scope=Scope.APP)
     def get_publish_url_to_broker_use_case(
         self,
         message_broker: MessageBrokerPublisherProtocol,
     ) -> PublishUrlToBrokerUseCase:
-        """
-        Provides a PublishArtifactToBrokerUseCase instance.
-        """
         return PublishUrlToBrokerUseCase(
             message_broker=message_broker,
         )
@@ -336,17 +271,12 @@ class UseCaseProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def get_create_url_use_case(
         self,
-        get_create_uniq_key_use_case: CreateUniqKeyUseCase,
-        get_publish_url_to_broker_use_case: PublishUrlToBrokerUseCase,
-        add_new_url_to_cache_use_case: AddNewUrlToCacheUseCase,
+        create_uniq_key_uc: CreateUniqKeyUseCase,
+        queue: NewUrlPublishQueue,
     ) -> CreateUrlUseCase:
-        """
-        Provides a ProcessArtifactUseCase instance.
-        """
         return CreateUrlUseCase(
-            create_uniq_key_uc=get_create_uniq_key_use_case,
-            add_new_url_to_cache_uc=add_new_url_to_cache_use_case,
-            publish_url_to_broker_uc=get_publish_url_to_broker_use_case,
+            create_uniq_key_uc=create_uniq_key_uc,
+            publish_url_queue=queue,
         )
 
     @provide(scope=Scope.REQUEST)
@@ -356,20 +286,14 @@ class UseCaseProvider(Provider):
         uow: UnitOfWorkProtocol,
         mapper: UrlMapper,
     ) -> GetTargetByKeyUseCase:
-        return GetTargetByKeyUseCase(
-            cache=cache,
-            uow=uow,
-            mapper=mapper,
-        )
+        return GetTargetByKeyUseCase(cache=cache, uow=uow, mapper=mapper)
 
     @provide(scope=Scope.REQUEST)
     def get_publish_url_to_broker_for_update_use_case(
         self,
         message_broker: MessageBrokerPublisherProtocol,
     ) -> PublishUrlToBrokerForUpdateUseCase:
-        return PublishUrlToBrokerForUpdateUseCase(
-            message_broker=message_broker,
-        )
+        return PublishUrlToBrokerForUpdateUseCase(message_broker=message_broker)
 
     @provide(scope=Scope.REQUEST)
     def redirect_to_target_url_use_case(
@@ -387,10 +311,25 @@ class UseCaseProvider(Provider):
         self,
         uow: UnitOfWorkProtocol,
     ) -> GetUserUrlsUseCase:
-        """
-        Provides a ProcessArtifactUseCase instance.
-        """
         return GetUserUrlsUseCase(uow=uow)
+
+
+class NewUrlPublishQueueProvider(Provider):
+    @provide(scope=Scope.APP)
+    async def get_new_url_publish_queue(
+        self,
+        publish_uc: PublishUrlToBrokerUseCase,
+    ) -> AsyncIterator[NewUrlPublishQueue]:
+        queue = NewUrlPublishQueue(
+            publish_uc=publish_uc,
+            maxsize=10_000,
+            workers=2,
+        )
+        await queue.start()
+        try:
+            yield queue
+        finally:
+            await queue.stop(drain=True, timeout_sec=10.0)
 
 
 PROVIDERS: list[Provider] = [
@@ -405,4 +344,5 @@ PROVIDERS: list[Provider] = [
     UnitOfWorkProvider(),
     ServiceProvider(),
     UseCaseProvider(),
+    NewUrlPublishQueueProvider(),
 ]

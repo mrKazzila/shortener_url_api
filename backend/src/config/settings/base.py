@@ -67,18 +67,6 @@ class Settings(BaseSettings):
         return self.broker.broker_url
 
     @property
-    def broker_new_artifact_queue(self) -> str:
-        return self.broker.broker_new_artifact_queue
-
-    @property
-    def publish_retries(self) -> int:
-        return self.broker.publish_retries
-
-    @property
-    def publish_retry_backoff(self) -> float:
-        return self.broker.publish_retry_backoff
-
-    @property
     def redis_password(self) -> str:
         return self.redis.redis_password
 

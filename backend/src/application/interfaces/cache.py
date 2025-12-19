@@ -24,3 +24,11 @@ class CacheProtocol(Protocol):
 
     @abstractmethod
     async def clear(self, pattern: str) -> int: ...
+
+    @abstractmethod
+    async def set_nx(
+        self,
+        key: str,
+        value: dict[str, Any] | str,
+        ttl_seconds: int | None = None,
+    ) -> bool: ...
