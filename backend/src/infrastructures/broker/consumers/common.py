@@ -19,8 +19,8 @@ async def init_container():
 async def init_dependencies(
     *,
     container: AsyncContainer,
-    us: UC,
+    uc: UC,
 ) -> tuple[KafkaBroker, UC]:
     broker: KafkaBroker = await container.get(KafkaBroker)
-    process_uc: us = await container.get(us)
+    process_uc: UC = await container.get(uc)
     return broker, process_uc

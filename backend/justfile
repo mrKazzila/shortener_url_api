@@ -35,12 +35,12 @@ set-docker-env:
 # Creates a requirements.txt file for dev
 freeze-dev:
     @echo "[req.txt] Generating requirements.txt (dev)..."
-    uv pip compile pyproject.toml --extra dev -o requirements.txt
+    @uv pip compile pyproject.toml --extra dev -o requirements.txt
 
 # Creates a requirements.txt file for prod
 freeze-prod:
     @echo "[req.txt] Generating requirements.txt (prod)..."
-    uv pip compile pyproject.toml -o requirements.txt
+    @uv pip compile pyproject.toml -o requirements.txt
 
 # Remove req.txt file
 clean-requirements:
@@ -86,12 +86,12 @@ scale-consumers ARG:
 # Create migration with autogeneration
 make-migration ARG:
     @echo "Create alembic revision: {{ARG}}"
-    @alembic revision --autogenerate -m {{ARG}}
+    @alembic revision --autogenerate -m "{{ARG}}"
 
 # Creates migration in the local environment
 make-migrate-local ARG:
     @just set-local-env
-    @just make-migration {{ARG}}
+    @just make-migration "{{ARG}}"
 
 # Rolls back to the specified revision locally
 make-downgrade-local:
@@ -108,6 +108,12 @@ migrate-down:
     @echo "Downgrading migrations..."
     {{APP_COMMAND}} run --rm fastapi python -m alembic downgrade -1
 
+apply-migration ARG:
+    @just set-docker-env
+    @just migrate-up
+    @just make-migrate-local "{{ARG}}"
+    @just set-docker-env
+    @just migrate-up
 
 
 ############################
@@ -129,12 +135,12 @@ infra-down:
     @echo "[infra] Infrastructure stack stopped!"
 
 # Runs the fastapi application in docker
-start-app:
+app-start:
     @echo "Starting app..."
     {{APP_COMMAND}} up -d fastapi
 
 # Full launch: env + deps + containers + themes + migrations + scaling + application
-run-app partitions replicas:
+app-up partitions replicas:
     @echo "[app] Running full-up..."
     @just create-global-net
     @just set-docker-env
@@ -142,12 +148,12 @@ run-app partitions replicas:
     @just migrate-up
     @just create-kafka-topics {{partitions}}
     @just scale-consumers {{replicas}}
-    @just start-app
+    @just app-start
     @just clean-requirements
     @echo "[app] Full startup completed."
 
 # Restart application containers
-restart-app:
+app-restart:
     @just set-docker-env
     @just freeze-dev
     @echo "Restarting fastapi and consumer containers..."
@@ -155,7 +161,7 @@ restart-app:
     @echo "FastAPI and consumers restarted"
 
 # Stops containers and cleans volume
-down-app:
+app-down:
     @echo "Stopping containers..."
     {{APP_COMMAND}} down -v
     @echo "Containers stopped"

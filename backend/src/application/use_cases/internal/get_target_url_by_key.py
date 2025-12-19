@@ -26,12 +26,11 @@ class GetTargetByKeyUseCase:
 
     async def execute(self, *, key: str) -> UrlEntity | None:
         if value := await self.cache.get(key=f"short:{key}"):
-            logger.info(f"FROM CACHE: {value=!r}")
             return self.mapper.to_entity(
                 cache={"key": key, **value},
             )
 
-        logger.info(f"NO  CACHE: {key=!r}")
+        logger.info(f"no cache: get from DB", key=key)
 
         if model := await self.uow.repository.get(
             reference={"key": key},

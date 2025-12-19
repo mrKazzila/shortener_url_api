@@ -1,8 +1,8 @@
 __all__ = ("UpdateUrlUseCase",)
 
-from collections import Counter
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, final
+from uuid import UUID
 
 import structlog
 
@@ -17,11 +17,17 @@ logger = structlog.get_logger(__name__)
 class UpdateUrlUseCase:
     uow: "UnitOfWorkProtocol"
 
-    async def execute(self, *, increments: Counter[str]) -> None:
-        logger.info(f"GOT increments from broker: {increments}")
+    async def execute(
+        self,
+        *,
+        events: list[tuple[UUID, str]],
+    ) -> None:
+        logger.info("GOT events from broker", size=len(events))
 
         async with self.uow:
-            await self.uow.repository.increment_clicks_batch(
-                increments=increments,
+            inserted = await self.uow.repository.apply_click_events(
+                events=events,
             )
             await self.uow.commit()
+
+        logger.info("APPLIED events", inserted=inserted, received=len(events))

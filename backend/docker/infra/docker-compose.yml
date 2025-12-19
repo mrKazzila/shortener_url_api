@@ -3,7 +3,7 @@ version: "3.9"
 services:
   pgbouncer:
     container_name: pgbouncer
-    image: edoburu/pgbouncer:latest
+    image: edoburu/pgbouncer:v1.24.1-p1
     restart: always
     environment:
       DB_USER: ${DB_USER}
@@ -96,7 +96,7 @@ services:
       start_period: 15s
 
   kafka-ui:
-    image: provectuslabs/kafka-ui:latest
+    image: provectuslabs/kafka-ui:v0.7.2
     container_name: kafka-ui
     depends_on:
       kafka:
