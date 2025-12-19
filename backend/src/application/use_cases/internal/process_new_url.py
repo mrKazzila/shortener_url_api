@@ -19,8 +19,6 @@ class ProcessNewUrlUseCase:
     uow: "UnitOfWorkProtocol"
 
     async def execute(self, *, entities: list["UrlEntity"]) -> None:
-        logger.info(f"GOTTEN {entities=!r} FROM BROKER")
-
         async with self.uow:
             await self.uow.repository.add_bulk(entities=entities)
             await self.uow.commit()

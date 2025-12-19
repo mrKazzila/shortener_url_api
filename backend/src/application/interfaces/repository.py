@@ -1,7 +1,6 @@
 __all__ = ("RepositoryProtocol",)
 
 from abc import abstractmethod
-from collections import Counter
 from datetime import datetime
 from typing import Protocol
 from uuid import UUID
@@ -49,15 +48,8 @@ class RepositoryProtocol(Protocol):
     ) -> None: ...
 
     @abstractmethod
-    async def increment_clicks(
+    async def apply_click_events(
         self,
         *,
-        key: str,
-    ) -> None: ...
-
-    @abstractmethod
-    async def increment_clicks_batch(
-        self,
-        *,
-        increments: Counter[str],
-    ) -> None: ...
+        events: list[tuple[UUID, str]],
+    ) -> int: ...

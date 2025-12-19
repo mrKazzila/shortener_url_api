@@ -111,3 +111,24 @@ class RedisCacheClient(CacheProtocol):
             logger.info("Redis connection closed")
         except redis.exceptions.RedisError as e:
             logger.error("Failed to close Redis connection", error=str(e))
+
+    async def set_nx(
+        self,
+        key: str,
+        value: dict[str, Any] | str,
+        ttl_seconds: int | None = None,
+    ) -> bool:
+        try:
+            serialized = json.dumps(value, ensure_ascii=False) if isinstance(value, dict) else str(value)
+            expire = ttl_seconds if ttl_seconds is not None else self.ttl
+
+            ok = await self.client.set(
+                key,
+                serialized,
+                nx=True,
+                ex=expire,
+            )
+            return bool(ok)
+        except (redis.exceptions.RedisError, TypeError, ValueError) as e:
+            logger.error("Redis set_nx operation failed", key=key, error=str(e))
+            return False

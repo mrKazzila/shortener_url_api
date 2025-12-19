@@ -1,7 +1,7 @@
 __all__ = ("MessageBrokerPublisherProtocol",)
 
 from abc import abstractmethod
-from typing import Protocol
+from typing import Any, Protocol
 
 from src.domain.entities.url import UrlEntity
 
@@ -16,6 +16,8 @@ class MessageBrokerPublisherProtocol(Protocol):
     @abstractmethod
     async def publish_update_url(
         self,
-        entity: UrlEntity,
-        topic: str | None = None,
+        payload: dict[str, Any],
     ) -> None: ...
+
+    @abstractmethod
+    async def publish_new_urls_batch(self, entities: list[UrlEntity]) -> None: ...

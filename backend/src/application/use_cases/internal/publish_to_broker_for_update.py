@@ -1,5 +1,6 @@
 __all__ = ("PublishUrlToBrokerForUpdateUseCase",)
 
+import uuid
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, final
 
@@ -17,26 +18,28 @@ logger = structlog.get_logger(__name__)
 class PublishUrlToBrokerForUpdateUseCase:
     message_broker: "MessageBrokerPublisherProtocol"
 
-    async def __call__(
+    async def execute(
         self,
         *,
         entity: "UrlEntity",
-        topic: str,
+        event_id: uuid.UUID,
     ) -> None:
-        try:
-            logger.info(f"Gotten update for {entity=!r} {topic=!r}")
+        payload = {
+            "event_id": str(event_id),
+            "key": entity.key,
+        }
 
-            await self.message_broker.publish_update_url(
-                entity=entity,
-                topic=topic,
-            )
+        try:
+            await self.message_broker.publish_update_url(payload=payload)
             logger.info(
-                "Published update artifact event to message broker",
+                "Published update event",
                 key=entity.key,
+                event_id=str(event_id),
             )
         except Exception as e:
             logger.warning(
-                "Failed to publish artifact notification to message broker (non-critical)",
+                "Failed to publish update event (non-critical)",
                 key=entity.key,
+                event_id=str(event_id),
                 error=str(e),
             )

@@ -3,6 +3,7 @@ __all__ = ("RedirectToOriginalUrlUseCase",)
 import asyncio
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, final
+from uuid import uuid4, UUID
 
 import structlog
 
@@ -24,21 +25,30 @@ class RedirectToOriginalUrlUseCase:
 
     async def execute(self, key: str) -> str | None:
         if entity := await self.get_target_url_by_key_uc.execute(key=key):
-            asyncio.create_task(self._publish(entity=entity))
+            asyncio.create_task(
+                self._publish(
+                    entity=entity,
+                    event_id=uuid4(),
+                ),
+            )
             return entity.target_url
+
         return None
 
-    async def _publish(self, *, entity: "UrlEntity") -> None:
+    async def _publish(
+        self,
+        *,
+        entity: "UrlEntity",
+        event_id: UUID,
+    ) -> None:
         try:
-            logger.info(f"GOT FOR UPDATE: {entity.key=!r}")
-            await self.publish_url_to_broker_for_update_uc(
+            await self.publish_url_to_broker_for_update_uc.execute(
                 entity=entity,
-                topic="update-urls",
+                event_id=event_id,
             )
-            logger.info(f"AFTER  CREATE TASK: {entity.key=!r}")
         except Exception as exc:
             logger.exception(
-                "CreateUrlUseCase._publish: failed to publish url %s: %s",
+                "RedirectToOriginalUrlUseCase._publish: failed to publish url %s: %s",
                 entity.key,
                 exc,
             )

@@ -1,4 +1,4 @@
-FROM python:3.11-slim as base
+FROM python:3.13-slim as base
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -17,7 +17,7 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     rm -rf /var/lib/apt/lists/*
 
 
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 RUN groupadd -r docker && \
     useradd -m -g docker unprivilegeduser && \
@@ -27,8 +27,8 @@ RUN groupadd -r docker && \
 ENV APP_HOME=/home/unprivilegeduser/shortener
 WORKDIR $APP_HOME
 
-COPY --from=builder --chown=unprivilegeduser:docker /root/.local/lib/python3.11/site-packages \
-    /home/unprivilegeduser/.local/lib/python3.11/site-packages
+COPY --from=builder --chown=unprivilegeduser:docker /root/.local/lib/python3.13/site-packages \
+    /home/unprivilegeduser/.local/lib/python3.13/site-packages
 COPY --from=builder --chown=unprivilegeduser:docker /root/.local/bin \
     /home/unprivilegeduser/.local/bin
 
