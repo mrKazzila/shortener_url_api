@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Annotated
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime
+from sqlalchemy import DateTime, String
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
@@ -32,16 +32,20 @@ class Urls(Base):
 
     name: Mapped[str] = mapped_column(
         doc="The URL title/name.",
+        type_=String(300),
         nullable=True,
     )
 
     key: Mapped[str] = mapped_column(
         doc="The shortened URL key.",
+        type_=String(5),
         unique=True,
         index=True,
     )
+
     target_url: Mapped[str] = mapped_column(
         doc="The original URL.",
+        type_=String(2048),
     )
 
     is_active: Mapped[bool] = mapped_column(
