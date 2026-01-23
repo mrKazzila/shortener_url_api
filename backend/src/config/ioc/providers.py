@@ -4,9 +4,9 @@ from collections.abc import AsyncIterator
 
 import redis.asyncio as redis
 import structlog
-from dishka import FromDishka, Provider, Scope, provide
-from fastapi import Request
+from dishka import Provider, Scope, provide
 from faststream.kafka import KafkaBroker
+from grpc import ServicerContext
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
@@ -60,22 +60,16 @@ class SettingsProvider(Provider):
 
 
 class AuthProvider(Provider):
-    # TODO: Refactor
-
-    def __init__(self):
-        super().__init__()
-        print("AuthProvider initialized!")
 
     @provide(scope=Scope.REQUEST)
-    def get_x_user_header_dto(
-        self,
-        request: Request,
-        settings: FromDishka[Settings],
-    ) -> XUserHeaderDTO:
-        print(f"Headers: {dict(request.headers)}")
-        user_id = request.headers.get(settings.user_header)
-        print(f"Extracted user_id: {user_id}")
-        return XUserHeaderDTO(x_user_id=user_id)
+    def user_id(self, context: ServicerContext) -> XUserHeaderDTO:
+        md = dict(context.invocation_metadata())
+        raw = md.get("x-user-id")
+
+        if not raw:
+            raise ValueError("missing x-user-id metadata")
+
+        return XUserHeaderDTO(x_user_id=raw)
 
 
 class RandomKeyGeneratorProvider(Provider):
@@ -201,28 +195,12 @@ class ServiceProvider(Provider):
 
 
 class CacheProvider(Provider):
-
-    << << << < HEAD
-    """
-    Provides caching services using Redis.
-    """
-== == == =
->> >> >> > dev
-
     @provide(scope=Scope.APP)
     async def get_cache_service(
         self,
         settings: Settings,
     ) -> AsyncIterator[CacheProtocol]:
-
-<< << << < HEAD
-        """
-        Provides a CacheProtocol implementation.
-        """
-        redis_client = await redis.from_url(
-                       == == == =
         redis_client = redis.from_url(
-                       >> >> >> > dev
             str(settings.redis_url),
             encoding="utf-8",
             decode_responses=False,
