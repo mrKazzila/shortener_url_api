@@ -12,7 +12,7 @@ __all__ = (
 # from src.application.use_cases.internal.add_new_url_to_cache import (
 #     AddNewUrlToCacheUseCase,
 # )
-# from src.application.use_cases.internal.check_key_in_cashe import (
+# from src.application.use_cases.internal.check_key_in_cache import (
 #     CheckKeyInCacheUseCase,
 # )
 from src.application.use_cases.internal.create_uniq_key_in_cache import (

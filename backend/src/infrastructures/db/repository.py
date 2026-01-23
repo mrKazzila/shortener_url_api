@@ -16,6 +16,7 @@ from sqlalchemy import (
     select,
     update,
     values,
+    delete,
 )
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -45,10 +46,14 @@ class SQLAlchemyRepository(RepositoryProtocol):
         self,
         *,
         reference: dict[str, str | int | UUID],
-    ) -> ModelType | None:
+    ) -> UrlEntity | None:
         _statement = select(self.model).filter_by(**reference)
         statement_result = await self.session.execute(statement=_statement)
-        return statement_result.scalar_one_or_none()
+
+        if db_model := statement_result.scalar_one_or_none():
+            return self.mapper.to_entity(model=db_model)
+
+        return None
 
     async def get_all(  # type: ignore
         self,
@@ -102,11 +107,26 @@ class SQLAlchemyRepository(RepositoryProtocol):
     async def update(  # type: ignore
         self,
         *,
-        reference: dict[str, str | int | UUID],
-        **update_data: str | int | datetime | bool,
+        entity: UrlEntity,
     ) -> None:
         _statement = (
-            update(self.model).filter_by(**reference).values(**update_data)
+            update(self.model)
+            .where(self.model.key == entity.key)
+            .values(
+                name=entity.name,
+                is_active=entity.is_active,
+            )
+            .execution_options(synchronize_session=False)
+        )
+        await self.session.execute(_statement)
+
+    async def delete(  # type: ignore
+        self,
+        *,
+        entity: UrlEntity,
+    ) -> None:
+        _statement = (
+            delete(self.model).where(self.model.key == entity.key)
         )
         await self.session.execute(_statement)
 

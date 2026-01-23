@@ -69,7 +69,10 @@ class NewUrlPublishQueue:
 
         for i in range(self._workers):
             self._tasks.append(
-                asyncio.create_task(self._worker(i), name=f"new-url-pub-{i}"),
+                asyncio.create_task(
+                    self._worker(i),
+                    name=f"new-url-pub-{i}",
+                ),
             )
 
         self._report_task = asyncio.create_task(
@@ -89,7 +92,12 @@ class NewUrlPublishQueue:
         )
         return None
 
-    async def stop(self, *, drain: bool = True, timeout_sec: float = 10.0) -> None:
+    async def stop(
+        self,
+        *,
+        drain: bool = True,
+        timeout_sec: float = 10.0,
+    ) -> None:
         if not self._started:
             return None
 

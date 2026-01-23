@@ -25,6 +25,8 @@ class RedirectToOriginalUrlUseCase:
 
     async def execute(self, key: str) -> str | None:
         if entity := await self.get_target_url_by_key_uc.execute(key=key):
+            if not entity.is_active:
+                raise Exception("TODO: Custom not active exception")
             asyncio.create_task(
                 self._publish(
                     entity=entity,

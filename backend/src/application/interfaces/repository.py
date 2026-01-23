@@ -1,7 +1,6 @@
 __all__ = ("RepositoryProtocol",)
 
 from abc import abstractmethod
-from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
@@ -43,8 +42,14 @@ class RepositoryProtocol(Protocol):
     async def update(
         self,
         *,
-        reference: dict[str, str | int | UUID],
-        **update_data: str | int | datetime | bool,
+        entity: UrlEntity,
+    ) -> None: ...
+
+    @abstractmethod
+    async def delete(
+        self,
+        *,
+        entity: UrlEntity,
     ) -> None: ...
 
     @abstractmethod
