@@ -1,184 +1,286 @@
 # =====================
-# Base variables
+# Settings
 # =====================
-ENV_FILE := "env/.env"
-
-APP_COMMAND := "docker-compose --env-file env/.env -p shortener-url -f docker-compose.yaml"
-INFRA_COMMAND := "docker-compose --env-file env/.env -p shortener-infra -f docker/infra/docker-compose.yml"
-MONITORING_COMMAND := "docker-compose --env-file env/.env -p shortener-monitoring -f docker/monitoring/docker-compose.yml"
+set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 
 
-# Show available commands
+APP := "docker compose --env-file env/.env -p shortener-app -f docker-compose.yaml"
+INFRA := "docker compose --env-file env/.env -p shortener-infra -f docker/infra/docker-compose.yml"
+MON := "docker compose --env-file env/.env -p shortener-mon -f docker/monitoring/docker-compose.yml"
+
+# =====================
+# Aliases
+# =====================
+alias iu := infra-up
+alias id := infra-down
+alias ic := infra-clean
+
+alias au := app-up
+alias ad := app-down
+alias ac := app-clean
+alias ab := app-bootstrap
+
+alias mu := mon-up
+alias md := mon-down
+alias mc := mon-clean
+
+alias up := all-up
+alias down := all-down
+
+alias r := redis-cli
+
+
+# =====================
+# Help
+# =====================
+default:
+    @just --list
+
 help:
     @just --list
 
-# Runs ruff (lint + format)
+
+# =====================
+# Quality
+# =====================
 lint:
     @echo "[ruff] Running linters..."
     - ruff check --fix --silent .
     - ruff format --silent .
 
-# Configures the local environment (DB localhost:5433)
-set-local-env:
+
+# =====================
+# Env switching
+# =====================
+# Set local env
+env-local:
     @sed -i '' 's/^DB_HOST=.*/DB_HOST=localhost/' env/.env
     @sed -i '' 's/^DB_PORT=.*/DB_PORT=5433/' env/.env
     @sed -i '' 's/^REDIS_HOST=.*/REDIS_HOST=localhost/' env/.env
-    @echo "Environment set for LOCAL"
+    @echo "[env] set for LOCAL"
 
-# Configures environment variables for Docker
-set-docker-env:
+# Set doker env
+env-docker:
     @sed -i '' 's/^DB_HOST=.*/DB_HOST=postgres/' env/.env
     @sed -i '' 's/^DB_PORT=.*/DB_PORT=5432/' env/.env
     @sed -i '' 's/^REDIS_HOST=.*/REDIS_HOST=redis/' env/.env
-    @echo "[docker_env] Environment set for DOCKER"
+    @echo "[env] set for DOCKER"
 
-# Creates a requirements.txt file for dev
-freeze-dev:
+
+# =====================
+# Requirements
+# =====================
+# Generating requirements.txt (dev)
+req-dev:
     @echo "[req.txt] Generating requirements.txt (dev)..."
     @uv pip compile pyproject.toml --extra dev -o requirements.txt
 
-# Creates a requirements.txt file for prod
-freeze-prod:
+# Generating requirements.txt (prod)
+req-prod:
     @echo "[req.txt] Generating requirements.txt (prod)..."
     @uv pip compile pyproject.toml -o requirements.txt
 
-# Remove req.txt file
-clean-requirements:
+# Removing requirements.txt
+req-clean:
     @echo "[req.txt] Removing requirements.txt..."
     rm -f requirements.txt
 
-# Create docker network
-create-global-net:
+
+# =====================
+# Internal helpers
+# =====================
+_net-create:
     @if docker network inspect global_net >/dev/null 2>&1; then \
-        echo "[global_net] the network already exists — skipping creation"; \
+        echo "[global_net] already exists — skipping"; \
     else \
-        echo "[global_net] No network - creating..."; \
-        docker network create global_net >/dev/null && \
-        echo "[global_net] created"; \
+        echo "[global_net] creating..."; \
+        docker network create global_net >/dev/null && echo "[global_net] created"; \
     fi
 
-# Check file
-ensure-pgbouncer-userlist:
+_pgbouncer-userlist-check:
     @if [ ! -f docker/infra/pgbouncer/userlist.txt ]; then \
-        echo "[pgbouncer] The file docker/infra/pgbouncer/userlist.txt is missing."; \
-        echo "[pgbouncer] Create it manually and fill it with user entries for pgbouncer."; \
+        echo "[pgbouncer] Missing docker/infra/pgbouncer/userlist.txt"; \
+        echo "[pgbouncer] Create it manually and fill it with user entries for pgbouncer"; \
         exit 1; \
     fi
-    @echo "[pgbouncer] The userlist.txt file has been found — everything is OK."
+    @echo "[pgbouncer] userlist.txt found — OK"
 
-# Creates Kafka topics with the specified number of partitions
-create-kafka-topics ARG:
-    @echo "[broker] Creating Kafka topics with {{ARG}} partitions..."
+
+# =====================
+# Kafka / scaling
+# =====================
+# Create kafka topics if not exist
+kafka-topics partitions:
+    @echo "[broker] Creating Kafka topics with {{partitions}} partitions..."
     @docker exec kafka /opt/kafka/bin/kafka-topics.sh \
-        --bootstrap-server kafka:9092 --create --topic new-urls --partitions {{ARG}} --replication-factor 1 || true
+        --bootstrap-server kafka:9092 --create --topic new-urls --partitions {{partitions}} --replication-factor 1 || true
     @docker exec kafka /opt/kafka/bin/kafka-topics.sh \
-        --bootstrap-server kafka:9092 --create --topic update-urls --partitions {{ARG}} --replication-factor 1 || true
+        --bootstrap-server kafka:9092 --create --topic update-urls --partitions {{partitions}} --replication-factor 1 || true
     @echo "[broker] Kafka topics created."
 
-# Scaling consumer and consumer_update
-scale-consumers ARG:
-    @echo "Scaling consumers to {{ARG}} replicas..."
-    {{APP_COMMAND}} up -d \
-        --scale consumer={{ARG}} \
-        --scale consumer-update={{ARG}}
-    @echo "Consumers scaled."
+# Scaling kafka consumers
+consumers-scale replicas:
+    @echo "[app] Scaling consumers to {{replicas}} replicas..."
+    {{APP}} up -d \
+        --scale consumer={{replicas}} \
+        --scale consumer-update={{replicas}}
+    @echo "[app] Consumers scaled."
 
-# Create migration with autogeneration
-make-migration ARG:
-    @echo "Create alembic revision: {{ARG}}"
-    @alembic revision --autogenerate -m "{{ARG}}"
 
-# Creates migration in the local environment
-make-migrate-local ARG:
-    @just set-local-env
-    @just make-migration "{{ARG}}"
+# =====================
+# DB / migrations
+# =====================
+# Create alembic revision
+db-rev msg:
+    @echo "[db] Create alembic revision: {{msg}}"
+    @alembic revision --autogenerate -m "{{msg}}"
 
-# Rolls back to the specified revision locally
-make-downgrade-local:
-    @just set-local-env
+# Generate alembic revision file
+db-rev-local msg:
+    @just env-local
+    @just db-rev "{{msg}}"
+
+# Downgrade alembic revision
+db-down-local:
+    @just env-local
     @alembic downgrade -1
 
-# Applies alembic migrations (upgrade head)
-migrate-up:
-    @echo "Running migrations..."
-    {{APP_COMMAND}} run --rm fastapi python -m alembic upgrade head
+# Upgrade DB megration to head
+db-up:
+    @echo "[db] upgrade head..."
+    {{APP}} run --rm fastapi python -m alembic upgrade head
 
-# Rolls back migration by one step
-migrate-down:
-    @echo "Downgrading migrations..."
-    {{APP_COMMAND}} run --rm fastapi python -m alembic downgrade -1
+# Downgrade DB megration
+db-down:
+    @echo "[db] downgrade -1..."
+    {{APP}} run --rm fastapi python -m alembic downgrade -1
 
-apply-migration ARG:
-    @just set-docker-env
-    @just migrate-up
-    @just make-migrate-local "{{ARG}}"
-    @just set-docker-env
-    @just migrate-up
+# Apply alembic megration to DB
+db-apply msg:
+    @just env-docker
+    @just db-up
+    @just db-rev-local "{{msg}}"
+    @just env-docker
+    @just db-up
 
 
-############################
-# Entry points
-############################
+# =====================
+# Stacks: infra / app / monitoring
+# =====================
 
-# Starts infrastructure stack
+# Starting infra
 infra-up:
-    @echo "[infra] Starting infrastructure stack..."
-    @just create-global-net
-    @just ensure-pgbouncer-userlist
-    {{INFRA_COMMAND}} up -d --build
-    @echo "[infra] Infrastructure stack started!"
+    @echo "[infra] Starting..."
+    @just _net-create
+    @just _pgbouncer-userlist-check
+    {{INFRA}} up -d --build
+    @echo "[infra] Started!"
 
-# Stops infrastructure stack
+# Stopping (keeping volumes) infra
 infra-down:
-    @echo "[infra] Stopping infrastructure stack..."
-    {{INFRA_COMMAND}} down -v
-    @echo "[infra] Infrastructure stack stopped!"
+    @echo "[infra] Stopping (keeping volumes)..."
+    {{INFRA}} down
+    @echo "[infra] Stopped!"
 
-# Runs the fastapi application in docker
-app-start:
-    @echo "Starting app..."
-    {{APP_COMMAND}} up -d fastapi
+# Stopping + removing volumes infra
+infra-clean:
+    @echo "[infra] Stopping + removing volumes..."
+    {{INFRA}} down -v
+    @echo "[infra] Cleaned!"
 
-# Full launch: env + deps + containers + themes + migrations + scaling + application
-app-up partitions replicas:
-    @echo "[app] Running full-up..."
-    @just create-global-net
-    @just set-docker-env
-    @just freeze-dev
-    @just migrate-up
-    @just create-kafka-topics {{partitions}}
-    @just scale-consumers {{replicas}}
-    @just app-start
-    @just clean-requirements
-    @echo "[app] Full startup completed."
+# Starting application
+app-up:
+    @echo "[app] Starting..."
+    @just _net-create
+    @just env-docker
+    {{APP}} up -d --build
+    @echo "[app] Started!"
 
-# Restart application containers
-app-restart:
-    @just set-docker-env
-    @just freeze-dev
-    @echo "Restarting fastapi and consumer containers..."
-    {{APP_COMMAND}} up -d --build fastapi consumer consumer-update
-    @echo "FastAPI and consumers restarted"
+# Starting fastapi only
+app-up-api:
+    @echo "[app] Starting fastapi only..."
+    @just _net-create
+    @just env-docker
+    {{APP}} up -d fastapi
+    @echo "[app] fastapi started!"
 
-# Stops containers and cleans volume
+# Rebuild application
+app-rebuild:
+    @just env-docker
+    @just req-dev
+    @echo "[app] Rebuilding fastapi + consumers..."
+    {{APP}} up -d --build fastapi consumer consumer-update
+    @just req-clean
+    @echo "[app] Rebuilt."
+
+# Bootstrapping application
+app-bootstrap partitions replicas:
+    @echo "[app] Bootstrapping..."
+    @just _net-create
+    @just env-docker
+    @just req-dev
+    @just db-up
+    @just kafka-topics {{partitions}}
+    @just consumers-scale {{replicas}}
+    @just app-up-api
+    @just req-clean
+    @echo "[app] Bootstrap completed."
+
+# Stopping (keeping volumes) application
 app-down:
-    @echo "Stopping containers..."
-    {{APP_COMMAND}} down -v
-    @echo "Containers stopped"
+    @echo "[app] Stopping (keeping volumes)..."
+    {{APP}} down
+    @echo "[app] Stopped!"
 
-# Starts monitoring stack
-monitoring-up:
-    @echo "[monitoring] Starting monitoring stack..."
-    {{MONITORING_COMMAND}} up -d --build
-    @echo "[monitoring] Monitoring stack started!"
+# Stopping + removing volumes application
+app-clean:
+    @echo "[app] Stopping + removing volumes..."
+    {{APP}} down -v
+    @echo "[app] Cleaned!"
 
-# Stops monitoring stack
-monitoring-down:
-    @echo "[monitoring] Stopping monitoring stack..."
-    {{MONITORING_COMMAND}} down -v
-    @echo "[monitoring] Monitoring stack stopped!"
+# Starting monitoring
+mon-up:
+    @echo "[mon] Starting..."
+    {{MON}} up -d --build
+    @echo "[mon] Started!"
 
-# Redis CLI
+# Stopping (keeping volumes) monitoring
+mon-down:
+    @echo "[mon] Stopping (keeping volumes)..."
+    {{MON}} down
+    @echo "[mon] Stopped!"
+
+# Stopping + removing volumes monitoring
+mon-clean:
+    @echo "[mon] Stopping + removing volumes..."
+    {{MON}} down -v
+    @echo "[mon] Cleaned!"
+
+
+# =====================
+# All stacks
+# =====================
+
+# Starting all
+all-up:
+    @just infra-up
+    @just app-up
+    @just mon-up
+    @echo "[all] up"
+
+# Stopping all
+all-down:
+    @just mon-down
+    @just app-down
+    @just infra-down
+    @echo "[all] down"
+
+
+# =====================
+# Convenience
+# =====================
+
+# Run redis CLI
 redis-cli:
-    @echo "Connecting to Redis CLI..."
-    {{INFRA_COMMAND}} exec redis redis-cli
+    @echo "[redis] Connecting..."
+    {{INFRA}} exec redis redis-cli

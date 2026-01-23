@@ -1,11 +1,13 @@
 __all__ = ("UrlEntity",)
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from typing import final
 from uuid import UUID
 
 from src.domain.exceptions.domain import ValidationError
+
+_UNSET = object()
 
 
 @final
@@ -67,4 +69,22 @@ class UrlEntity:
             key=key,
             target_url=target_url,
             name=name,
+        )
+
+    def update(
+        self,
+        *,
+        name: str | None | object = _UNSET,
+        is_active: bool | object = _UNSET,
+        touch_last_used: bool = False,
+    ) -> "UrlEntity":
+        new_name = self.name if name is _UNSET else name
+        new_is_active = self.is_active if is_active is _UNSET else is_active
+        new_last_used = datetime.now(UTC) if touch_last_used else self.last_used
+
+        return replace(
+            self,
+            name=new_name,
+            is_active=new_is_active,
+            last_used=new_last_used,
         )

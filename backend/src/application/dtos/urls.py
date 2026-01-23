@@ -1,7 +1,9 @@
 __all__ = (
     "CreateUrlDTO",
     "CreatedUrlDTO",
+    "DeleteUrlDTO",
     "PublishUrlDTO",
+    "UpdateUrlDTO",
 )
 
 from dataclasses import asdict, dataclass
@@ -32,3 +34,15 @@ class PublishUrlDTO(CreatedUrlDTO):
 
     def to_dict(self: Self) -> dict[str, str]:
         return asdict(self)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class DeleteUrlDTO:
+    key: str
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class UpdateUrlDTO:
+    key: str
+    name: str | None = None
+    is_active: bool | None = None

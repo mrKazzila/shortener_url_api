@@ -24,6 +24,8 @@ from src.application.use_cases import (
     CreateUrlUseCase,
     GetUserUrlsUseCase,
     RedirectToOriginalUrlUseCase,
+    DeleteUrlUseCase,
+    UpdateUrlUseCase,
 )
 from src.application.use_cases.internal import (
     CreateUniqKeyUseCase,
@@ -312,6 +314,30 @@ class UseCaseProvider(Provider):
         uow: UnitOfWorkProtocol,
     ) -> GetUserUrlsUseCase:
         return GetUserUrlsUseCase(uow=uow)
+
+    @provide(scope=Scope.REQUEST)
+    def delete_url_use_case(
+        self,
+        get_target_url_by_key_uc: GetTargetByKeyUseCase,
+        cache: CacheProtocol,
+        uow: UnitOfWorkProtocol,
+    ) -> DeleteUrlUseCase:
+        return DeleteUrlUseCase(
+            get_target_url_by_key_uc=get_target_url_by_key_uc,
+            cache=cache,
+            uow=uow,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def update_url_use_case(
+        self,
+        get_target_url_by_key_uc: GetTargetByKeyUseCase,
+        uow: UnitOfWorkProtocol,
+    ) -> UpdateUrlUseCase:
+        return UpdateUrlUseCase(
+            get_target_url_by_key_uc=get_target_url_by_key_uc,
+            uow=uow,
+        )
 
 
 class NewUrlPublishQueueProvider(Provider):

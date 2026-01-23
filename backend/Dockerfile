@@ -11,10 +11,16 @@ WORKDIR /app/
 FROM base as builder
 
 COPY requirements.txt /tmp/
+
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir --user -r /tmp/requirements.txt && \
+    pip install --no-cache-dir --user --upgrade --force-reinstall -r /tmp/requirements.txt && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+  rm -rf /var/lib/apt/lists/*
+
+#RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+#    pip install --no-cache-dir --user -r /tmp/requirements.txt && \
+#    apt-get clean && \
+#    rm -rf /var/lib/apt/lists/*
 
 # ===================
 FROM python:3.13-slim

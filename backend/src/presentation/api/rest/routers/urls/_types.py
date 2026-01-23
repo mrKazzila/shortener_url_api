@@ -1,6 +1,8 @@
 __all__ = (
     "PathUrlKey",
     "QueryLongUrl",
+    "QueryUrlName",
+    "QueryUrlIsActive",
 )
 
 import re
@@ -29,5 +31,22 @@ PathUrlKey = Annotated[
         min_length=5,
         max_length=5,
         example="LiNks",
+    ),
+]
+
+QueryUrlName = Annotated[
+    str | None,
+    Query(
+        ...,
+        description="New disk name",
+        max_length=300,
+    ),
+]
+
+QueryUrlIsActive = Annotated[
+    bool | None,
+    Query(
+        ...,
+        description="Whether the URL is active or not",
     ),
 ]
