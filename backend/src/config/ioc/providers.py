@@ -202,12 +202,27 @@ class ServiceProvider(Provider):
 
 class CacheProvider(Provider):
 
+    << << << < HEAD
+    """
+    Provides caching services using Redis.
+    """
+== == == =
+>> >> >> > dev
+
     @provide(scope=Scope.APP)
     async def get_cache_service(
         self,
         settings: Settings,
     ) -> AsyncIterator[CacheProtocol]:
+
+<< << << < HEAD
+        """
+        Provides a CacheProtocol implementation.
+        """
+        redis_client = await redis.from_url(
+                       == == == =
         redis_client = redis.from_url(
+                       >> >> >> > dev
             str(settings.redis_url),
             encoding="utf-8",
             decode_responses=False,
@@ -341,8 +356,6 @@ class NewUrlPublishQueueProvider(Provider):
             yield queue
         finally:
             await queue.stop(drain=True, timeout_sec=10.0)
-
-
 
 
 PROVIDERS: list[Provider] = [

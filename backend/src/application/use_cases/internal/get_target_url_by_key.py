@@ -29,7 +29,6 @@ class GetTargetByKeyUseCase:
             return self.mapper.to_entity(
                 cache={"key": key, **value},
             )
-
         logger.info(f"no cache: get from DB", key=key)
 
         if model := await self.uow.repository.get(
