@@ -156,7 +156,7 @@
 │   │       ├── internal
 │   │       │   ├── __init__.py
 │   │       │   ├── add_new_url_to_cache.py
-│   │       │   ├── check_key_in_cashe.py
+│   │       │   ├── check_key_in_cache.py
 │   │       │   ├── create_uniq_key_in_cache.py
 │   │       │   ├── get_target_url_by_key.py
 │   │       │   ├── process_new_url.py
