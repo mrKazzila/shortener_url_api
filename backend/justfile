@@ -148,12 +148,12 @@ db-down-local:
 # Upgrade DB megration to head
 db-up:
     @echo "[db] upgrade head..."
-    {{APP}} run --rm fastapi python -m alembic upgrade head
+    {{APP}} run --rm grpc python -m alembic upgrade head
 
 # Downgrade DB megration
 db-down:
     @echo "[db] downgrade -1..."
-    {{APP}} run --rm fastapi python -m alembic downgrade -1
+    {{APP}} run --rm grpc python -m alembic downgrade -1
 
 # Apply alembic megration to DB
 db-apply msg:
@@ -209,7 +209,7 @@ app-rebuild:
     @just env-docker
     @just req-dev
     @echo "[app] Rebuilding fastapi + consumers..."
-    {{APP}} up -d --build fastapi consumer consumer-update
+    {{APP}} up -d --build grpc consumer consumer-update
     @just req-clean
     @echo "[app] Rebuilt."
 

@@ -8,6 +8,7 @@ __pycache__/
 .cache
 
 # ===== local environment =====
+/src/generated/*
 .venv
 .DS_Store
 env/*
