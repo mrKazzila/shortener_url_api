@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package shortener.v1;
+
+service ShortenerService {
+    rpc CreateShortUrl (CreateShortUrlRequest) returns (CreateShortUrlResponse);
+    rpc ResolveKey (ResolveKeyRequest) returns (ResolveKeyResponse);
+    rpc UpdateUrl (UpdateUrlRequest) returns (UpdateUrlResponse);
+    rpc DeleteUrl (DeleteUrlRequest) returns (DeleteUrlResponse);
+}
+
+message CreateShortUrlRequest {
+    string target_url = 1;
+}
+
+message CreateShortUrlResponse {
+    string key = 1;
+    string target_url = 2;
+}
+
+message ResolveKeyRequest {
+    string key = 1;
+}
+
+message ResolveKeyResponse {
+    string target_url = 1;
+}
+
+message UpdateUrlRequest {
+    string key = 1;
+    string name = 2;
+    bool is_active = 3;
+}
+
+message UpdateUrlResponse {
+    string ok = 1;
+}
+
+message DeleteUrlRequest {
+    string key = 1;
+}
+
+message DeleteUrlResponse {
+    string ok = 1;
+}
