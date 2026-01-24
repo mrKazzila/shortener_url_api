@@ -4,3 +4,26 @@
 
 # ===== project =====
 persistentdata
+
+# ===== base =====
+__pypackages__/
+logs/
+
+# ===== cache data =====
+__pycache__/
+.ruff_cache
+.cache
+
+# ===== local environment =====
+backend/src/generated/*
+backend/.venv
+backend/env/*
+backend/!env/.env.example
+backend/docker/infra/pgbouncer/userlist.txt
+
+# ===== test data =====
+.pytest_cache/
+cover/
+/htmlcov/
+.coverage
+.coverage.*
