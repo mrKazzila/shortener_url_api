@@ -1,8 +1,6 @@
 # ===== project =====
-/linters/
 ./README.md
 ./.coverage
-./Makefile
 .DS_Store
 
 # ===== docker =====
