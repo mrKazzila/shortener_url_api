@@ -90,6 +90,11 @@ skip-magic-trailing-comma = false
 quote-style = "double"
 indent-style = "space"
 
+[dependency-groups]
+dev = [
+    "ruff>=0.14.9",
+]
+
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402"]
 
