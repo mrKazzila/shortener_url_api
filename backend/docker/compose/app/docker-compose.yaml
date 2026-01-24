@@ -4,7 +4,7 @@ version: "3.9"
 x-consumer-base: &consumer_base
   build:
     context: .
-    dockerfile: Dockerfile.consumer
+    dockerfile: Consumer.dockerfile
   env_file:
     - env/.env
 
