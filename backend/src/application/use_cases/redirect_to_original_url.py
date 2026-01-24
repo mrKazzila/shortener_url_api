@@ -3,7 +3,7 @@ __all__ = ("RedirectToOriginalUrlUseCase",)
 import asyncio
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, final
-from uuid import uuid4, UUID
+from uuid import UUID, uuid4
 
 import structlog
 

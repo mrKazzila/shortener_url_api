@@ -80,7 +80,9 @@ class UrlEntity:
     ) -> "UrlEntity":
         new_name = self.name if name is _UNSET else name
         new_is_active = self.is_active if is_active is _UNSET else is_active
-        new_last_used = datetime.now(UTC) if touch_last_used else self.last_used
+        new_last_used = (
+            datetime.now(UTC) if touch_last_used else self.last_used
+        )
 
         return replace(
             self,

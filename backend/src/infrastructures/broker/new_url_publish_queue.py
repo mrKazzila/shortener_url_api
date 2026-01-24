@@ -1,7 +1,7 @@
 import asyncio
 import time
 from dataclasses import dataclass
-from typing import Final, Optional
+from typing import Final
 
 import structlog
 
@@ -45,7 +45,7 @@ class NewUrlPublishQueue:
         self._batch_window_sec = batch_window_sec
 
         self._tasks: list[asyncio.Task] = []
-        self._report_task: Optional[asyncio.Task] = None
+        self._report_task: asyncio.Task | None = None
         self._started = False
 
         self._enqueued = 0
@@ -63,7 +63,7 @@ class NewUrlPublishQueue:
 
     async def start(self) -> None:
         if self._started:
-            return None
+            return
 
         self._started = True
 
@@ -90,7 +90,7 @@ class NewUrlPublishQueue:
             max_retries=self._max_retries,
             base_backoff_sec=self._base_backoff_sec,
         )
-        return None
+        return
 
     async def stop(
         self,
@@ -99,7 +99,7 @@ class NewUrlPublishQueue:
         timeout_sec: float = 10.0,
     ) -> None:
         if not self._started:
-            return None
+            return
 
         logger.info(
             "NewUrlPublishQueue stopping",
@@ -111,7 +111,7 @@ class NewUrlPublishQueue:
         if drain:
             try:
                 await asyncio.wait_for(self._q.join(), timeout=timeout_sec)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 logger.warning(
                     "NewUrlPublishQueue drain timeout",
                     timeout_sec=timeout_sec,
@@ -134,7 +134,7 @@ class NewUrlPublishQueue:
         self._started = False
 
         logger.info("NewUrlPublishQueue stopped")
-        return None
+        return
 
     async def enqueue(self, *, entity: UrlEntity) -> None:
         item = NewUrlItem(entity=entity)
@@ -142,15 +142,18 @@ class NewUrlPublishQueue:
         try:
             self._q.put_nowait(item)
             self._enqueued += 1
-            return None
+            return
         except asyncio.QueueFull:
             pass
 
         try:
-            await asyncio.wait_for(self._q.put(item), timeout=self._enqueue_timeout_sec)
+            await asyncio.wait_for(
+                self._q.put(item),
+                timeout=self._enqueue_timeout_sec,
+            )
             self._enqueued += 1
-            return None
-        except asyncio.TimeoutError:
+            return
+        except TimeoutError:
             self._enqueue_timeouts += 1
             qsize = self._q.qsize()
 
@@ -175,7 +178,7 @@ class NewUrlPublishQueue:
 
             try:
                 if first is _STOP:
-                    return None
+                    return
 
                 assert isinstance(first, NewUrlItem)
                 entities.append(first.entity)
@@ -188,8 +191,11 @@ class NewUrlPublishQueue:
                         break
 
                     try:
-                        nxt = await asyncio.wait_for(self._q.get(), timeout=remaining)
-                    except asyncio.TimeoutError:
+                        nxt = await asyncio.wait_for(
+                            self._q.get(),
+                            timeout=remaining,
+                        )
+                    except TimeoutError:
                         break
 
                     consumed += 1
@@ -208,7 +214,7 @@ class NewUrlPublishQueue:
                     self._q.task_done()
 
             if stop_after:
-                return None
+                return
 
     @staticmethod
     def _is_batch_buffer_full_error(err: Exception) -> bool:
@@ -222,9 +228,9 @@ class NewUrlPublishQueue:
         worker: int,
     ) -> None:
         if not entities:
-            return None
+            return
 
-        last_err: Optional[Exception] = None
+        last_err: Exception | None = None
 
         for attempt in range(1, self._max_retries + 1):
             t0 = time.perf_counter()
@@ -235,8 +241,11 @@ class NewUrlPublishQueue:
                 self._publish_calls += 1
                 self._published_msgs += len(entities)
                 self._publish_call_ms_sum += dt_ms
-                self._publish_call_ms_max = max(self._publish_call_ms_max, dt_ms)
-                return None
+                self._publish_call_ms_max = max(
+                    self._publish_call_ms_max,
+                    dt_ms,
+                )
+                return
 
             except Exception as e:
                 last_err = e
@@ -257,7 +266,7 @@ class NewUrlPublishQueue:
 
                     await self._publish_with_retries(left, worker=worker)
                     await self._publish_with_retries(right, worker=worker)
-                    return None
+                    return
 
                 self._retries += 1
                 dt_ms = (time.perf_counter() - t0) * 1000.0
@@ -281,7 +290,7 @@ class NewUrlPublishQueue:
             batch_size=len(entities),
             error=str(last_err),
         )
-        return None
+        return
 
     async def _reporter(self) -> None:
         try:
@@ -295,7 +304,9 @@ class NewUrlPublishQueue:
                 calls = self._publish_calls
                 msgs = self._published_msgs
 
-                avg_call_ms = self._publish_call_ms_sum / calls if calls else 0.0
+                avg_call_ms = (
+                    self._publish_call_ms_sum / calls if calls else 0.0
+                )
                 avg_msg_ms = self._publish_call_ms_sum / msgs if msgs else 0.0
                 avg_batch = msgs / calls if calls else 0.0
 
@@ -328,4 +339,4 @@ class NewUrlPublishQueue:
                 self._publish_call_ms_max = 0.0
 
         except asyncio.CancelledError:
-            return None
+            return
