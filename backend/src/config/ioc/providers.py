@@ -53,14 +53,12 @@ logger = structlog.get_logger(__name__)
 
 
 class SettingsProvider(Provider):
-
     @provide(scope=Scope.APP)
     def get_settings(self) -> Settings:
         return Settings()
 
 
 class AuthProvider(Provider):
-
     @provide(scope=Scope.REQUEST)
     def user_id(self, context: ServicerContext) -> XUserHeaderDTO:
         md = dict(context.invocation_metadata())

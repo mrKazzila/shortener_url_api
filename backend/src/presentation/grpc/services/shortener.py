@@ -4,23 +4,21 @@ from dataclasses import dataclass
 from uuid import UUID
 
 import grpc
-from dishka.integrations.grpcio import inject, FromDishka
+from dishka.integrations.grpcio import FromDishka, inject
 
-from src.application.dtos.urls import CreateUrlDTO, UpdateUrlDTO, DeleteUrlDTO
+from src.application.dtos.urls import CreateUrlDTO, DeleteUrlDTO, UpdateUrlDTO
 # from src.application.dtos.users import XUserHeaderDTO
 from src.application.use_cases import (
     CreateUrlUseCase,
+    DeleteUrlUseCase,
     RedirectToOriginalUrlUseCase,
     UpdateUrlUseCase,
-    DeleteUrlUseCase,
 )
-from src.generated.shortener.v1 import shortener_pb2
-from src.generated.shortener.v1 import shortener_pb2_grpc
+from src.generated.shortener.v1 import shortener_pb2, shortener_pb2_grpc
 
 
 @dataclass
 class ShortenerGrpcService(shortener_pb2_grpc.ShortenerServiceServicer):
-
     @inject
     async def CreateShortUrl(
         self,
@@ -65,7 +63,7 @@ class ShortenerGrpcService(shortener_pb2_grpc.ShortenerServiceServicer):
                 key=request.key,
                 is_active=request.is_active,
                 name=request.name,
-            )
+            ),
         )
 
         return "Ok" if result else "Error"

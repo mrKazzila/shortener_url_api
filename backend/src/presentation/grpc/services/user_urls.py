@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 import grpc
-from dishka.integrations.grpcio import inject, FromDishka
+from dishka.integrations.grpcio import FromDishka, inject
 
 from src.application.dtos.users import (
     GetUserUrlsDTO,
@@ -12,14 +12,12 @@ from src.application.dtos.users import (
     # XUserHeaderDTO,
 )
 from src.application.use_cases import GetUserUrlsUseCase
-from src.generated.user_urls.v1 import user_urls_pb2
-from src.generated.user_urls.v1 import user_urls_pb2_grpc
+from src.generated.user_urls.v1 import user_urls_pb2, user_urls_pb2_grpc
 from src.presentation.mappers.user_mapper import UserPresentationMapper
 
 
 @dataclass
 class UserUrlsGrpcService(user_urls_pb2_grpc.UserUrlsServiceServicer):
-
     @inject
     async def GetUserUrls(
         self,
@@ -39,7 +37,7 @@ class UserUrlsGrpcService(user_urls_pb2_grpc.UserUrlsServiceServicer):
                     limit=request.limit,
                     last_id=request.last_id,
                 ),
-            )
+            ),
         )
 
         return mapper.to_proto_get_user_urls_response(result)

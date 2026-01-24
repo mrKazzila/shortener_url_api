@@ -1,7 +1,7 @@
 __all__ = ("create_grpc_server",)
 
 import grpc
-from dishka import make_async_container, AsyncContainer
+from dishka import AsyncContainer, make_async_container
 from dishka.integrations.grpcio import DishkaAioInterceptor, GrpcioProvider
 from grpc_reflection.v1alpha import reflection
 

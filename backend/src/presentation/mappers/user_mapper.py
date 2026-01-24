@@ -1,7 +1,7 @@
 __all__ = ("UserPresentationMapper",)
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import final
 
 from google.protobuf.timestamp_pb2 import Timestamp
@@ -45,8 +45,12 @@ class UserPresentationMapper:
                 name=url.name,
                 clicks_count=url.clicks_count,
                 is_active=url.is_active,
-                created_at=UserPresentationMapper._dt_to_timestamp(url.created_at),
-                last_used=UserPresentationMapper._dt_to_timestamp(url.last_used),
+                created_at=UserPresentationMapper._dt_to_timestamp(
+                    url.created_at
+                ),
+                last_used=UserPresentationMapper._dt_to_timestamp(
+                    url.last_used
+                ),
             )
 
             items.append(item)
@@ -61,6 +65,8 @@ class UserPresentationMapper:
         ts = Timestamp()
 
         ts.FromDatetime(
-            dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt.astimezone(timezone.utc)
+            dt.replace(tzinfo=UTC)
+            if dt.tzinfo is None
+            else dt.astimezone(UTC),
         )
         return ts
