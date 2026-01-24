@@ -31,9 +31,7 @@ class CreateUrlUseCase:
         *,
         dto: CreateUrlDTO,
     ) -> CreatedUrlDTO:
-        key: str = await self.create_uniq_key_uc.execute(
-            target_url=dto.target_url,
-        )
+        key: str = await self.create_uniq_key_uc.execute(dto=dto)
 
         entity = UrlEntity.create(
             key=key,

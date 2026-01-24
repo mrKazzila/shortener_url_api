@@ -11,12 +11,12 @@ from sqlalchemy import (
     Integer,
     String,
     column,
+    delete,
     func,
     insert,
     select,
     update,
     values,
-    delete,
 )
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -125,9 +125,7 @@ class SQLAlchemyRepository(RepositoryProtocol):
         *,
         entity: UrlEntity,
     ) -> None:
-        _statement = (
-            delete(self.model).where(self.model.key == entity.key)
-        )
+        _statement = delete(self.model).where(self.model.key == entity.key)
         await self.session.execute(_statement)
 
     async def apply_click_events(  # type: ignore

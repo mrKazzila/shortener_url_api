@@ -1190,6 +1190,11 @@ dev = [
     { name = "ruff" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "ruff" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "alembic", specifier = "==1.17.2" },
@@ -1223,6 +1228,9 @@ requires-dist = [
     { name = "validators", specifier = "==0.35.0" },
 ]
 provides-extras = ["dev"]
+
+[package.metadata.requires-dev]
+dev = [{ name = "ruff", specifier = ">=0.14.9" }]
 
 [[package]]
 name = "sqlalchemy"

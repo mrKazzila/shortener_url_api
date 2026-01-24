@@ -40,7 +40,6 @@ class SettingsProvider(Provider):
 
 
 class BrokerProvider(Provider):
-
     @provide(scope=Scope.APP)
     async def get_broker(
         self,
@@ -102,7 +101,6 @@ class MapperProvider(Provider):
 
 
 class RepositoryProvider(Provider):
-
     @provide(scope=Scope.APP)
     def get_repository(
         self,
@@ -116,7 +114,6 @@ class RepositoryProvider(Provider):
 
 
 class UnitOfWorkProvider(Provider):
-
     @provide(scope=Scope.APP)
     def get_unit_of_work(
         self,
@@ -130,7 +127,6 @@ class UnitOfWorkProvider(Provider):
 
 
 class ServiceProvider(Provider):
-
     @provide(scope=Scope.APP)
     def get_message_broker(
         self,
@@ -144,7 +140,6 @@ class ServiceProvider(Provider):
 
 
 class UseCaseProvider(Provider):
-
     @provide(scope=Scope.APP)
     def process_new_url_use_case(
         self,

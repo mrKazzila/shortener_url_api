@@ -18,7 +18,7 @@ _URL_REGEX = re.compile(
 QueryLongUrl = Annotated[
     str,
     Query(
-        description="Initial long URL for shortening",
+        description="The original URL",
         example="https://www.youtube.com/",
         regex=_URL_REGEX.pattern,
     ),
@@ -38,7 +38,7 @@ QueryUrlName = Annotated[
     str | None,
     Query(
         ...,
-        description="New disk name",
+        description="The URL title/name",
         max_length=300,
     ),
 ]

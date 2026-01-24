@@ -10,10 +10,9 @@ from src.application.dtos.urls import CreateUrlDTO, DeleteUrlDTO, UpdateUrlDTO
 from src.application.dtos.users import XUserHeaderDTO  # noqa
 from src.application.use_cases import (
     CreateUrlUseCase,
-    RedirectToOriginalUrlUseCase,
     DeleteUrlUseCase,
+    RedirectToOriginalUrlUseCase,
     UpdateUrlUseCase,
-
 )
 from src.presentation.api.rest.routers.urls._types import (
     PathUrlKey,

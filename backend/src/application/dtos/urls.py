@@ -17,7 +17,10 @@ class CreateUrlDTO:
     user_id: UUID
 
     def to_dict(self: Self) -> dict[str, str | UUID]:
-        return asdict(self)
+        data = asdict(self)
+        if isinstance(data.get("user_id"), UUID):
+            data["user_id"] = str(data["user_id"])
+        return data
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

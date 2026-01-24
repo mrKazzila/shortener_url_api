@@ -22,9 +22,9 @@ from src.application.interfaces import (
 from src.application.mappers import UrlMapper
 from src.application.use_cases import (
     CreateUrlUseCase,
+    DeleteUrlUseCase,
     GetUserUrlsUseCase,
     RedirectToOriginalUrlUseCase,
-    DeleteUrlUseCase,
     UpdateUrlUseCase,
 )
 from src.application.use_cases.internal import (
@@ -73,14 +73,12 @@ class AuthProvider(Provider):
 
 
 class RandomKeyGeneratorProvider(Provider):
-
     @provide(scope=Scope.APP)
     def get_random_key_generator(self) -> RandomKeyGenerator:
         return RandomKeyGenerator()
 
 
 class BrokerProvider(Provider):
-
     @provide(scope=Scope.APP)
     async def get_broker(
         self,
@@ -107,7 +105,6 @@ class BrokerProvider(Provider):
 
 
 class DatabaseProvider(Provider):
-
     @provide(scope=Scope.APP)
     async def get_session_factory(
         self,
@@ -134,7 +131,6 @@ class DatabaseProvider(Provider):
 
 
 class MapperProvider(Provider):
-
     @provide(scope=Scope.APP)
     def get_url_mapper(self) -> UrlMapper:
         return UrlMapper()
@@ -153,7 +149,6 @@ class MapperProvider(Provider):
 
 
 class RepositoryProvider(Provider):
-
     @provide(scope=Scope.REQUEST)
     def get_repository(
         self,
@@ -167,7 +162,6 @@ class RepositoryProvider(Provider):
 
 
 class UnitOfWorkProvider(Provider):
-
     @provide(scope=Scope.REQUEST)
     def get_unit_of_work(
         self,
@@ -181,7 +175,6 @@ class UnitOfWorkProvider(Provider):
 
 
 class ServiceProvider(Provider):
-
     @provide(scope=Scope.APP)
     def get_message_broker(
         self,
@@ -227,7 +220,6 @@ class CacheProvider(Provider):
 
 
 class UseCaseProvider(Provider):
-
     @provide(scope=Scope.REQUEST)
     def get_create_uniq_key_use_case(
         self,
@@ -273,7 +265,9 @@ class UseCaseProvider(Provider):
         self,
         message_broker: MessageBrokerPublisherProtocol,
     ) -> PublishUrlToBrokerForUpdateUseCase:
-        return PublishUrlToBrokerForUpdateUseCase(message_broker=message_broker)
+        return PublishUrlToBrokerForUpdateUseCase(
+            message_broker=message_broker,
+        )
 
     @provide(scope=Scope.REQUEST)
     def redirect_to_target_url_use_case(
