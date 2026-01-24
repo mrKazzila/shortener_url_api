@@ -19,11 +19,10 @@ backend/src/generated/*
 backend/.venv
 backend/env/*
 backend/!env/.env.example
-backend/docker/infra/pgbouncer/userlist.txt
+/backend/docker/compose/infra/pgbouncer/userlist.txt
 
 # ===== test data =====
 .pytest_cache/
 cover/
 /htmlcov/
-.coverage
 .coverage.*
