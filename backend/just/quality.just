@@ -1,5 +1,11 @@
+# Ruff check(fix) and format
 [group('Quality')]
-lint:
+ruff:
     @echo "[ruff] Running linters..."
     - ruff check --fix --silent .
     - ruff format --silent .
+
+# Type checking (Pyright)
+[group('Quality')]
+pyright:
+    uv run pyright
