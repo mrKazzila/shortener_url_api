@@ -198,11 +198,11 @@ app-up:
 
 # Starting fastapi only
 app-up-api:
-    @echo "[app] Starting fastapi only..."
+    @echo "[app] Starting grpc only..."
     @just _net-create
     @just env-docker
-    {{APP}} up -d fastapi
-    @echo "[app] fastapi started!"
+    {{APP}} up -d grpc
+    @echo "[app] grpc started!"
 
 # Rebuild application
 app-rebuild:
