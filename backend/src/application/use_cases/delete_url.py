@@ -8,12 +8,12 @@ import structlog
 from src.application.dtos.urls import DeleteUrlDTO
 
 if TYPE_CHECKING:
-    from src.application.use_cases.internal import (
-        GetTargetByKeyUseCase,
-    )
     from src.application.interfaces import (
         CacheProtocol,
         UnitOfWorkProtocol,
+    )
+    from src.application.use_cases.internal import (
+        GetTargetByKeyUseCase,
     )
 
 logger = structlog.get_logger(__name__)

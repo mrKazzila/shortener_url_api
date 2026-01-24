@@ -119,7 +119,11 @@ class RedisCacheClient(CacheProtocol):
         ttl_seconds: int | None = None,
     ) -> bool:
         try:
-            serialized = json.dumps(value, ensure_ascii=False) if isinstance(value, dict) else str(value)
+            serialized = (
+                json.dumps(value, ensure_ascii=False)
+                if isinstance(value, dict)
+                else str(value)
+            )
             expire = ttl_seconds if ttl_seconds is not None else self.ttl
 
             ok = await self.client.set(
@@ -130,5 +134,9 @@ class RedisCacheClient(CacheProtocol):
             )
             return bool(ok)
         except (redis.exceptions.RedisError, TypeError, ValueError) as e:
-            logger.error("Redis set_nx operation failed", key=key, error=str(e))
+            logger.error(
+                "Redis set_nx operation failed",
+                key=key,
+                error=str(e),
+            )
             return False
