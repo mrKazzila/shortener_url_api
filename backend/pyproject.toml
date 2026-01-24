@@ -48,18 +48,41 @@ dev = [
     "grpcio-tools>=1.76.0",
 ]
 
+
+
 # ==========================
 # ===== TOOLS SETTINGS =====
 # ==========================
 [tool.pytest.ini_options]
-addopts = "-v -rA -p no:warnings"
+addopts = "-v -ra --import-mode=importlib"
 testpaths = ["tests"]
+
+strict_markers = true
+strict_config = true
+
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+asyncio_default_test_loop_scope = "function"
+
+filterwarnings = [
+    "error",
+]
+
+markers = [
+    "unit: fast unit tests",
+    "integration: tests with db/redis/etc",
+    "e2e: end-to-end tests",
+]
+
 
 [tool.ruff]
 respect-gitignore = true
 line-length = 79
 target-version = "py313"
 src = ["src", "tests"]
+extend-exclude = [
+    "src/generated/**",
+]
 
 [tool.ruff.lint]
 fixable = ["ALL"]
@@ -112,6 +135,60 @@ inline-quotes = "double"
 multiline-quotes = "double"
 docstring-quotes = "double"
 
+
+[tool.pyright]
+pythonVersion = "3.13"
+typeCheckingMode = "standard"
+
+include = ["src", "tests"]
+
+exclude = [
+    ".venv",
+    "env",
+    "docs",
+    "**/__pycache__",
+]
+
+ignore = [
+    "src/generated/**",
+    "src/infrastructures/db/migrations/versions/**",
+]
+
+venvPath = "."
+venv = ".venv"
+
+reportMissingImports = "error"
+reportMissingModuleSource = "warning"
+reportMissingTypeStubs = "none"
+
+# strictListInference = true
+# strictDictionaryInference = true
+# strictSetInference = true
+
+# reportUnknownParameterType = "warning"
+# reportUnknownArgumentType = "warning"
+# reportUnknownLambdaType = "warning"
+
+# reportUnknownVariableType = "warning"
+# reportUnknownMemberType = "warning"
+
+# reportMissingTypeArgument = "warning"
+
+# reportUntypedFunctionDecorator = "warning"
+# reportUntypedClassDecorator = "warning"
+# reportUntypedBaseClass = "warning"
+
+# reportIncompatibleMethodOverride = "warning"
+# reportUninitializedInstanceVariable = "warning"
+# reportMissingSuperCall = "warning"
+# reportUnusedImport = "warning"
+
+# strict = [
+#   "src/domain/**",
+#   "src/application/**",
+# ]
+
+
 # ==========================
 # ===== ALEMBIC CONFIG =====
 # ==========================
@@ -119,7 +196,6 @@ docstring-quotes = "double"
 script_location = "%(here)s/src/infrastructures/db/migrations"
 file_template = "%%(year)d_%%(month).2d_%%(day).2d_%%(hour).2d%%(minute).2d-%%(rev)s_%%(slug)s"
 
-# важно: если ты импортируешь модули как `infrastructures.*`, то нужен `src`
 prepend_sys_path = ["%(here)s/src"]
 
 timezone = "UTC"
