@@ -8,4 +8,4 @@ ruff:
 # Type checking (Pyright)
 [group('Quality')]
 pyright:
-    uv run pyright
+    @uv run pyright
