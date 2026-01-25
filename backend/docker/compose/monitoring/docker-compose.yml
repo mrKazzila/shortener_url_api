@@ -1,60 +1,64 @@
-version: "3.9"
-
 services:
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.5.1
     container_name: prometheus
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
       - "--log.level=error"
     ports:
       - "9090:9090"
     networks:
       - global_net
+    restart: unless-stopped
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:12.4.0-21230963995
     container_name: grafana
     depends_on:
       - prometheus
       - loki
     volumes:
-      - ./grafana/datasources:/etc/grafana/provisioning/datasources
-      - ../../../persistentdata/grafana_data:/var/lib/grafana
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - grafana_data:/var/lib/grafana
     ports:
       - "3000:3000"
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_LOG_LEVEL=error
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_LOG_LEVEL: error
     networks:
       - global_net
+    restart: unless-stopped
 
   loki:
-    image: grafana/loki:latest
+    image: grafana/loki:3.6
     container_name: loki
     command:
-      - -config.file=/etc/loki/config.yml
-      - -log.level=error
+      - "-config.file=/etc/loki/config.yml"
+      - "-log.level=error"
     volumes:
       - ./loki/config.yml:/etc/loki/config.yml:ro
-      - ../../../persistentdata/loki/data:/var/loki
-      - ../../../persistentdata/loki/wal:/wal
+      - loki_data:/loki
     ports:
       - "3100:3100"
     networks:
       - global_net
+    restart: unless-stopped
 
   promtail:
-    image: grafana/promtail:latest
+    image: grafana/promtail:3.6
     container_name: promtail
     volumes:
       - ./promtail/config.yml:/etc/promtail/config.yml:ro
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/log:/var/log:ro
+      - promtail_data:/var/lib/promtail
     command:
       - "-config.file=/etc/promtail/config.yml"
       - "-log.level=error"
@@ -62,12 +66,13 @@ services:
       - "9080:9080"
     networks:
       - global_net
-    privileged: true
-
+    restart: unless-stopped
 
 volumes:
+  prometheus_data:
   grafana_data:
   loki_data:
+  promtail_data:
 
 networks:
   global_net:

@@ -1,0 +1,56 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+  log_level: error
+
+positions:
+  filename: /var/lib/promtail/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: docker-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: docker-logs
+          __path__: /var/lib/docker/containers/*/*-json.log
+
+    pipeline_stages:
+      - json:
+          expressions:
+            log: log
+            stream: stream
+
+      - regex:
+          expression: '/var/lib/docker/containers/(?P<container_id>[a-f0-9]+)/.*\.log'
+          source: filename
+
+      - docker: { }
+
+      - labels:
+          container_name:
+          container_id:
+          image:
+          stream:
+
+      - match:
+          selector: '{log=~".*filetargetmanager.*|.*recalculate_owned_streams.*|.*table_manager.*"}'
+          action: drop
+          drop_counter_reason: "promtail_internal_logs"
+
+      - json:
+          expressions:
+            caller: caller
+            level: level
+          source: log
+
+      - match:
+          selector: '{caller=~"filetargetmanager.*|recalculate_owned_streams.*|table_manager.*"}'
+          action: drop
+          drop_counter_reason: "promtail_by_caller"
+
+      - output:
+          source: log

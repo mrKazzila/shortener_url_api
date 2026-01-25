@@ -13,11 +13,59 @@ def setup_logging(
     if isinstance(level, str):
         level = getattr(logging, level.upper(), logging.INFO)
 
-    _configure_structlog(json_format=json_format)
-    _configure_default_logging(level=level, json_format=json_format)
+    base_processors = _build_default_processors(
+        json_format=json_format,
+    )
+
+    _configure_structlog(base_processors=base_processors)
+    _configure_default_logging(
+        base_processors=base_processors,
+        level=level,
+        json_format=json_format,
+    )
 
 
-def _build_default_processors(json_format: bool):
+def _configure_structlog(*, base_processors: list) -> None:
+    processors = base_processors.copy()
+    processors.append(structlog.stdlib.ProcessorFormatter.wrap_for_formatter)
+
+    structlog.configure_once(
+        processors=processors,
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        cache_logger_on_first_use=True,
+    )
+
+
+def _configure_default_logging(
+    *,
+    base_processors: list,
+    json_format: bool,
+    level: int,
+) -> None:
+    renderer = (
+        structlog.processors.JSONRenderer()
+        if json_format
+        else structlog.dev.ConsoleRenderer()
+    )
+
+    formatter = structlog.stdlib.ProcessorFormatter(
+        foreign_pre_chain=base_processors,
+        processors=[
+            structlog.stdlib.ProcessorFormatter.remove_processors_meta,
+            renderer,
+        ],
+    )
+
+    handler = logging.StreamHandler(stream=sys.stdout)
+    handler.setFormatter(formatter)
+
+    root = logging.getLogger()
+    root.handlers.clear()
+    root.addHandler(handler)
+    root.setLevel(level)
+
+
+def _build_default_processors(*, json_format: bool) -> list:
     processors = [
         structlog.stdlib.add_log_level,
         structlog.stdlib.add_logger_name,
@@ -41,37 +89,3 @@ def _build_default_processors(json_format: bool):
         processors.append(structlog.processors.format_exc_info)
 
     return processors
-
-
-def _configure_structlog(json_format: bool):
-    structlog.configure_once(
-        processors=_build_default_processors(json_format=json_format)
-        + [
-            structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
-        ],
-        logger_factory=structlog.stdlib.LoggerFactory(),
-    )
-
-
-def _configure_default_logging(*, level: int, json_format: bool):
-    renderer = (
-        structlog.processors.JSONRenderer()
-        if json_format
-        else structlog.dev.ConsoleRenderer()
-    )
-
-    formatter = structlog.stdlib.ProcessorFormatter(
-        processors=_build_default_processors(json_format=json_format)
-        + [
-            structlog.stdlib.ProcessorFormatter.remove_processors_meta,
-            renderer,
-        ],
-    )
-
-    handler = logging.StreamHandler(stream=sys.stdout)
-    handler.setFormatter(formatter)
-
-    root = logging.getLogger()
-    root.handlers.clear()
-    root.addHandler(handler)
-    root.setLevel(level)

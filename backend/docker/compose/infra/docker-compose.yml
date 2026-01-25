@@ -1,18 +1,22 @@
-version: "3.9"
+x-service-defaults: &service_defaults
+  restart: unless-stopped
+  networks:
+    - global_net
+
+x-pgbouncer-volumes: &pgbouncer_volumes
+  - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+  - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
 
 services:
   pgbouncer:
-    container_name: pgbouncer
+    <<: *service_defaults
     image: edoburu/pgbouncer:v1.24.1-p1
-    restart: always
     environment:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
     ports:
       - "6432:6432"
-    volumes:
-      - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
-      - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
+    volumes: *pgbouncer_volumes
     depends_on:
       postgres:
         condition: service_healthy
@@ -24,9 +28,8 @@ services:
       start_period: 5s
 
   postgres:
-    container_name: postgres
+    <<: *service_defaults
     image: postgres:${POSTGRES_VERSION}
-    restart: always
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -39,22 +42,16 @@ services:
       timeout: 5s
       retries: 5
       start_period: 5s
-    deploy:
-      resources:
-        limits:
-          cpus: "2"
-          memory: 10G
     volumes:
-      - ../../../persistentdata/db:/var/lib/postgresql/data/
+      - pgdata:/var/lib/postgresql/data
 
   redis:
-    container_name: redis
+    <<: *service_defaults
     image: redis:7-alpine
-    restart: always
     ports:
       - "6379:6379"
     volumes:
-      - ../../../persistentdata/redis:/data
+      - redisdata:/data
     command:
       - redis-server
       - --loglevel warning
@@ -68,8 +65,8 @@ services:
       retries: 5
 
   kafka:
+    <<: *service_defaults
     image: apache/kafka:3.7.0
-    container_name: kafka
     ports:
       - "9092:9092"
     environment:
@@ -87,6 +84,8 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    volumes:
+      - kafka_data:/tmp/kraft-combined-logs
 
     healthcheck:
       test: [ "CMD-SHELL", "bash -c '</dev/tcp/localhost/9092'" ]
@@ -96,11 +95,11 @@ services:
       start_period: 15s
 
   kafka-ui:
+    <<: *service_defaults
     image: provectuslabs/kafka-ui:v0.7.2
-    container_name: kafka-ui
     depends_on:
       kafka:
-        condition: service_started
+        condition: service_healthy
     ports:
       - "8080:8080"
     environment:
@@ -108,7 +107,6 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
       LOGGING_LEVEL_ROOT: ERROR
       LOGGING_LEVEL_COM_PROVECTUS: ERROR
-
     healthcheck:
       test: [ "CMD-SHELL", "wget -qO- http://localhost:8080/ | grep -q '<title>'" ]
       interval: 10s
@@ -116,8 +114,11 @@ services:
       retries: 5
       start_period: 10s
 
+volumes:
+  pgdata:
+  redisdata:
+  kafka_data:
 
 networks:
-  default:
+  global_net:
     external: true
-    name: global_net
