@@ -19,9 +19,10 @@ import 'db.just'
 import 'stacks.just'
 import 'all.just'
 import 'convenience.just'
+import 'docs.just'
 
 # Local commands (don't commit)
-import? 'just/local.just'
+import? 'local.just'
 
 # =====================
 # Aliases
