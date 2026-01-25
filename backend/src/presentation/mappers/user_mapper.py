@@ -46,10 +46,10 @@ class UserPresentationMapper:
                 clicks_count=url.clicks_count,
                 is_active=url.is_active,
                 created_at=UserPresentationMapper._dt_to_timestamp(
-                    url.created_at
+                    url.created_at,
                 ),
                 last_used=UserPresentationMapper._dt_to_timestamp(
-                    url.last_used
+                    url.last_used,
                 ),
             )
 

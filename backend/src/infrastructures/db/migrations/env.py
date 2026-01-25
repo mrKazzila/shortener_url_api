@@ -18,7 +18,13 @@ target_metadata = Base.metadata
 
 def _setup_structlog_for_alembic() -> None:
     level = os.getenv("LOG_LEVEL", "INFO")
-    json_format = os.getenv("LOG_JSON", "0") in {"1", "true", "True", "yes", "YES"}
+    json_format = os.getenv("LOG_JSON", "0") in {
+        "1",
+        "true",
+        "True",
+        "yes",
+        "YES",
+    }
 
     setup_logging(level=level, json_format=json_format)
 
