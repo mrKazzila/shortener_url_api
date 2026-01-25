@@ -1,0 +1,50 @@
+x-service-defaults: &service_defaults
+  restart: unless-stopped
+  env_file:
+    - env/.env
+  networks:
+    - global_net
+
+x-consumer-build: &consumer_build
+  build:
+    context: .
+    dockerfile: docker/dockerfiles/Consumer.dockerfile
+
+x-grpc-build: &grpc_build
+  build:
+    context: .
+    dockerfile: docker/dockerfiles/Dockerfile
+
+services:
+  grpc:
+    <<: *service_defaults
+    <<: *grpc_build
+    image: ${APP_NAME}-grpc
+    command: sh -c "./scripts/run_grpc.sh"
+    ports:
+      - "50051:50051"
+    volumes:
+      - ./:/home/unprivilegeduser/shortener
+    working_dir: /home/unprivilegeduser/shortener
+
+  consumer:
+    <<: *service_defaults
+    <<: *consumer_build
+    image: ${APP_NAME}-consumer
+    command: [ "-m", "src.infrastructures.broker.consumers.consumer_new_url" ]
+    volumes:
+      - ./:/home/unprivilegeduser/shortener
+    working_dir: /home/unprivilegeduser/shortener
+
+  consumer-update:
+    <<: *service_defaults
+    <<: *consumer_build
+    image: ${APP_NAME}-consumer-update
+    command: [ "-m", "src.infrastructures.broker.consumers.consumer_update_url" ]
+    volumes:
+      - ./:/home/unprivilegeduser/shortener
+    working_dir: /home/unprivilegeduser/shortener
+
+networks:
+  global_net:
+    external: true
