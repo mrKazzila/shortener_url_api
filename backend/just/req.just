@@ -2,7 +2,7 @@
 [group('Requirements')]
 req-dev:
     @echo "[req.txt] Generating requirements.txt (dev)..."
-    @uv pip compile pyproject.toml --extra dev -o requirements.txt
+    @uv pip compile pyproject.toml --group dev -o requirements.txt
 
 # Generating requirements.txt (prod)
 [group('Requirements')]
