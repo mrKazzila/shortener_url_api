@@ -1,1 +1,5 @@
+# Main entrypoint: show available commands
+default:
+    @just --list
+
 import 'just/main.just'

@@ -1,8 +1,3 @@
-# Main entrypoint: show available commands
-default:
-    @just --list
-
-
 [group('Help')]
 choose:
     @if command -v fzf >/dev/null 2>&1; then \
@@ -27,8 +22,8 @@ _net-create:
 [group('Internal')]
 [private]
 _pgbouncer-userlist-check:
-    @if [ ! -f docker/infra/pgbouncer/userlist.txt ]; then \
-        echo "[pgbouncer] Missing docker/infra/pgbouncer/userlist.txt"; \
+    @if [ ! -f docker/compose/infra/pgbouncer/userlist.txt ]; then \
+        echo "[pgbouncer] Missing docker/compose/infra/pgbouncer/userlist.txt"; \
         echo "[pgbouncer] Create it manually and fill it with user entries for pgbouncer"; \
         exit 1; \
     fi
