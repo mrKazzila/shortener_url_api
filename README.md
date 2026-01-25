@@ -122,7 +122,7 @@
 │       │   └── prometheus.yml
 │       └── promtail
 │           └── config.yml
-├── docker-compose.yaml
+├── docker-compose.yml
 ├── env
 ├── justfile
 ├── pyproject.toml
