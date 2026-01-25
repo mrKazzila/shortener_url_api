@@ -1,10 +1,18 @@
+/**
+ * User urls related messages.
+ */
 syntax = "proto3";
 
 package user_urls.v1;
 
 import "google/protobuf/timestamp.proto";
 
+
+/**
+ * Service for user urls logic.
+ */
 service UserUrlsService {
+    /// Used to get all user urls.
     rpc GetUserUrls (GetUserUrlsRequest) returns (GetUserUrlsResponse);
 }
 
@@ -14,16 +22,16 @@ message GetUserUrlsRequest {
 }
 
 message UserUrl {
-    string key = 1;
-    string target_url = 2;
-    string name = 3;
-    int32 clicks_count = 4;
-    bool is_active = 5;
-    google.protobuf.Timestamp created_at = 6;
-    google.protobuf.Timestamp last_used = 7;
+    string key = 1; /// Short key
+    string target_url = 2; /// Original URL
+    string name = 3; /// Description URL
+    int32 clicks_count = 4; /// Click amount
+    bool is_active = 5; /// Key flag
+    google.protobuf.Timestamp created_at = 6; /// Created time
+    google.protobuf.Timestamp last_used = 7; /// Last used time
 }
 
 message GetUserUrlsResponse {
-    repeated UserUrl items = 1;
-    int32 count = 2;
+    repeated UserUrl items = 1;  /// UserUrl data
+    int32 count = 2; /// Urls count
 }

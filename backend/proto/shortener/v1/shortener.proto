@@ -1,45 +1,56 @@
+/**
+ * Shortener related messages.
+ */
 syntax = "proto3";
 
 package shortener.v1;
 
+
+/**
+ * Service for shortening logic.
+ */
 service ShortenerService {
+    /// Used to create short key for original URL.
     rpc CreateShortUrl (CreateShortUrlRequest) returns (CreateShortUrlResponse);
+    /// Used to get original URL by short key.
     rpc ResolveKey (ResolveKeyRequest) returns (ResolveKeyResponse);
+    /// Used to update information for URL entity by short key.
     rpc UpdateUrl (UpdateUrlRequest) returns (UpdateUrlResponse);
+    /// Used to delete short key.
     rpc DeleteUrl (DeleteUrlRequest) returns (DeleteUrlResponse);
 }
 
 message CreateShortUrlRequest {
-    string target_url = 1;
+    string target_url = 1; /// Original URL
 }
 
 message CreateShortUrlResponse {
-    string key = 1;
-    string target_url = 2;
+    string key = 1; /// Short key
+    string target_url = 2; /// Unique booking status ID
 }
 
 message ResolveKeyRequest {
-    string key = 1;
+    string key = 1; /// Short key
 }
 
 message ResolveKeyResponse {
-    string target_url = 1;
+    string target_url = 1; /// Original URL
 }
 
 message UpdateUrlRequest {
-    string key = 1;
-    string name = 2;
-    bool is_active = 3;
+    string key = 1; /// Short key
+    string name = 2; /// Description URL
+    bool is_active = 3; /// Key flag
 }
 
 message UpdateUrlResponse {
-    string ok = 1;
+    string ok = 1; /// response result
 }
 
 message DeleteUrlRequest {
-    string key = 1;
+    string key = 1; /// Short key
 }
 
 message DeleteUrlResponse {
-    string ok = 1;
+    string ok = 1; /// response result
 }
