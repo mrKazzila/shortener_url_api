@@ -1,3 +1,4 @@
+# Run redis-cli in docker
 [group('Convenience')]
 redis-cli:
     @echo "[redis] Connecting..."

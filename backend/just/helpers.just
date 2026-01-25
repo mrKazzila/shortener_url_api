@@ -1,3 +1,4 @@
+# Choose just command
 [group('Help')]
 choose:
     @if command -v fzf >/dev/null 2>&1; then \
