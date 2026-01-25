@@ -5,25 +5,16 @@ server:
   log_level: error
 
 common:
-  path_prefix: /tmp/loki
+  path_prefix: /loki
   replication_factor: 1
   ring:
-    instance_addr: 127.0.0.1
     kvstore:
       store: inmemory
 
 ingester:
-  lifecycler:
-    ring:
-      replication_factor: 1
-      kvstore:
-        store: inmemory
-    final_sleep: 0s
   wal:
     enabled: true
-    dir: /wal
-  chunk_idle_period: 5m
-  max_chunk_age: 1h
+    dir: /loki/wal
 
 schema_config:
   configs:
@@ -44,11 +35,7 @@ storage_config:
 
 limits_config:
   allow_structured_metadata: false
-  reject_old_samples: true
-  reject_old_samples_max_age: 168h
-
-query_scheduler:
-  max_outstanding_requests_per_tenant: 4096
+  reject_old_samples: false
 
 table_manager:
   retention_deletes_enabled: false
