@@ -1,4 +1,4 @@
-# Generate
+# Generate grpc documentation
 [group('Docs')]
-grpc-gen:
-    @./scripts/gen_grpc.sh
+grpc-gen-docs:
+    @./scripts/gen_proto_doc.sh
