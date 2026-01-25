@@ -3,10 +3,9 @@
 # =====================
 set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 
-APP := "docker compose --env-file env/.env -p shortener-app -f docker-compose.yaml"
-INFRA := "docker compose --env-file env/.env -p shortener-infra -f docker/infra/docker-compose.yml"
-MON := "docker compose --env-file env/.env -p shortener-mon -f docker/monitoring/docker-compose.yml"
-
+APP := "docker compose --project-directory . --env-file env/.env -p shortener-app -f docker/compose/app/docker-compose.yml"
+INFRA := "docker compose --project-directory docker/compose/infra --env-file env/.env -p shortener-infra -f docker/compose/infra/docker-compose.yml"
+MON := "docker compose --project-directory docker/compose/monitoring --env-file env/.env -p shortener-mon -f docker/compose/monitoring/docker-compose.yml"
 
 # =====================
 # Imports
