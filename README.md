@@ -84,12 +84,12 @@ grpcui -plaintext localhost:50051
 
 4. Run app (1 1 = partitions & replicas)
 ```bash
-  just run-app 1 1
+  just app-bootstrap 1 1
 ```
 
 5. Optional monitoring stack
 ```bash
-  just monitoring-up
+  just mon-up
 ```
 
 6.  See all available commands
