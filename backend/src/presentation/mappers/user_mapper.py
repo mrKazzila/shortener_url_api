@@ -8,30 +8,11 @@ from google.protobuf.timestamp_pb2 import Timestamp
 
 from src.domain.entities.url import UrlEntity
 from src.generated.user_urls.v1 import user_urls_pb2
-from src.presentation.api.schemas.users import SUserUrl, SUserUrls
 
 
 @final
 @dataclass(frozen=True, slots=True)
 class UserPresentationMapper:
-    @staticmethod
-    def to_response(user_urls: list["UrlEntity"]) -> SUserUrls:
-        return SUserUrls(
-            count=len(user_urls),
-            urls=[
-                SUserUrl(
-                    key=url.key,
-                    target_url=url.target_url,
-                    name=url.name,
-                    clicks_count=url.clicks_count,
-                    is_active=url.is_active,
-                    created_at=url.created_at,
-                    last_used=url.last_used,
-                )
-                for url in user_urls
-            ],
-        )
-
     @staticmethod
     def to_proto_get_user_urls_response(
         user_urls: list["UrlEntity"],
