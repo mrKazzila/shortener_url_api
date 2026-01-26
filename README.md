@@ -312,7 +312,7 @@ Example results:
 │   │       ├── __init__.py
 │   │       └── url_db_mapper.py
 │   ├── main.py
-│   ├── main_grpc.py
+│   ├── main.py
 │   └── presentation
 │       ├── __init__.py
 │       ├── api

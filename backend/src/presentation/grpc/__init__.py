@@ -1,3 +1,7 @@
-__all__ = ("create_grpc_server",)
+__all__ = (
+    "GRPC_INTERCEPTORS",
+    "GRPC_SERVICES",
+)
 
-from src.presentation.grpc.server import create_grpc_server
+from src.presentation.grpc.interceptors import GRPC_INTERCEPTORS
+from src.presentation.grpc.services import GRPC_SERVICES
