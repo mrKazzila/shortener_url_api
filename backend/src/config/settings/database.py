@@ -1,12 +1,12 @@
-from pathlib import Path
 from typing import final
 
 from pydantic import Field, PostgresDsn, computed_field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from src.config.settings._base_settings import BaseAppSettings
 
 
 @final
-class DatabaseSettings(BaseSettings):
+class DatabaseSettings(BaseAppSettings):
     postgres_protocol: str = Field(..., validation_alias="DB_PROTOCOL")
     postgres_user: str = Field(..., validation_alias="DB_USER")
     postgres_password: str = Field(..., validation_alias="DB_PASSWORD")
@@ -24,8 +24,3 @@ class DatabaseSettings(BaseSettings):
             port=self.postgres_port,
             path=self.postgres_db,
         )
-
-    model_config = SettingsConfigDict(
-        env_file=Path(__file__).resolve().parents[3].joinpath("env/.env"),
-        extra="allow",
-    )

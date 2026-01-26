@@ -1,8 +1,8 @@
 from typing import final
 
 from pydantic import Field
-from pydantic_settings import BaseSettings
 
+from src.config.settings._base_settings import BaseAppSettings
 from src.config.settings.app import AppSettings
 from src.config.settings.broker import BrokerSettings
 from src.config.settings.database import DatabaseSettings
@@ -10,7 +10,7 @@ from src.config.settings.redis import RedisSettings
 
 
 @final
-class Settings(BaseSettings):
+class Settings(BaseAppSettings):
     app: AppSettings = Field(default_factory=AppSettings)
     database: DatabaseSettings = Field(default_factory=DatabaseSettings)
     redis: RedisSettings = Field(default_factory=RedisSettings)
@@ -34,7 +34,7 @@ class Settings(BaseSettings):
 
     @property
     def redis_url(self) -> str:
-        return str(self.redis.redis_uri)
+        return str(self.redis.redis_url)
 
     @property
     def redis_cache_ttl(self) -> int:

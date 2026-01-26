@@ -1,12 +1,12 @@
-from pathlib import Path
 from typing import final
 
 from pydantic import Field, RedisDsn, computed_field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from src.config.settings._base_settings import BaseAppSettings
 
 
 @final
-class RedisSettings(BaseSettings):
+class RedisSettings(BaseAppSettings):
     redis_password: str = Field(
         "redis_password",
         validation_alias="REDIS_PASSWORD",
@@ -36,7 +36,7 @@ class RedisSettings(BaseSettings):
             path=f"/{self.redis_db}",
         )
 
-        print(f'REDIS: {t=!r}')
+        print(f"REDIS: {t=!r}")
         return RedisDsn.build(
             scheme="redis",
             username=self.redis_user,
@@ -45,8 +45,3 @@ class RedisSettings(BaseSettings):
             port=self.redis_port,
             path=f"/{self.redis_db}",
         )
-
-    model_config = SettingsConfigDict(
-        env_file=Path(__file__).resolve().parents[3].joinpath("env/.env"),
-        extra="allow",
-    )
