@@ -18,4 +18,4 @@ ty:
 # Import linter (check CA)
 [group('Quality')]
 import-linter:
-    uv run import-linter
+    uv run lint-imports
