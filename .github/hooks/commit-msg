@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Colors (disable colors if not a TTY)
+if [[ -t 1 ]]; then
+  BLUE="\033[0;34m"
+  RED="\033[1;31m"
+  GREEN="\033[1;32m"
+  YELLOW="\033[0;33m"
+  NC="\033[0m"
+else
+  BLUE=""
+  RED=""
+  GREEN=""
+  YELLOW=""
+  NC=""
+fi
+
+MSG_FILE="${1:-}"
+
+if [[ -z "${MSG_FILE}" || ! -f "${MSG_FILE}" ]]; then
+  echo -e "${RED}[❌] commit-msg hook: commit message file not found.${NC}"
+  exit 1
+fi
+
+# Take the first meaningful line: ignore empty lines and comments
+FIRST_LINE="$(grep -vE '^\s*#' "$MSG_FILE" | sed -E '/^\s*$/d' | head -n 1 || true)"
+
+if [[ -z "${FIRST_LINE}" ]]; then
+  echo -e "${RED}[❌] Bad commit message: empty message.${NC}"
+  exit 1
+fi
+
+# Allow common Git-generated messages
+if [[ "${FIRST_LINE}" =~ ^Merge\  ]] || [[ "${FIRST_LINE}" =~ ^Revert\  ]]; then
+  echo -e "${GREEN}[✅] Good commit (Merge/Revert).${NC}"
+  exit 0
+fi
+
+# Allow fixup!/squash! prefixes used during interactive rebase
+# Examples:
+#   fixup! feat: add auth
+#   squash! fix: correct typo
+if [[ "${FIRST_LINE}" =~ ^(fixup\!\ |squash\!\ ) ]]; then
+  # Strip fixup!/squash! and validate the remaining message
+  FIRST_LINE="${FIRST_LINE#fixup! }"
+  FIRST_LINE="${FIRST_LINE#squash! }"
+fi
+
+# Commit message convention:
+# feat: <message>
+# fix: <message>
+# etc
+#
+# If you want scope support:
+# feat(api): <message>
+VALID_REGEX='^(feat|chore|test|ci|refactor|fix|style)(\([a-z0-9_-]+\))?: .+'
+
+ERROR_MSG="Commit message MUST match:
+${GREEN}feat: ${YELLOW}some info
+${GREEN}chore: ${YELLOW}some info
+${GREEN}test: ${YELLOW}some info
+${GREEN}ci: ${YELLOW}some info
+${GREEN}refactor: ${YELLOW}some info
+${GREEN}fix: ${YELLOW}some info
+${GREEN}style: ${YELLOW}some info
+
+Optional scope:
+${GREEN}feat(api): ${YELLOW}some info
+"
+
+if [[ "${FIRST_LINE}" =~ ${VALID_REGEX} ]]; then
+  echo -e "${GREEN}[✅] Good commit!${NC}"
+  exit 0
+else
+  echo -e "${RED}[❌] Bad commit message:${NC} ${BLUE}\"${FIRST_LINE}\"${NC}"
+  echo -e "${YELLOW}${ERROR_MSG}${NC}"
+  echo -e "${YELLOW}[🤫] Add --no-verify to bypass.${NC}"
+  exit 1
+fi
