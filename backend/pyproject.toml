@@ -52,6 +52,8 @@ dev = [
     "mkdocs-literate-nav>=0.6.2",
     "mkdocs-section-index>=0.3.10",
     "mkdocs-autorefs>=1.4.3",
+    "import-linter>=2.9",
+    "ty>=0.0.13",
 ]
 
 
@@ -193,6 +195,121 @@ reportMissingTypeStubs = "none"
 #   "src/domain/**",
 #   "src/application/**",
 # ]
+
+
+[tool.importlinter]
+root_package = "src"
+include_external_packages = true
+
+# 1) Слои: presentation -> application -> domain
+[[tool.importlinter.contracts]]
+name = "Layering: presentation -> application -> domain"
+type = "layers"
+layers = [
+    "src.presentation",
+    "src.application",
+    "src.domain",
+]
+
+# 2) The domain must be clean: no external frameworks and no “external” layers.
+[[tool.importlinter.contracts]]
+name = "Domain is pure"
+type = "forbidden"
+source_modules = [
+    "src.domain",
+]
+forbidden_modules = [
+    # inner layers that the domain must not know
+    "src.application",
+    "src.presentation",
+    "src.infrastructures",
+    "src.config",
+    "src.generated",
+    # external libraries / infrastructure
+    "fastapi",
+    "starlette",
+    "sqlalchemy",
+    "alembic",
+    "pydantic",
+    "redis",
+    "aioredis",
+    "grpc",
+]
+
+# 3) The application must not depend on presentation/infrastructure/config/generated.
+[[tool.importlinter.contracts]]
+name = "Application boundaries"
+type = "forbidden"
+source_modules = [
+    "src.application",
+]
+forbidden_modules = [
+    "src.presentation",
+    "src.infrastructures",
+    "src.config",
+    "src.generated",
+    # The application must not pull web/db directly.
+    "fastapi",
+    "starlette",
+    "sqlalchemy",
+    "alembic",
+    "grpc",
+]
+
+# 4) Presentation must not go directly to infrastructure (only to application)
+[[tool.importlinter.contracts]]
+name = "Presentation does not import infrastructure"
+type = "forbidden"
+source_modules = [
+    "src.presentation",
+]
+forbidden_modules = [
+    "src.infrastructures",
+]
+
+# 5) Infrastructure must not import presentation
+[[tool.importlinter.contracts]]
+name = "Infrastructure does not import presentation"
+type = "forbidden"
+source_modules = [
+    "src.infrastructures",
+]
+forbidden_modules = [
+    "src.presentation",
+]
+
+# 6) Internal use_cases/internal must not be imported from outside the application.
+[[tool.importlinter.contracts]]
+name = "Application internals are private"
+type = "forbidden"
+source_modules = [
+    "src.presentation",
+    "src.infrastructures",
+    "src.domain",
+    "src.config",
+]
+forbidden_modules = [
+    "src.application.use_cases.internal",
+]
+
+
+[tool.ty.environment]
+python-version = "3.13"
+root = ["./src"]
+
+[tool.ty.src]
+include = ["src", "tests"]
+exclude = [
+    ".venv/**",
+    "env/**",
+    "docs/**",
+    "src/generated/**",
+    "src/infrastructures/db/migrations/**",
+]
+
+[tool.ty.terminal]
+output-format = "concise"
+error-on-warning = false
 
 
 # ==========================
