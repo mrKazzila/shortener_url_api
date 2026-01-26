@@ -20,6 +20,7 @@ import 'stacks.just'
 import 'all.just'
 import 'convenience.just'
 import 'docs.just'
+import 'prepare.just'
 
 # Local commands (don't commit)
 import? 'local.just'
