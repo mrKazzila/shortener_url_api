@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import cast, final
+from typing import final
 
 from pydantic import Field, PostgresDsn, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -24,10 +24,6 @@ class DatabaseSettings(BaseSettings):
             port=self.postgres_port,
             path=self.postgres_db,
         )
-
-    @computed_field
-    def sqlalchemy_database_uri(self) -> PostgresDsn:
-        return cast("PostgresDsn", self.database_url)
 
     model_config = SettingsConfigDict(
         env_file=Path(__file__).resolve().parents[3].joinpath("env/.env"),

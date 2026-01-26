@@ -1,5 +1,4 @@
 import asyncio
-import os
 
 from alembic import context
 from sqlalchemy.engine import URL
@@ -17,23 +16,17 @@ target_metadata = Base.metadata
 
 
 def _setup_structlog_for_alembic() -> None:
-    level = os.getenv("LOG_LEVEL", "INFO")
-    json_format = os.getenv("LOG_JSON", "0") in {
-        "1",
-        "true",
-        "True",
-        "yes",
-        "YES",
-    }
-
-    setup_logging(level=level, json_format=json_format)
+    setup_logging(
+        level=settings.log_level,
+        json_format=True,
+    )
 
 
 _setup_structlog_for_alembic()
 
 
 def get_sqlalchemy_url() -> URL:
-    url = make_url(str(settings.sqlalchemy_database_uri))
+    url = make_url(settings.database_url)
 
     if url.drivername in {"postgresql", "postgres"}:
         url = url.set(drivername="postgresql+asyncpg")
