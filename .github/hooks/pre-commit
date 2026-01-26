@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Colors (disable colors if not a TTY)
+if [[ -t 1 ]]; then
+  BLUE='\033[0;34m'
+  RED='\033[0;31m'
+  GREEN='\033[0;32m'
+  YELLOW='\033[1;33m'
+  NC='\033[0m'
+else
+  BLUE=""
+  RED=""
+  GREEN=""
+  YELLOW=""
+  NC=""
+fi
+
+ROOT="$(git rev-parse --show-toplevel)"
+BACKEND_DIR="${ROOT}/backend"
+
+if [[ ! -d "${BACKEND_DIR}" ]]; then
+  echo -e "${RED}[❌] backend/ directory not found. Hook expects monorepo layout.${NC}"
+  exit 1
+fi
+
+cd "${ROOT}"
+
+# Collect staged python files in backend/ (NUL-separated to support spaces)
+PY_FILES_REL=()
+
+while IFS= read -r -d '' f; do
+  case "$f" in
+    backend/*.py|backend/*.pyi)
+      PY_FILES_REL+=("${f#backend/}")
+      ;;
+  esac
+done < <(git diff --cached --name-only -z --diff-filter=ACMR -- backend)
+
+if [[ ${#PY_FILES_REL[@]} -eq 0 ]]; then
+  echo -e "${BLUE}[ℹ️] No staged Python files in backend/. Skipping ruff.${NC}"
+  exit 0
+fi
+
+cd "${BACKEND_DIR}"
+
+# Choose how to run ruff (PATH-safe for PyCharm)
+run_ruff() {
+  if command -v ruff >/dev/null 2>&1; then
+    ruff "$@"
+    return 0
+  fi
+
+  if command -v uv >/dev/null 2>&1; then
+    uv run ruff "$@"
+    return 0
+  fi
+
+  echo -e "${RED}[❌] Ruff not found in PATH, and uv not found to run it.${NC}"
+  echo -e "${YELLOW}Fix options:${NC}"
+  echo -e "${YELLOW}- Install ruff globally (brew/pipx) OR${NC}"
+  echo -e "${YELLOW}- Install uv and keep ruff in project dependencies${NC}"
+  exit 1
+}
+
+echo -e "${BLUE}[🚀] Ruff autofix + format (staged files only)...${NC}"
+run_ruff check --fix --quiet "${PY_FILES_REL[@]}"
+run_ruff format --quiet "${PY_FILES_REL[@]}"
+
+# Re-stage after changes (we are inside backend/)
+git add -- "${PY_FILES_REL[@]}"
+
+echo -e "${BLUE}[🚀] Ruff final checks...${NC}"
+run_ruff check --quiet "${PY_FILES_REL[@]}"
+run_ruff format --check --quiet "${PY_FILES_REL[@]}"
+
+echo -e "${GREEN}[✅] Pre-commit OK.${NC}"
+exit 0
