@@ -19,7 +19,7 @@ services:
   grpc:
     <<: *service_defaults
     <<: *grpc_build
-    image: ${APP_NAME}-grpc
+    image: shortener-app-grpc
     command: sh -c "./scripts/run_grpc.sh"
     ports:
       - "50051:50051"
@@ -30,7 +30,7 @@ services:
   consumer:
     <<: *service_defaults
     <<: *consumer_build
-    image: ${APP_NAME}-consumer
+    image: shortener-app-consumer
     command: [ "-m", "src.infrastructures.broker.consumers.consumer_new_url" ]
     volumes:
       - ./:/home/unprivilegeduser/shortener
@@ -39,7 +39,7 @@ services:
   consumer-update:
     <<: *service_defaults
     <<: *consumer_build
-    image: ${APP_NAME}-consumer-update
+    image: shortener-app-consumer-update
     command: [ "-m", "src.infrastructures.broker.consumers.consumer_update_url" ]
     volumes:
       - ./:/home/unprivilegeduser/shortener
