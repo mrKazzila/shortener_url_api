@@ -1,30 +1,47 @@
-from pathlib import Path
 from typing import final
 
-from pydantic import Field, RedisDsn
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field, RedisDsn, computed_field
+
+from src.config.settings._base_settings import BaseAppSettings
 
 
 @final
-class RedisSettings(BaseSettings):
-    redis_url: RedisDsn = Field(
-        RedisDsn("redis://:redis_password@redis:6379/0"),
-        validation_alias="REDIS_URL",
-    )
+class RedisSettings(BaseAppSettings):
     redis_password: str = Field(
         "redis_password",
         validation_alias="REDIS_PASSWORD",
     )
+    redis_user: str | None = Field(
+        default=None,
+        validation_alias="REDIS_USER",
+    )
     redis_host: str = Field("redis", validation_alias="REDIS_HOST")
     redis_port: int = Field(6379, validation_alias="REDIS_PORT")
     redis_db: int = Field(0, validation_alias="REDIS_DB")
+
     redis_cache_ttl: int = Field(3600, validation_alias="REDIS_CACHE_TTL")
     redis_cache_prefix: str = Field(
-        "antiques:",
+        "short:",
         validation_alias="REDIS_CACHE_PREFIX",
     )
 
-    model_config = SettingsConfigDict(
-        env_file=Path(__file__).resolve().parents[3].joinpath("env/.env"),
-        extra="allow",
-    )
+    @computed_field
+    def redis_url(self) -> RedisDsn:
+        t = RedisDsn.build(
+            scheme="redis",
+            username=self.redis_user,
+            password=self.redis_password,
+            host=self.redis_host,
+            port=self.redis_port,
+            path=f"/{self.redis_db}",
+        )
+
+        print(f"REDIS: {t=!r}")
+        return RedisDsn.build(
+            scheme="redis",
+            username=self.redis_user,
+            password=self.redis_password,
+            host=self.redis_host,
+            port=self.redis_port,
+            path=f"/{self.redis_db}",
+        )

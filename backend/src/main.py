@@ -1,19 +1,20 @@
-from src.config import (
-    app_setup,
-    create_app,
-    get_providers,
-    get_settings,
-)
-from src.presentation.api.middleware import MIDDLEWARES
-from src.presentation.api.rest import ROUTERS
+import asyncio
 
-settings = get_settings()
+from src.config import server
+from src.config.ioc.providers import PROVIDERS
+from src.presentation.grpc import GRPC_INTERCEPTORS, GRPC_SERVICES
 
-app = create_app(settings=settings)
 
-app_setup(
-    app=app,
-    providers=get_providers(),
-    middlewares=MIDDLEWARES,
-    endpoints=ROUTERS,
-)
+def main() -> None:
+    get_server = server(
+        is_reflection_enable=True,
+        ioc_providers=PROVIDERS,
+        grpc_interceptors=GRPC_INTERCEPTORS,
+        grpc_services=GRPC_SERVICES,
+    )
+
+    asyncio.run(get_server)
+
+
+if __name__ == "__main__":
+    main()

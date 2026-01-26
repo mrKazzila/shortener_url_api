@@ -84,12 +84,12 @@ grpcui -plaintext localhost:50051
 
 4. Run app (1 1 = partitions & replicas)
 ```bash
-  just run-app 1 1
+  just app-bootstrap 1 1
 ```
 
 5. Optional monitoring stack
 ```bash
-  just monitoring-up
+  just mon-up
 ```
 
 6.  See all available commands
@@ -312,7 +312,7 @@ Example results:
 │   │       ├── __init__.py
 │   │       └── url_db_mapper.py
 │   ├── main.py
-│   ├── main_grpc.py
+│   ├── main.py
 │   └── presentation
 │       ├── __init__.py
 │       ├── api

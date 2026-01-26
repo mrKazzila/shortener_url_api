@@ -71,7 +71,7 @@ class DatabaseProvider(Provider):
         settings: Settings,
     ) -> AsyncIterator[async_sessionmaker[AsyncSession]]:
         engine = engine_factory(
-            dsn=str(settings.database_url),
+            dsn=settings.database_url,
             is_echo=settings.debug,
         )
         session_factory = get_session_factory(engine)

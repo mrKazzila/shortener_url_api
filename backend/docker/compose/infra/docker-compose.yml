@@ -29,7 +29,7 @@ services:
 
   postgres:
     <<: *service_defaults
-    image: postgres:${POSTGRES_VERSION}
+    image: postgres:15.3
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
