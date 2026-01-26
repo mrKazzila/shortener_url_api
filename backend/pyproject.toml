@@ -134,7 +134,6 @@ indent-style = "space"
 [tool.ruff.lint.isort]
 split-on-trailing-comma = true
 combine-as-imports = true
-lines-after-imports = 1
 lines-between-types = 0
 known-local-folder = ["src"]
 
