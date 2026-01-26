@@ -15,4 +15,4 @@ esac
 echo "[PYTHONPATH] $PYTHONPATH"
 echo "[gRPC] starting server on ${GRPC_HOST}:${GRPC_PORT}"
 
-exec python -m src.main_grpc
+exec python -m src.main

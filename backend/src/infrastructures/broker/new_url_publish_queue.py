@@ -310,7 +310,7 @@ class NewUrlPublishQueue:
                 avg_msg_ms = self._publish_call_ms_sum / msgs if msgs else 0.0
                 avg_batch = msgs / calls if calls else 0.0
 
-                logger.error(
+                logger.debug(
                     "NewUrlPublishQueue stats",
                     qsize=qsize,
                     maxsize=self._q.maxsize,

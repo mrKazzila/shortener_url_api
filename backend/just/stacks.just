@@ -48,8 +48,8 @@ app-up-api:
 app-rebuild:
     @just env-docker
     @just req-dev
-    @echo "[app] Rebuilding fastapi + consumers..."
-    {{APP}} up -d --build grpc consumer consumer-update  > /dev/null
+    @echo "[app] Rebuilding grpc server + consumers..."
+    {{APP}} up -d --build grpc consumer consumer-update
     @just req-clean
     @echo "[app] Rebuilt."
 

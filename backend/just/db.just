@@ -20,7 +20,7 @@ db-down-local:
 [group('DB')]
 db-up:
     @echo "[db] upgrade head..."
-    {{APP}} run --rm grpc python -m alembic upgrade head > /dev/null
+    {{APP}} run --rm grpc python -m alembic upgrade head
 
 # Downgrade DB migration
 [group('DB')]
