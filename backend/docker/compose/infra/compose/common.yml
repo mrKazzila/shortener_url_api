@@ -1,0 +1,8 @@
+volumes:
+  pgdata:
+  redisdata:
+  kafka_data:
+
+networks:
+  global_net:
+    external: true

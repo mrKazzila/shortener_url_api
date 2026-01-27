@@ -1,0 +1,29 @@
+x-service-defaults: &service_defaults
+  restart: unless-stopped
+  networks:
+    - global_net
+
+services:
+  redis:
+    <<: *service_defaults
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    command:
+      - redis-server
+      - --loglevel
+      - warning
+      - --save
+      - "60"
+      - "1"
+      - --appendonly
+      - "yes"
+      - --requirepass
+      - redis_password
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli -a redis_password ping | grep PONG" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5

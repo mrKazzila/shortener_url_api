@@ -1,0 +1,6 @@
+include:
+  - path:
+      - ./compose/common.yml
+      - ./compose/db.yml
+      - ./compose/cache.yml
+      - ./compose/broker.yml
