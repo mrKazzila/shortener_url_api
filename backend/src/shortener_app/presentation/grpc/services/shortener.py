@@ -11,7 +11,6 @@ from shortener_app.application.dtos.urls import (
     DeleteUrlDTO,
     UpdateUrlDTO,
 )
-# from src.application.dtos.users import XUserHeaderDTO
 from shortener_app.application.use_cases import (
     CreateUrlUseCase,
     DeleteUrlUseCase,
