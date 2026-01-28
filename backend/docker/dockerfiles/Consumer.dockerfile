@@ -1,14 +1,11 @@
-FROM python:3.13-slim as base
+FROM python:3.13-slim AS base
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONFAULTHANDLER=1 \
     PYTHONHASHSEED=random
 
-WORKDIR /app/
-
-
-FROM base as builder
+FROM base AS builder
 
 COPY requirements.txt /tmp/
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
@@ -33,11 +30,11 @@ COPY --from=builder --chown=unprivilegeduser:docker /root/.local/bin \
     /home/unprivilegeduser/.local/bin
 
 ENV PATH="/home/unprivilegeduser/.local/bin:${PATH}"
-
+ENV PYTHONPATH="${APP_HOME}/src"
 
 COPY --chown=unprivilegeduser:docker . $APP_HOME/
 
 USER unprivilegeduser
 
 ENTRYPOINT ["python"]
-CMD ["-m", "src.infrastructures.broker.consumers.consumer_new_url"]
+CMD ["-m", "shortener_app.infrastructures.broker.consumers.consumer_new_url"]

@@ -1,0 +1,24 @@
+__all__ = ("ProcessNewUrlUseCase",)
+
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, final
+
+import structlog
+
+if TYPE_CHECKING:
+    from shortener_app.application.interfaces import UnitOfWorkProtocol
+    from shortener_app.domain.entities import UrlEntity
+
+
+logger = structlog.get_logger(__name__)
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ProcessNewUrlUseCase:
+    uow: "UnitOfWorkProtocol"
+
+    async def execute(self, *, entities: list["UrlEntity"]) -> None:
+        async with self.uow:
+            await self.uow.repository.add_bulk(entities=entities)
+            await self.uow.commit()
