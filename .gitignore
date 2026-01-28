@@ -8,6 +8,10 @@ persistentdata
 # ===== base =====
 __pypackages__/
 logs/
+/backend/src/shortener_app.egg-info/
+/backend/src/shortener.egg-info/
+/backend/.import_linter_cache/
+
 
 # ===== cache data =====
 __pycache__/
@@ -15,7 +19,7 @@ __pycache__/
 .cache
 
 # ===== local environment =====
-/backend/src/generated/*
+/backend/src/shortener_app/generated/*
 /backend/.venv
 /backend/env/*
 /backend/!env/.env.example
@@ -27,4 +31,3 @@ __pycache__/
 cover/
 /htmlcov/
 .coverage.*
-

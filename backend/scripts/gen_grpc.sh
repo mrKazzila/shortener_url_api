@@ -2,19 +2,28 @@
 set -euo pipefail
 
 PROTO_DIR="./proto"
-OUT_DIR="./src/generated"
+OUT_SRC="./src"
+PKG_PREFIX="shortener_app/generated"
+OUT_PY_DIR="${OUT_SRC}/shortener_app/generated"
 
-mkdir -p "${OUT_DIR}"
+rm -rf "${OUT_PY_DIR}"
+mkdir -p "${OUT_PY_DIR}"
 
-PROTOS=$(find "${PROTO_DIR}" -name "*.proto" | sort)
+TMP_DIR="$(mktemp -d)"
+cleanup() { rm -rf "${TMP_DIR}"; }
+trap cleanup EXIT
 
-python -m grpc_tools.protoc \
-  -I "${PROTO_DIR}" \
-  --python_out="${OUT_DIR}" \
-  --pyi_out="${OUT_DIR}" \
-  --grpc_python_out="${OUT_DIR}" \
-  ${PROTOS}
+mkdir -p "${TMP_DIR}/${PKG_PREFIX}"
+cp -R "${PROTO_DIR}/." "${TMP_DIR}/${PKG_PREFIX}/"
 
-find "${OUT_DIR}" -type d -exec sh -c 'touch "$1/__init__.py"' _ {} \;
+find "${TMP_DIR}/${PKG_PREFIX}" -name "*.proto" -print0 | sort -z | \
+  xargs -0 python -m grpc_tools.protoc \
+    -I "${TMP_DIR}" \
+    -I "${TMP_DIR}/${PKG_PREFIX}" \
+    --python_out="${OUT_SRC}" \
+    --pyi_out="${OUT_SRC}" \
+    --grpc_python_out="${OUT_SRC}"
 
-echo "Generated protos into ${OUT_DIR}"
+find "${OUT_PY_DIR}" -type d -exec sh -c 'touch "$1/__init__.py"' _ {} \;
+
+echo "Generated protos into ${OUT_PY_DIR}"
