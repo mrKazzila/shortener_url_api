@@ -1,18 +1,22 @@
-#!/bin/bash
-set -euo pipefail
+#!/bin/sh
+set -eu
 
-current_dir=$(pwd)
-echo "Current dir: $current_dir"
+echo "Current dir: $(pwd)"
 
 : "${GRPC_HOST:=0.0.0.0}"
 : "${GRPC_PORT:=50051}"
+: "${APP_HOME:=/home/unprivilegeduser/shortener}"
+
+src_path="${APP_HOME}/src"
 
 case ":${PYTHONPATH:-}:" in
-  *":${APP_HOME}/src/generated:"*) ;;
-  *) export PYTHONPATH="${APP_HOME}/src/generated:${PYTHONPATH:-}" ;;
+  *":${src_path}:"*) ;;
+  *) PYTHONPATH="${src_path}${PYTHONPATH:+:${PYTHONPATH}}"
+     export PYTHONPATH
+     ;;
 esac
 
-echo "[PYTHONPATH] $PYTHONPATH"
+echo "[PYTHONPATH] ${PYTHONPATH:-}"
 echo "[gRPC] starting server on ${GRPC_HOST}:${GRPC_PORT}"
 
-exec python -m src.main
+exec python -m shortener_app

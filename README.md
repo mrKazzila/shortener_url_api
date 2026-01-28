@@ -107,8 +107,8 @@ For local load testing, I use **ghz**.
 
 ```bash
 ghz --insecure \
-  --proto ./proto/shortener/v1/shortener.proto \
-  --call shortener.v1.ShortenerService.CreateShortUrl \
+  --proto ./proto/shortener_app/v1/shortener_app.proto \
+  --call shortener_app.v1.ShortenerService.CreateShortUrl \
   -d '{"target_url":"https://example.com"}' \
   -c 50 \
   --duration 10m \
@@ -178,9 +178,9 @@ Example results:
 │   ├── common
 │   │   └── v1
 │   │       └── common.proto
-│   ├── shortener
+│   ├── shortener_app
 │   │   └── v1
-│   │       └── shortener.proto
+│   │       └── shortener_app.proto
 │   └── user_urls
 │       └── v1
 │           └── user_urls.proto
@@ -267,7 +267,7 @@ Example results:
 │   │   │       ├── common_pb2.py
 │   │   │       ├── common_pb2.pyi
 │   │   │       └── common_pb2_grpc.py
-│   │   ├── shortener
+│   │   ├── shortener_app
 │   │   │   ├── __init__.py
 │   │   │   └── v1
 │   │   │       ├── __init__.py
@@ -353,7 +353,7 @@ Example results:
 │       │   ├── server.py
 │       │   └── services
 │       │       ├── __init__.py
-│       │       ├── shortener.py
+│       │       ├── shortener_app.py
 │       │       └── user_urls.py
 │       └── mappers
 │           ├── __init__.py
