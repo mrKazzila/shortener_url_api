@@ -48,7 +48,7 @@ dev = [
     "coverage==7.13.0",
     "httpx==0.28.1",
     "ruff==0.14.9",
-    "grpcio-tools>=1.76.0",
+    "grpcio-tools==1.76.0",
     "mkdocs-material>=9.7.1",
     "mkdocstrings[python]>=1.0.2",
     "mkdocs-gen-files>=0.6.0",
@@ -60,6 +60,11 @@ dev = [
 ]
 
 
+[project.scripts]
+shortener-app = "shortener_app.__main__:main"
+shortener-consumer-new-url = "shortener_app.consumers.new_url.__main__:main"
+shortener-consumer-update-url = "shortener_app.consumers.update_url.__main__:main"
+
 
 # ===== TOOLS SETTINGS =====
 
@@ -70,7 +75,7 @@ dev = [
 script_location = "%(here)s/src/shortener_app/infrastructures/db/migrations"
 file_template = "%%(year)d_%%(month).2d_%%(day).2d_%%(hour).2d%%(minute).2d-%%(rev)s_%%(slug)s"
 
-prepend_sys_path = ["%(here)s/src"]
+#prepend_sys_path = ["%(here)s/src"]
 
 timezone = "UTC"
 truncate_slug_length = 40
