@@ -19,17 +19,14 @@ services:
   grpc:
     <<: [ *service_defaults, *grpc_build ]
     image: shortener-app-grpc
-    command: [ "sh", "./scripts/run_grpc.sh" ]
     ports:
       - "50051:50051"
-    volumes:
-      - ./:/home/unprivilegeduser/shortener
     working_dir: /home/unprivilegeduser/shortener
 
   consumer:
     <<: [ *service_defaults, *consumer_build ]
     image: shortener-app-consumer
-    command: [ "-m", "shortener_app.infrastructures.broker.consumers.consumer_new_url" ]
+    command: [ "shortener_app.consumers.new_url" ]
     volumes:
       - ./:/home/unprivilegeduser/shortener
     working_dir: /home/unprivilegeduser/shortener
@@ -37,9 +34,7 @@ services:
   consumer-update:
     <<: [ *service_defaults, *consumer_build ]
     image: shortener-app-consumer-update
-    command: [ "-m", "shortener_app.infrastructures.broker.consumers.consumer_update_url" ]
-    volumes:
-      - ./:/home/unprivilegeduser/shortener
+    command: [ "shortener_app.consumers.update_url" ]
     working_dir: /home/unprivilegeduser/shortener
 
 networks:

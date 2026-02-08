@@ -7,34 +7,27 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 FROM base AS builder
 
-COPY requirements.txt /tmp/
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir --user --upgrade --force-reinstall -r /tmp/requirements.txt && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+WORKDIR /build
+
+COPY pyproject.toml uv.lock ./
+COPY src ./src
+
+RUN pip install --upgrade pip setuptools wheel \
+    && pip wheel . -w /wheels
 
 
+# ===================
 FROM python:3.13-slim
 
-RUN groupadd -r docker && \
-    useradd -m -g docker unprivilegeduser && \
-    mkdir -p /home/unprivilegeduser && \
-    chown -R unprivilegeduser /home/unprivilegeduser
+RUN groupadd -r docker \
+    && useradd -m -g docker unprivilegeduser
 
-ENV APP_HOME=/home/unprivilegeduser/shortener
-WORKDIR $APP_HOME
+WORKDIR /app
 
-COPY --from=builder --chown=unprivilegeduser:docker /root/.local/lib/python3.13/site-packages \
-    /home/unprivilegeduser/.local/lib/python3.13/site-packages
-COPY --from=builder --chown=unprivilegeduser:docker /root/.local/bin \
-    /home/unprivilegeduser/.local/bin
+COPY --from=builder /wheels /wheels
 
-ENV PATH="/home/unprivilegeduser/.local/bin:${PATH}"
-ENV PYTHONPATH="${APP_HOME}/src"
-
-COPY --chown=unprivilegeduser:docker . $APP_HOME/
+RUN pip install --no-cache-dir /wheels/*
 
 USER unprivilegeduser
 
-ENTRYPOINT ["python"]
-CMD ["-m", "shortener_app.infrastructures.broker.consumers.consumer_new_url"]
+ENTRYPOINT ["python", "-m"]
