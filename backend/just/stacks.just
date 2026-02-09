@@ -47,10 +47,8 @@ app-up-api:
 [group('App')]
 app-rebuild:
     @just env-docker
-    @just req-dev
     @echo "[app] Rebuilding grpc server + consumers..."
     {{APP}} up -d --build grpc consumer consumer-update
-    @just req-clean
     @echo "[app] Rebuilt."
 
 # Bootstrap application
