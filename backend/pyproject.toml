@@ -75,8 +75,6 @@ shortener-consumer-update-url = "shortener_app.consumers.update_url.__main__:mai
 script_location = "%(here)s/src/shortener_app/infrastructures/db/migrations"
 file_template = "%%(year)d_%%(month).2d_%%(day).2d_%%(hour).2d%%(minute).2d-%%(rev)s_%%(slug)s"
 
-#prepend_sys_path = ["%(here)s/src"]
-
 timezone = "UTC"
 truncate_slug_length = 40
 
