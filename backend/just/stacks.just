@@ -59,12 +59,11 @@ app-bootstrap partitions replicas:
     @echo "[app] Bootstrapping..."
     @just _net-create
     @just env-docker
-    @just req-dev
-    @just db-up
+    @just build-migrate-image
+    @just db-migrate
     @just kafka-topics {{partitions}}
     @just consumers-scale {{replicas}}
     @just app-up-api
-    @just req-clean
     @echo "[app] Bootstrap completed."
 
 # Stop application (keeping volumes)

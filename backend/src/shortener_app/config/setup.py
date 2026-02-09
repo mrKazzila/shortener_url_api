@@ -12,8 +12,6 @@ from dishka import make_async_container
 from dishka.integrations.grpcio import DishkaAioInterceptor, GrpcioProvider
 from grpc_reflection.v1alpha import reflection
 
-from shortener_app.config.settings.logging import setup_logging
-
 if TYPE_CHECKING:
     from dishka import AsyncContainer, Provider
 
@@ -22,7 +20,6 @@ if TYPE_CHECKING:
     )
     from shortener_app.presentation.grpc.services import GrpcServiceDefinition
 
-setup_logging(json_format=False)
 logger = structlog.get_logger(__name__)
 
 
