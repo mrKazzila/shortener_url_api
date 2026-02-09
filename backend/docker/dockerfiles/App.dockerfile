@@ -2,11 +2,12 @@ FROM python:3.13-slim AS builder
 
 WORKDIR /build
 
-COPY pyproject.toml uv.lock ./
+RUN pip install --upgrade pip setuptools wheel
+
+COPY pyproject.toml ./
 COPY src ./src
 
-RUN pip install --upgrade pip setuptools wheel \
-    && pip wheel . -w /wheels
+RUN pip wheel . -w /wheels
 
 
 # ===================

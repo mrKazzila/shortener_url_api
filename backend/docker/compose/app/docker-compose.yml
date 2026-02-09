@@ -5,37 +5,37 @@ x-service-defaults: &service_defaults
   networks:
     - global_net
 
+x-grpc-build: &grpc_build
+  build:
+    context: .
+    dockerfile: docker/dockerfiles/App.dockerfile
+
 x-consumer-build: &consumer_build
   build:
     context: .
     dockerfile: docker/dockerfiles/Consumer.dockerfile
 
-x-grpc-build: &grpc_build
-  build:
-    context: .
-    dockerfile: docker/dockerfiles/Dockerfile
 
 services:
   grpc:
     <<: [ *service_defaults, *grpc_build ]
     image: shortener-app-grpc
+    command: [ "shortener_app" ]
     ports:
       - "50051:50051"
-    working_dir: /home/unprivilegeduser/shortener
+    working_dir: /app
 
   consumer:
     <<: [ *service_defaults, *consumer_build ]
     image: shortener-app-consumer
     command: [ "shortener_app.consumers.new_url" ]
-    volumes:
-      - ./:/home/unprivilegeduser/shortener
-    working_dir: /home/unprivilegeduser/shortener
+    working_dir: /app
 
   consumer-update:
     <<: [ *service_defaults, *consumer_build ]
     image: shortener-app-consumer-update
     command: [ "shortener_app.consumers.update_url" ]
-    working_dir: /home/unprivilegeduser/shortener
+    working_dir: /app
 
 networks:
   global_net:
