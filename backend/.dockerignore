@@ -1,11 +1,19 @@
 # ===== project =====
-./README.md
+**.md
 ./.coverage
-.DS_Store
+**.DS_Store
+
+tests/
+docs/
+just/
+proto/
+
+docker/
+scripts/
+**.egg-info
 
 # ===== docker =====
 ./.dockerignore
-./Dockerfile
 
 # ===== git =====
 ./.gitignore
