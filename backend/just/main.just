@@ -6,6 +6,7 @@ set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 APP := "docker compose --project-directory . --env-file env/.env -p shortener_app-app -f docker/compose/app/docker-compose.yml"
 INFRA := "docker compose --project-directory docker/compose/infra --env-file env/.env -p shortener_app-infra -f docker/compose/infra/infra.yml"
 MON := "docker compose --project-directory docker/compose/monitoring --env-file env/.env -p shortener_app-mon -f docker/compose/monitoring/docker-compose.yml"
+MIGRATION := "docker run --rm --network global_net --env-file env/.env shortener-app-migrate"
 
 # =====================
 # Imports

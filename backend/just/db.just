@@ -4,6 +4,11 @@ db-rev msg:
     @echo "[db] Create alembic revision: {{msg}}"
     @alembic revision --autogenerate -m "{{msg}}"
 
+# Building a migration image
+[group('DB')]
+build-migrate-image:
+	docker build -f docker/dockerfiles/Migration.dockerfile -t shortener-app-migrate .
+
 # Generate alembic revision file
 [group('DB')]
 db-rev-local msg:
@@ -12,27 +17,35 @@ db-rev-local msg:
 
 # Downgrade alembic revision
 [group('DB')]
-db-down-local:
+db-downgrade-local:
     @just env-local
     @alembic downgrade -1
 
 # Upgrade DB migration to head
 [group('DB')]
-db-up:
+db-migrate:
     @echo "[db] upgrade head..."
-    {{APP}} run --rm grpc python -m alembic upgrade head
+    {{MIGRATION}} upgrade head
 
 # Downgrade DB migration
 [group('DB')]
-db-down:
+db-downgrade:
     @echo "[db] downgrade -1..."
-    {{APP}} run --rm grpc python -m alembic downgrade -1
+    @just build-migrate-image
+    {{MIGRATION}} downgrade -1
+
+# Show current DB migration
+[group('DB')]
+db-current:
+    @echo "[db] Show current DB migration"
+    @just build-migrate-image
+    {{MIGRATION}} current
 
 # Apply alembic migration to DB
 [group('DB')]
 db-apply msg:
     @just env-docker
-    @just db-up
+    @just build-migrate-image
     @just db-rev-local "{{msg}}"
     @just env-docker
-    @just db-up
+    @just db-migrate
