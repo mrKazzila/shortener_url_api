@@ -12,7 +12,7 @@ from alembic import op
 # revision identifiers, used by Alembic.
 revision = "0001_urls"
 down_revision = None
-branch_labels = ("baseline",)
+branch_labels = None
 depends_on = None
 
 
