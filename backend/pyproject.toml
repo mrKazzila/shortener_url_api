@@ -52,6 +52,8 @@ dev = [
     "mkdocs-autorefs>=1.4.3",
     "import-linter>=2.9",
     "ty>=0.0.13",
+    "testcontainers[postgresql]>=4.14.1",
+    "psycopg[binary]>=3.3.2",
 ]
 
 
@@ -197,12 +199,14 @@ asyncio_default_test_loop_scope = "function"
 
 filterwarnings = [
     "error",
+    "ignore:Repeated configuration attempted\\.:RuntimeWarning",
 ]
 
 markers = [
     "unit: fast unit tests",
     "integration: tests with db/redis/etc",
     "e2e: end-to-end tests",
+    "migrations: alembic migration tests",
 ]
 
 
