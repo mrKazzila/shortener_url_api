@@ -9,10 +9,22 @@ choose:
         exit 1; \
     fi
 
+[group('Internal')]
+[private]
+_docker-ready:
+  @if docker info >/dev/null 2>&1; then \
+    echo "[infra] Docker daemon is reachable ✅"; \
+    exit 0; \
+  fi; \
+  echo "[infra] Docker daemon is unavailable ❌"; \
+  echo "[infra] Launch OrbStack.app or Docker Desktop and repeat."; \
+  exit 1
+
 
 [group('Internal')]
 [private]
 _net-create:
+    @just _docker-ready
     @if docker network inspect global_net >/dev/null 2>&1; then \
         echo "[global_net] already exists — skipping"; \
     else \

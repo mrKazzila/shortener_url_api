@@ -13,7 +13,6 @@ MIGRATION := "docker run --rm --network global_net --env-file env/.env shortener
 # =====================
 import 'quality.just'
 import 'env.just'
-import 'req.just'
 import 'helpers.just'
 import 'kafka.just'
 import 'db.just'
