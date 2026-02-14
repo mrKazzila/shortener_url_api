@@ -2,7 +2,7 @@
 [group('DB')]
 db-rev msg:
     @echo "[db] Create alembic revision: {{msg}}"
-    @alembic revision --autogenerate -m "{{msg}}"
+    @alembic revision --autogenerate -m "{{msg}}" --rev-id {{msg}}
 
 # Building a migration image
 [group('DB')]
