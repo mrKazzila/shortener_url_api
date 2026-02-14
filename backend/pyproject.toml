@@ -31,7 +31,7 @@ dependencies = [
     "pydantic==2.12.5",
     "pydantic-settings==2.12.0",
     "grpcio==1.76.0",
-    "protobuf==6.33.2",
+    "protobuf==6.33.5",
     "grpcio-reflection==1.76.0",
     "greenlet>=3.3.1",
 ]
