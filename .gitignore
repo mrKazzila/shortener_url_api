@@ -24,7 +24,6 @@ __pycache__/
 /backend/env/*
 /backend/!env/.env.example
 /backend/docker/compose/infra/pgbouncer/userlist.txt
-/backend/just/local.just
 
 # ===== test data =====
 .pytest_cache/
