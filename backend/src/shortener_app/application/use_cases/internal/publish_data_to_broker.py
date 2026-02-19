@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING, final
 import structlog
 
 if TYPE_CHECKING:
+    from shortener_app.application.dtos.urls.urls_events import PublishUrlDTO
     from shortener_app.application.interfaces import (
         MessageBrokerPublisherProtocol,
     )
-    from shortener_app.domain.entities.url import UrlEntity
 
 logger = structlog.get_logger(__name__)
 
@@ -19,19 +19,5 @@ logger = structlog.get_logger(__name__)
 class PublishUrlToBrokerUseCase:
     message_broker: "MessageBrokerPublisherProtocol"
 
-    async def execute(self, *, entity: "UrlEntity") -> None:
-        try:
-            await self.message_broker.publish_new_url(entity=entity)
-            logger.info(
-                "PublishUrlToBrokerUseCase: published event for key=%s",
-                entity.key,
-            )
-        except Exception as exc:
-            logger.warning(
-                "PublishUrlToBrokerUseCase: failed publishing url key=%s error=%s",
-                entity.key,
-                exc,
-            )
-
-    async def execute_batch(self, *, entities: list["UrlEntity"]) -> None:
-        await self.message_broker.publish_new_urls_batch(entities=entities)
+    async def execute_batch(self, *, dtos: list["PublishUrlDTO"]) -> None:
+        await self.message_broker.publish_new_urls_batch(dtos=dtos)

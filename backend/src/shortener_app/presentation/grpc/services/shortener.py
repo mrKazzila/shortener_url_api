@@ -5,22 +5,18 @@ from uuid import UUID
 
 import grpc
 from dishka.integrations.grpcio import FromDishka, inject
-
-from shortener_app.application.dtos.urls import (
-    CreateUrlDTO,
-    DeleteUrlDTO,
-    UpdateUrlDTO,
+from shortener_app.generated.shortener.v1 import (
+    shortener_pb2,
+    shortener_pb2_grpc,
 )
+
 from shortener_app.application.use_cases import (
     CreateUrlUseCase,
     DeleteUrlUseCase,
     RedirectToOriginalUrlUseCase,
     UpdateUrlUseCase,
 )
-from shortener_app.generated.shortener.v1 import (
-    shortener_pb2,
-    shortener_pb2_grpc,
-)
+from shortener_app.presentation.mappers import UrlPresentationMapper
 
 
 @dataclass
@@ -30,21 +26,17 @@ class ShortenerGrpcService(shortener_pb2_grpc.ShortenerServiceServicer):
         self,
         request: shortener_pb2.CreateShortUrlRequest,
         context: grpc.aio.ServicerContext,
+        x_user_id: FromDishka[UUID],
+        mapper: FromDishka[UrlPresentationMapper],
         use_case: FromDishka[CreateUrlUseCase],
-        # header: FromDishka[XUserHeaderDTO],
     ) -> shortener_pb2.CreateShortUrlResponse:
         result = await use_case.execute(
-            dto=CreateUrlDTO(
-                target_url=request.target_url,
-                # user_id=UUID(header.x_user_id),
-                user_id=UUID("3b0e3fe7-e753-4e14-9ff4-0a200c2cbdcf"),
+            dto=mapper.to_create_url_dto(
+                request,
+                user_id=x_user_id,
             ),
         )
-
-        return shortener_pb2.CreateShortUrlResponse(
-            key=result.key,
-            target_url=result.target_url,
-        )
+        return mapper.to_create_short_url_response(result)
 
     @inject
     async def ResolveKey(
@@ -52,38 +44,38 @@ class ShortenerGrpcService(shortener_pb2_grpc.ShortenerServiceServicer):
         request: shortener_pb2.ResolveKeyRequest,
         context: grpc.aio.ServicerContext,
         use_case: FromDishka[RedirectToOriginalUrlUseCase],
+        mapper: FromDishka[UrlPresentationMapper],
     ) -> shortener_pb2.ResolveKeyResponse:
-        result = await use_case.execute(key=request.key)
-        return shortener_pb2.ResolveKeyResponse(target_url=result)
+        return mapper.to_resolve_key_response(
+            await use_case.execute(key=request.key),
+        )
 
     @inject
     async def UpdateUrl(
         self,
         request: shortener_pb2.UpdateUrlRequest,
         context: grpc.aio.ServicerContext,
+        x_user_id: FromDishka[UUID],
         use_case: FromDishka[UpdateUrlUseCase],
-        # header: FromDishka[XUserHeaderDTO],
-    ) -> str:
-        result = await use_case.execute(
-            dto=UpdateUrlDTO(
-                key=request.key,
-                is_active=request.is_active,
-                name=request.name,
+        mapper: FromDishka[UrlPresentationMapper],
+    ) -> shortener_pb2.UpdateUrlResponse:
+        return mapper.to_update_url_response(
+            ok=await use_case.execute(
+                dto=mapper.to_update_url_dto(request),
             ),
         )
-
-        return "Ok" if result else "Error"
 
     @inject
     async def DeleteUrl(
         self,
         request: shortener_pb2.DeleteUrlRequest,
         context: grpc.aio.ServicerContext,
+        x_user_id: FromDishka[UUID],
         use_case: FromDishka[DeleteUrlUseCase],
-        # header: FromDishka[XUserHeaderDTO],
-    ) -> str:
-        result = await use_case.execute(
-            dto=DeleteUrlDTO(key=request.key),
+        mapper: FromDishka[UrlPresentationMapper],
+    ) -> shortener_pb2.DeleteUrlResponse:
+        return mapper.to_delete_url_response(
+            ok=await use_case.execute(
+                dto=mapper.to_delete_url_dto(request),
+            ),
         )
-
-        return "Ok" if result else "Error"

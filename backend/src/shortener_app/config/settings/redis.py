@@ -27,16 +27,6 @@ class RedisSettings(BaseAppSettings):
 
     @computed_field
     def redis_url(self) -> RedisDsn:
-        t = RedisDsn.build(
-            scheme="redis",
-            username=self.redis_user,
-            password=self.redis_password,
-            host=self.redis_host,
-            port=self.redis_port,
-            path=f"/{self.redis_db}",
-        )
-
-        print(f"REDIS: {t=!r}")
         return RedisDsn.build(
             scheme="redis",
             username=self.redis_user,

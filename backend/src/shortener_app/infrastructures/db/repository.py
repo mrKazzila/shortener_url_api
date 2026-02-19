@@ -23,9 +23,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from shortener_app.application.interfaces import RepositoryProtocol
 from shortener_app.domain.entities import UrlEntity
+from shortener_app.infrastructures.db.mappers.url_db_mapper import UrlDBMapper
 from shortener_app.infrastructures.db.models import Urls
 from shortener_app.infrastructures.db.models.click_inbox import ClickInbox
-from shortener_app.infrastructures.mappers import UrlDBMapper
 
 ModelType = TypeVar("ModelType", bound=Urls)
 
@@ -93,8 +93,7 @@ class SQLAlchemyRepository(RepositoryProtocol):
         if not entities:
             return
 
-        dicts = [self.mapper.to_model(entity) for entity in entities]
-        logger.info(f"ADD BULK: {dicts=!r}")
+        dicts = [self.mapper.to_model_data(entity) for entity in entities]
 
         stmt = (
             pg_insert(self.model)

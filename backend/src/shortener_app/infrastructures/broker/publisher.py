@@ -1,15 +1,17 @@
 __all__ = ("KafkaPublisher",)
 
 from dataclasses import dataclass, field
-from typing import Any, final
+from typing import final
 
 import structlog
 from faststream.kafka import KafkaBroker
 
-from shortener_app.application.dtos.urls import PublishUrlDTO
+from shortener_app.application.dtos.urls.urls_events import (
+    PublishUrlDTO,
+    UrlClickedEventDTO,
+)
 from shortener_app.application.interfaces import MessageBrokerPublisherProtocol
-from shortener_app.application.mappers import UrlMapper
-from shortener_app.domain.entities import UrlEntity
+from shortener_app.application.interfaces.dto_codec import DtoCodecProtocol
 
 logger = structlog.get_logger(__name__)
 
@@ -18,48 +20,37 @@ logger = structlog.get_logger(__name__)
 @dataclass(frozen=True, slots=True, kw_only=True)
 class KafkaPublisher(MessageBrokerPublisherProtocol):
     """
-    Kafka implementation of the MessageBrokerPublisherProtocol.
+    Kafka publisher adapter.
+
+    Uses dedicated codecs per message type to keep schemas explicit and type-safe.
     """
 
     broker: KafkaBroker
+
+    publish_url_codec: DtoCodecProtocol[PublishUrlDTO, bytes]
+    url_clicked_codec: DtoCodecProtocol[UrlClickedEventDTO, bytes]
+
     new_urls_topic: str = field(default="new-urls")
     update_urls_update_topic: str = field(default="update-urls")
-    mapper: UrlMapper
 
-    async def publish_new_url(self, entity: UrlEntity) -> None:
+    async def publish_new_urls_batch(self, dtos: list[PublishUrlDTO]) -> None:
+        messages = [self.publish_url_codec.encode(dto) for dto in dtos]
+        await self.broker.publish_batch(*messages, topic=self.new_urls_topic)
+
+    async def publish_update_url(self, dto: UrlClickedEventDTO) -> None:
         try:
-            publish_dto: PublishUrlDTO = self.mapper.to_publish_dto(entity)
-            payload = publish_dto.to_dict()
-
-            await self.broker.publish(
-                topic=self.new_urls_topic,
-                key=publish_dto.key.encode("utf-8"),
-                message=payload,
-                headers={"content-type": "application/json"},
-            )
-        except Exception as e:
-            logger.error("Failed to publish new_url event", error=str(e))
-            raise
-
-    async def publish_update_url(self, payload: dict[str, Any]) -> None:
-        try:
-            url_key = payload.get("key")
-            event_id = payload.get("event_id")
+            payload = self.url_clicked_codec.encode(dto)
 
             await self.broker.publish(
                 topic=self.update_urls_update_topic,
-                key=url_key.encode("utf-8"),
+                key=dto.key.encode("utf-8"),
                 message=payload,
                 headers={
                     "content-type": "application/json",
-                    "event_id": str(event_id),
+                    "event_id": str(dto.event_id),
                     "event_type": "UrlClicked",
                 },
             )
         except Exception as e:
             logger.error("Failed to publish update_url event", error=str(e))
             raise
-
-    async def publish_new_urls_batch(self, entities: list[UrlEntity]) -> None:
-        msgs = [self.mapper.to_publish_dto(e).to_dict() for e in entities]
-        await self.broker.publish_batch(*msgs, topic=self.new_urls_topic)

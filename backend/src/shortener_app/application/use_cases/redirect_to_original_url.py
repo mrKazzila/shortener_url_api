@@ -3,16 +3,19 @@ __all__ = ("RedirectToOriginalUrlUseCase",)
 import asyncio
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, final
-from uuid import UUID, uuid4
 
 import structlog
 
 if TYPE_CHECKING:
+    from shortener_app.application.dtos.urls.urls_events import (
+        UrlClickedEventDTO,
+    )
+    from shortener_app.application.mappers.url_dto_facade import UrlDtoFacade
     from shortener_app.application.use_cases.internal import (
         GetTargetByKeyUseCase,
         PublishUrlToBrokerForUpdateUseCase,
     )
-    from shortener_app.domain.entities.url import UrlEntity
+
 
 logger = structlog.get_logger(__name__)
 
@@ -22,35 +25,28 @@ logger = structlog.get_logger(__name__)
 class RedirectToOriginalUrlUseCase:
     get_target_url_by_key_uc: "GetTargetByKeyUseCase"
     publish_url_to_broker_for_update_uc: "PublishUrlToBrokerForUpdateUseCase"
+    mapper: "UrlDtoFacade"
 
     async def execute(self, key: str) -> str | None:
         if entity := await self.get_target_url_by_key_uc.execute(key=key):
             if not entity.is_active:
                 raise Exception("TODO: Custom not active exception")
-            asyncio.create_task(
-                self._publish(
-                    entity=entity,
-                    event_id=uuid4(),
-                ),
+
+            publish_redirected_dto = self.mapper.to_publish_redirected_dto(
+                entity=entity,
             )
+            asyncio.create_task(self._publish(dto=publish_redirected_dto))
+
             return entity.target_url
 
         return None
 
-    async def _publish(
-        self,
-        *,
-        entity: "UrlEntity",
-        event_id: UUID,
-    ) -> None:
+    async def _publish(self, *, dto: "UrlClickedEventDTO") -> None:
         try:
-            await self.publish_url_to_broker_for_update_uc.execute(
-                entity=entity,
-                event_id=event_id,
-            )
+            await self.publish_url_to_broker_for_update_uc.execute(dto=dto)
         except Exception as exc:
             logger.exception(
                 "RedirectToOriginalUrlUseCase._publish: failed to publish url %s: %s",
-                entity.key,
+                dto.key,
                 exc,
             )

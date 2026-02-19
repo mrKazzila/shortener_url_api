@@ -5,7 +5,7 @@ from typing import TypeVar
 from dishka import AsyncContainer, make_async_container
 from faststream.kafka import KafkaBroker
 
-from shortener_app.config.ioc.di import get_providers
+from shortener_app.config.ioc.providers import get_providers
 
 UC = TypeVar("UC")
 

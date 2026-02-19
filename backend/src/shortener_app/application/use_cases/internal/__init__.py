@@ -1,6 +1,4 @@
 __all__ = (
-    # "AddNewUrlToCacheUseCase"
-    # "CheckKeyInCacheUseCase"
     "CreateUniqKeyUseCase"
     "GetTargetByKeyUseCase"
     "ProcessNewUrlUseCase"
@@ -9,12 +7,6 @@ __all__ = (
     "PublishUrlToBrokerForUpdateUseCase"
 )
 
-# from src.application.use_cases.internal.add_new_url_to_cache import (
-#     AddNewUrlToCacheUseCase,
-# )
-# from src.application.use_cases.internal.check_key_in_cache import (
-#     CheckKeyInCacheUseCase,
-# )
 from shortener_app.application.use_cases.internal.create_uniq_key_in_cache import (
     CreateUniqKeyUseCase,
 )

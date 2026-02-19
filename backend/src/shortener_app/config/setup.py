@@ -26,7 +26,7 @@ logger = structlog.get_logger(__name__)
 async def server(
     *,
     is_reflection_enable: bool = False,
-    ioc_providers: list["Provider"],
+    ioc_providers: tuple["Provider", ...],
     grpc_interceptors: Sequence["GrpcInterceptorDefinition"],
     grpc_services: Sequence["GrpcServiceDefinition"],
 ) -> None:
@@ -70,7 +70,7 @@ def _get_address() -> str:
 async def _create_grpc_server(
     *,
     is_reflection_enable: bool,
-    ioc_providers: list["Provider"],
+    ioc_providers: tuple["Provider", ...],
     grpc_interceptors: Sequence["GrpcInterceptorDefinition"],
     grpc_services: Sequence["GrpcServiceDefinition"],
 ) -> grpc.aio.Server:

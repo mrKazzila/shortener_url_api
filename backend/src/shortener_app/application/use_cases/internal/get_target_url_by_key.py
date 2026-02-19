@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING, final
 
 import structlog
 
+from shortener_app.application.dtos.urls.urls_cache import UrlCacheRecordDTO
+from shortener_app.application.interfaces.dto_codec import DtoCodecProtocol
 from shortener_app.domain.entities.url import UrlEntity
 
 if TYPE_CHECKING:
@@ -12,7 +14,7 @@ if TYPE_CHECKING:
         CacheProtocol,
         UnitOfWorkProtocol,
     )
-    from shortener_app.application.mappers import UrlMapper
+    from shortener_app.application.mappers import UrlDtoFacade
 
 logger = structlog.get_logger(__name__)
 
@@ -22,17 +24,13 @@ logger = structlog.get_logger(__name__)
 class GetTargetByKeyUseCase:
     cache: "CacheProtocol"
     uow: "UnitOfWorkProtocol"
-    mapper: "UrlMapper"
+    mapper: "UrlDtoFacade"
+    codec: DtoCodecProtocol[UrlCacheRecordDTO, dict[str, str]]
 
     async def execute(self, *, key: str) -> UrlEntity | None:
         if value := await self.cache.get(key=f"short:{key}"):
-            return self.mapper.to_entity(
-                cache={"key": key, **value},
-            )
-        logger.info("no cache: get from DB", key=key)
+            cache_dto: UrlCacheRecordDTO = self.codec.decode(value)
+            return self.mapper.to_entity_from_cache_dto(dto=cache_dto)
 
-        if entity := await self.uow.repository.get(
-            reference={"key": key},
-        ):
-            return entity
-        return None
+        logger.info("no cache: get from DB", key=key)
+        return await self.uow.repository.get(reference={"key": key})

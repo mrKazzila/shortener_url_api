@@ -5,7 +5,7 @@ from typing import Final
 
 import structlog
 
-from shortener_app.domain.entities.url import UrlEntity
+from shortener_app.application.dtos.urls.urls_events import PublishUrlDTO
 
 logger = structlog.get_logger(__name__)
 
@@ -14,7 +14,7 @@ _STOP: Final[object] = object()
 
 @dataclass(slots=True)
 class NewUrlItem:
-    entity: UrlEntity
+    entity: PublishUrlDTO
 
 
 class NewUrlPublishQueue:
@@ -136,8 +136,8 @@ class NewUrlPublishQueue:
         logger.info("NewUrlPublishQueue stopped")
         return
 
-    async def enqueue(self, *, entity: UrlEntity) -> None:
-        item = NewUrlItem(entity=entity)
+    async def enqueue(self, *, dto: PublishUrlDTO) -> None:
+        item = NewUrlItem(entity=dto)
 
         try:
             self._q.put_nowait(item)
@@ -160,7 +160,7 @@ class NewUrlPublishQueue:
             if qsize >= int(self._q.maxsize * 0.8):
                 logger.warning(
                     "Publish queue overloaded; applying backpressure",
-                    key=entity.key,
+                    key=dto.key,
                     qsize=qsize,
                     maxsize=self._q.maxsize,
                 )
@@ -174,7 +174,7 @@ class NewUrlPublishQueue:
             consumed = 1
             stop_after = False
 
-            entities: list[UrlEntity] = []
+            entities: list[PublishUrlDTO] = []
 
             try:
                 if first is _STOP:
@@ -223,7 +223,7 @@ class NewUrlPublishQueue:
 
     async def _publish_with_retries(
         self,
-        entities: list[UrlEntity],
+        entities: list[PublishUrlDTO],
         *,
         worker: int,
     ) -> None:
@@ -235,7 +235,7 @@ class NewUrlPublishQueue:
         for attempt in range(1, self._max_retries + 1):
             t0 = time.perf_counter()
             try:
-                await self._publish_uc.execute_batch(entities=entities)
+                await self._publish_uc.execute_batch(dtos=entities)
 
                 dt_ms = (time.perf_counter() - t0) * 1000.0
                 self._publish_calls += 1
