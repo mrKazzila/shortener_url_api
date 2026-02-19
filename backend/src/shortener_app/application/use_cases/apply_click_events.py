@@ -1,4 +1,4 @@
-__all__ = ("UpdateUrlUseCase",)
+__all__ = ("ApplyClickEventsUseCase",)
 
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, final
@@ -14,7 +14,7 @@ logger = structlog.get_logger(__name__)
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
-class UpdateUrlUseCase:
+class ApplyClickEventsUseCase:
     uow: "UnitOfWorkProtocol"
 
     async def execute(

@@ -1,12 +1,16 @@
+__all__ = ("run_subscriber",)
+
 from uuid import UUID
 
 import structlog
+from dishka import AsyncContainer
 from faststream import FastStream
 from pydantic import BaseModel
 
-from shortener_app.application.use_cases.internal import UpdateUrlUseCase
+from shortener_app.application.use_cases.apply_click_events import (
+    ApplyClickEventsUseCase,
+)
 from shortener_app.infrastructures.broker.consumers.common import (
-    init_container,
     init_dependencies,
 )
 
@@ -18,13 +22,11 @@ class ClickEvent(BaseModel):
     event_id: UUID
 
 
-async def main() -> None:
-    container = await init_container()
-
+async def run_subscriber(container: AsyncContainer) -> None:
     async with container() as app_container:
         broker, update_uc = await init_dependencies(
             container=app_container,
-            uc=UpdateUrlUseCase,
+            uc=ApplyClickEventsUseCase,
         )
         app = FastStream(broker)
 

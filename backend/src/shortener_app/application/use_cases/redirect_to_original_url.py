@@ -11,8 +11,10 @@ if TYPE_CHECKING:
         UrlClickedEventDTO,
     )
     from shortener_app.application.mappers.url_dto_facade import UrlDtoFacade
-    from shortener_app.application.use_cases.internal import (
+    from shortener_app.application.use_cases.internal.get_target_url_by_key import (
         GetTargetByKeyUseCase,
+    )
+    from shortener_app.application.use_cases.internal.publish_to_broker_for_update import (
         PublishUrlToBrokerForUpdateUseCase,
     )
 

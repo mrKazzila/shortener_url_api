@@ -11,12 +11,12 @@ from shortener_app.application.dtos.urls.urls_responses import CreatedUrlDTO
 from shortener_app.domain.entities.url import UrlEntity
 
 if TYPE_CHECKING:
-    from shortener_app.application.mappers.url_dto_facade import UrlDtoFacade
-    from shortener_app.application.use_cases.internal import (
-        CreateUniqKeyUseCase,
+    from shortener_app.application.interfaces.publish_queue import (
+        NewUrlPublishQueueProtocol,
     )
-    from shortener_app.infrastructures.broker.new_url_publish_queue import (
-        NewUrlPublishQueue,
+    from shortener_app.application.mappers.url_dto_facade import UrlDtoFacade
+    from shortener_app.application.use_cases.internal.create_uniq_key_in_cache import (
+        CreateUniqKeyUseCase,
     )
 
 
@@ -27,7 +27,7 @@ logger = structlog.get_logger(__name__)
 @dataclass(frozen=True, slots=True, kw_only=True)
 class CreateUrlUseCase:
     create_uniq_key_uc: "CreateUniqKeyUseCase"
-    publish_url_queue: "NewUrlPublishQueue"
+    publish_url_queue: "NewUrlPublishQueueProtocol"
     mapper: "UrlDtoFacade"
 
     async def execute(

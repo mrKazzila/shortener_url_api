@@ -7,33 +7,55 @@ import structlog
 from dishka import Provider, Scope, provide
 from grpc import ServicerContext
 
-from shortener_app.application.interfaces import (
-    CacheProtocol,
+from shortener_app.application.interfaces.broker import (
     MessageBrokerPublisherProtocol,
-    UnitOfWorkProtocol,
 )
-from shortener_app.application.mappers import UrlDtoFacade
-from shortener_app.application.use_cases import (
+from shortener_app.application.interfaces.cache import CacheProtocol
+from shortener_app.application.interfaces.publish_queue import (
+    NewUrlPublishQueueProtocol,
+)
+from shortener_app.application.interfaces.uow import UnitOfWorkProtocol
+from shortener_app.application.mappers.url_dto_facade import UrlDtoFacade
+from shortener_app.application.use_cases.create_short_url import (
     CreateUrlUseCase,
-    DeleteUrlUseCase,
-    GetUserUrlsUseCase,
-    RedirectToOriginalUrlUseCase,
-    UpdateUrlUseCase,
 )
-from shortener_app.application.use_cases.internal import (
+from shortener_app.application.use_cases.delete_url import DeleteUrlUseCase
+from shortener_app.application.use_cases.get_user_urls import (
+    GetUserUrlsUseCase,
+)
+from shortener_app.application.use_cases.internal.create_uniq_key_in_cache import (
     CreateUniqKeyUseCase,
+)
+from shortener_app.application.use_cases.internal.get_target_url_by_key import (
     GetTargetByKeyUseCase,
-    PublishUrlToBrokerForUpdateUseCase,
+)
+from shortener_app.application.use_cases.internal.publish_data_to_broker import (
     PublishUrlToBrokerUseCase,
 )
-from shortener_app.domain.services import RandomKeyGenerator
-from shortener_app.infrastructures.broker import (
+from shortener_app.application.use_cases.internal.publish_to_broker_for_update import (
+    PublishUrlToBrokerForUpdateUseCase,
+)
+from shortener_app.application.use_cases.redirect_to_original_url import (
+    RedirectToOriginalUrlUseCase,
+)
+from shortener_app.application.use_cases.update_url import UpdateUrlUseCase
+from shortener_app.config.ioc.adapters.new_url_publish_queue import (
+    NewUrlPublishQueueAdapter,
+)
+from shortener_app.domain.services.key_generator import RandomKeyGenerator
+from shortener_app.infrastructures.broker.new_url_publish_queue import (
     NewUrlPublishQueue,
 )
-from shortener_app.infrastructures.codecs import UrlCacheRedisHashCodec
+from shortener_app.infrastructures.codecs.cache.url_redis_hash_codec import (
+    UrlCacheRedisHashCodec,
+)
 from shortener_app.presentation.exceptions.auth import (
     InvalidUserIdMetadata,
     MissingUserIdMetadata,
+)
+from shortener_app.presentation.mappers import (
+    UrlPresentationMapper,
+    UserPresentationMapper,
 )
 
 logger = structlog.get_logger(__name__)
@@ -50,17 +72,17 @@ class NewUrlPublishQueueProvider(Provider):
     async def get_new_url_publish_queue(
         self,
         publish_uc: PublishUrlToBrokerUseCase,
-    ) -> AsyncIterator[NewUrlPublishQueue]:
-        queue = NewUrlPublishQueue(
+    ) -> AsyncIterator[NewUrlPublishQueueProtocol]:
+        impl = NewUrlPublishQueue(
             publish_uc=publish_uc,
             maxsize=10_000,
             workers=2,
         )
-        await queue.start()
+        await impl.start()
         try:
-            yield queue
+            yield NewUrlPublishQueueAdapter(impl)
         finally:
-            await queue.stop(drain=True, timeout_sec=10.0)
+            await impl.stop(drain=True, timeout_sec=10.0)
 
 
 class AuthProvider(Provider):
@@ -109,7 +131,7 @@ class UseCaseProvider(Provider):
     def get_create_url_use_case(
         self,
         create_uniq_key_uc: CreateUniqKeyUseCase,
-        queue: NewUrlPublishQueue,
+        queue: NewUrlPublishQueueProtocol,
         mapper: UrlDtoFacade,
     ) -> CreateUrlUseCase:
         return CreateUrlUseCase(
@@ -191,9 +213,20 @@ class UseCaseProvider(Provider):
         )
 
 
+class PresentationMapperProvider(Provider):
+    @provide(scope=Scope.APP)
+    def get_url_presentation_mapper(self) -> UrlPresentationMapper:
+        return UrlPresentationMapper()
+
+    @provide(scope=Scope.APP)
+    def get_user_presentation_mapper(self) -> UserPresentationMapper:
+        return UserPresentationMapper()
+
+
 GRPC_ONLY_PROVIDERS: tuple[Provider, ...] = (
     RandomKeyGeneratorProvider(),
     AuthProvider(),
     UseCaseProvider(),
     NewUrlPublishQueueProvider(),
+    PresentationMapperProvider(),
 )

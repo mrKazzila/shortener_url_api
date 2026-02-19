@@ -14,8 +14,10 @@ from shortener_app.application.dtos.users.user_requests import (
     GetUserUrlsDTO,
     PaginationDTO,
 )
-from shortener_app.application.use_cases import GetUserUrlsUseCase
-from shortener_app.presentation.mappers import (
+from shortener_app.application.use_cases.get_user_urls import (
+    GetUserUrlsUseCase,
+)
+from shortener_app.presentation.mappers.user_mapper import (
     UserPresentationMapper,
 )
 
