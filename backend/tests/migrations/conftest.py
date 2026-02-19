@@ -8,6 +8,36 @@ from alembic.config import Config
 from testcontainers.postgres import PostgresContainer
 
 
+@pytest.fixture(scope="session")
+def pg_container() -> Generator[PostgresContainer, Any]:
+    with PostgresContainer("postgres:16") as pg:
+        yield pg
+
+
+@pytest.fixture
+def alembic_cfg(pg_container: PostgresContainer) -> Config:
+    raw_url = pg_container.get_connection_url()
+
+    psycopg_uri = _to_psycopg_uri(raw_url)
+    sqlalchemy_url = _to_sqlalchemy_url(raw_url)
+
+    _reset_public_schema(psycopg_uri)
+    return _alembic_config(sqlalchemy_url)
+
+
+@pytest.fixture(scope="session")
+def alembic_cfg_nodb() -> Config:
+    cfg = Config("alembic.ini")
+    configuration = (
+        ("script_location", "src/shortener_app/infrastructures/db/migrations"),
+        ("sqlalchemy.url", "postgresql+psycopg://user:pass@localhost/dbname"),
+    )
+
+    [cfg.set_main_option(name, value) for name, value in configuration]
+
+    return cfg
+
+
 def _to_psycopg_uri(url: str) -> str:
     """
     psycopg v3 accepts URIs of the form postgresql://...
@@ -42,36 +72,6 @@ def _alembic_config(sqlalchemy_url: str) -> Config:
     configuration = (
         ("script_location", "src/shortener_app/infrastructures/db/migrations"),
         ("sqlalchemy.url", sqlalchemy_url),
-    )
-
-    [cfg.set_main_option(name, value) for name, value in configuration]
-
-    return cfg
-
-
-@pytest.fixture(scope="session")
-def pg_container() -> Generator[PostgresContainer, Any]:
-    with PostgresContainer("postgres:16") as pg:
-        yield pg
-
-
-@pytest.fixture
-def alembic_cfg(pg_container: PostgresContainer) -> Config:
-    raw_url = pg_container.get_connection_url()
-
-    psycopg_uri = _to_psycopg_uri(raw_url)
-    sqlalchemy_url = _to_sqlalchemy_url(raw_url)
-
-    _reset_public_schema(psycopg_uri)
-    return _alembic_config(sqlalchemy_url)
-
-
-@pytest.fixture(scope="session")
-def alembic_cfg_nodb() -> Config:
-    cfg = Config("alembic.ini")
-    configuration = (
-        ("script_location", "src/shortener_app/infrastructures/db/migrations"),
-        ("sqlalchemy.url", "postgresql+psycopg://user:pass@localhost/dbname"),
     )
 
     [cfg.set_main_option(name, value) for name, value in configuration]
