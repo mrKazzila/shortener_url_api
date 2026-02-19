@@ -10,13 +10,15 @@ from shortener_app.generated.shortener.v1 import (
     shortener_pb2_grpc,
 )
 
-from shortener_app.application.use_cases import (
+from shortener_app.application.use_cases.create_short_url import (
     CreateUrlUseCase,
-    DeleteUrlUseCase,
-    RedirectToOriginalUrlUseCase,
-    UpdateUrlUseCase,
 )
-from shortener_app.presentation.mappers import UrlPresentationMapper
+from shortener_app.application.use_cases.delete_url import DeleteUrlUseCase
+from shortener_app.application.use_cases.redirect_to_original_url import (
+    RedirectToOriginalUrlUseCase,
+)
+from shortener_app.application.use_cases.update_url import UpdateUrlUseCase
+from shortener_app.presentation.mappers.url_mapper import UrlPresentationMapper
 
 
 @dataclass

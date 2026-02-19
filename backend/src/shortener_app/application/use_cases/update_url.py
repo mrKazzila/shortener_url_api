@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from shortener_app.application.interfaces import (
         UnitOfWorkProtocol,
     )
-    from shortener_app.application.use_cases.internal import (
+    from shortener_app.application.use_cases.internal.get_target_url_by_key import (
         GetTargetByKeyUseCase,
     )
 

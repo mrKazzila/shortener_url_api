@@ -3,12 +3,14 @@ __all__ = ("CONSUMER_ONLY_PROVIDERS",)
 import structlog
 from dishka import Provider, Scope, provide
 
-from shortener_app.application.interfaces import (
+from shortener_app.application.interfaces.uow import (
     UnitOfWorkProtocol,
 )
-from shortener_app.application.use_cases.internal import (
+from shortener_app.application.use_cases.apply_click_events import (
+    ApplyClickEventsUseCase,
+)
+from shortener_app.application.use_cases.process_new_url import (
     ProcessNewUrlUseCase,
-    UpdateUrlUseCase,
 )
 
 logger = structlog.get_logger(__name__)
@@ -26,8 +28,8 @@ class UseCaseProvider(Provider):
     def update_url_use_case(
         self,
         uow: UnitOfWorkProtocol,
-    ) -> UpdateUrlUseCase:
-        return UpdateUrlUseCase(uow=uow)
+    ) -> ApplyClickEventsUseCase:
+        return ApplyClickEventsUseCase(uow=uow)
 
 
 CONSUMER_ONLY_PROVIDERS: tuple[Provider, ...] = (UseCaseProvider(),)

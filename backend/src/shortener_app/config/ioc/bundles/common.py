@@ -42,10 +42,6 @@ from shortener_app.infrastructures.db import (
     get_session_factory,
 )
 from shortener_app.infrastructures.db.mappers import UrlDBMapper
-from shortener_app.presentation.mappers import (
-    UrlPresentationMapper,
-    UserPresentationMapper,
-)
 
 logger = structlog.get_logger(__name__)
 
@@ -148,14 +144,6 @@ class MapperProvider(Provider):
     @provide(scope=Scope.APP)
     def get_url_db_mapper(self) -> UrlDBMapper:
         return UrlDBMapper()
-
-    @provide(scope=Scope.APP)
-    def get_url_presentation_mapper(self) -> UrlPresentationMapper:
-        return UrlPresentationMapper()
-
-    @provide(scope=Scope.APP)
-    def get_user_presentation_mapper(self) -> UserPresentationMapper:
-        return UserPresentationMapper()
 
 
 class CodecProvider(Provider):

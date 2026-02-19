@@ -12,7 +12,7 @@ if TYPE_CHECKING:
         CacheProtocol,
         UnitOfWorkProtocol,
     )
-    from shortener_app.application.use_cases.internal import (
+    from shortener_app.application.use_cases.internal.get_target_url_by_key import (
         GetTargetByKeyUseCase,
     )
 
