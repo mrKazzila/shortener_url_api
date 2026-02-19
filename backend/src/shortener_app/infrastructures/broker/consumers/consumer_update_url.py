@@ -1,4 +1,3 @@
-import asyncio
 from uuid import UUID
 
 import structlog
@@ -6,19 +5,17 @@ from faststream import FastStream
 from pydantic import BaseModel
 
 from shortener_app.application.use_cases.internal import UpdateUrlUseCase
-from shortener_app.config.settings.logging import setup_logging
 from shortener_app.infrastructures.broker.consumers.common import (
     init_container,
     init_dependencies,
 )
 
-setup_logging(json_format=True)
 logger = structlog.get_logger(__name__)
 
 
 class ClickEvent(BaseModel):
-    event_id: UUID
     key: str
+    event_id: UUID
 
 
 async def main() -> None:
@@ -47,7 +44,3 @@ async def main() -> None:
             await update_uc.execute(events=events)
 
         await app.run()
-
-
-if __name__ == "__main__":
-    asyncio.run(main())

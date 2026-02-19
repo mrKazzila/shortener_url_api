@@ -1,26 +1,23 @@
 __all__ = ("MessageBrokerPublisherProtocol",)
 
 from abc import abstractmethod
-from typing import Any, Protocol
+from typing import Protocol
 
-from shortener_app.domain.entities.url import UrlEntity
+from shortener_app.application.dtos.urls.urls_events import (
+    PublishUrlDTO,
+    UrlClickedEventDTO,
+)
 
 
 class MessageBrokerPublisherProtocol(Protocol):
     @abstractmethod
-    async def publish_new_url(
+    async def publish_new_urls_batch(
         self,
-        entity: UrlEntity,
+        dtos: list[PublishUrlDTO],
     ) -> None: ...
 
     @abstractmethod
     async def publish_update_url(
         self,
-        payload: dict[str, Any],
-    ) -> None: ...
-
-    @abstractmethod
-    async def publish_new_urls_batch(
-        self,
-        entities: list[UrlEntity],
+        dto: UrlClickedEventDTO,
     ) -> None: ...

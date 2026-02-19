@@ -10,8 +10,21 @@ from shortener_app.infrastructures.db.models import Urls
 @final
 @dataclass(frozen=True, slots=True)
 class UrlDBMapper:
+    """
+    Infrastructure persistence mapper: ORM model <-> Domain entity.
+
+    Responsibilities:
+    - Translate database/ORM representation (Urls model) into a Domain UrlEntity.
+    - Translate Domain UrlEntity into persistence data suitable for ORM insert/update.
+
+    Notes:
+    - This mapper belongs to the Infrastructure layer because it depends on ORM models.
+    - No DTOs here: keep transport concerns out of persistence mapping.
+    """
+
     @staticmethod
     def to_entity(model: Urls) -> UrlEntity:
+        """Convert an ORM Urls model instance into a Domain UrlEntity."""
         return UrlEntity(
             id=model.id,
             user_id=model.user_id,
@@ -25,7 +38,12 @@ class UrlDBMapper:
         )
 
     @staticmethod
-    def to_model(entity: UrlEntity) -> dict:
+    def to_model_data(entity: UrlEntity) -> dict:
+        """
+        Convert a Domain UrlEntity into a dict of fields suitable for ORM persistence.
+
+        Returned dict is intended to be used with ORM constructors or update operations.
+        """
         return {
             "user_id": str(entity.user_id),
             "key": entity.key,

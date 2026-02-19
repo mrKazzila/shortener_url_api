@@ -1,3 +1,3 @@
-__all__ = ("UrlMapper",)
+__all__ = ("UrlDtoFacade",)
 
-from shortener_app.application.mappers.url_mapper import UrlMapper
+from shortener_app.application.mappers.url_dto_facade import UrlDtoFacade

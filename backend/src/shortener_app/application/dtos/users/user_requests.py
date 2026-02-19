@@ -1,18 +1,11 @@
 __all__ = (
     "GetUserUrlsDTO",
     "PaginationDTO",
-    "XUserHeaderDTO",
 )
 
 from dataclasses import dataclass
 from typing import final
 from uuid import UUID
-
-
-@final
-@dataclass(frozen=True, slots=True)
-class XUserHeaderDTO:
-    x_user_id: str | None
 
 
 @final

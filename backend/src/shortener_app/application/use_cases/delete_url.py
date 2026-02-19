@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, final
 
 import structlog
 
-from shortener_app.application.dtos.urls import DeleteUrlDTO
+from shortener_app.application.dtos.urls.urls_requests import DeleteUrlDTO
 
 if TYPE_CHECKING:
     from shortener_app.application.interfaces import (

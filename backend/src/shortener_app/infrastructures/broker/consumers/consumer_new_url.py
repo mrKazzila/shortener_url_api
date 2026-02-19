@@ -1,4 +1,3 @@
-import asyncio
 from uuid import UUID
 
 import structlog
@@ -6,14 +5,12 @@ from faststream import FastStream
 from pydantic import BaseModel
 
 from shortener_app.application.use_cases.internal import ProcessNewUrlUseCase
-from shortener_app.config.settings.logging import setup_logging
 from shortener_app.domain.entities.url import UrlEntity
 from shortener_app.infrastructures.broker.consumers.common import (
     init_container,
     init_dependencies,
 )
 
-setup_logging(json_format=True)
 logger = structlog.get_logger(__name__)
 
 
@@ -58,7 +55,3 @@ async def main() -> None:
             await process_uc.execute(entities=entities)
 
         await app.run()
-
-
-if __name__ == "__main__":
-    asyncio.run(main())

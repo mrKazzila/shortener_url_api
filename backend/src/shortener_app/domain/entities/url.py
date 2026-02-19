@@ -62,6 +62,7 @@ class UrlEntity:
         target_url: str,
         key: str,
         name: str | None = None,
+        is_active: bool = True,
     ) -> "UrlEntity":
         return cls(
             id=0,
@@ -69,6 +70,7 @@ class UrlEntity:
             key=key,
             target_url=target_url,
             name=name,
+            is_active=is_active,
         )
 
     def update(
