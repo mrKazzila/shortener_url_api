@@ -82,7 +82,6 @@ module = "ruff"
 options = "format REVISION_SCRIPT_FILENAME"
 
 
-
 # ==========================
 # ===== importlinter =======
 # ==========================
@@ -100,21 +99,18 @@ layers = [
     "shortener_app.domain",
 ]
 
-# 2) The domain must be clean: no external frameworks and no “external” layers.
+# 2) Domain must be pure.
 [[tool.importlinter.contracts]]
 name = "Domain is pure"
 type = "forbidden"
-source_modules = [
-    "shortener_app.domain",
-]
+source_modules = ["shortener_app.domain"]
 forbidden_modules = [
-    # inner layers that the domain must not know
     "shortener_app.application",
     "shortener_app.presentation",
     "shortener_app.infrastructures",
     "shortener_app.config",
     "shortener_app.generated",
-    # external libraries / infrastructure
+    "shortener_app.consumers",
     "fastapi",
     "starlette",
     "sqlalchemy",
@@ -123,51 +119,70 @@ forbidden_modules = [
     "redis",
     "aioredis",
     "grpc",
+    "faststream",
 ]
 
-# 3) The application must not depend on presentation/infrastructure/config/generated.
+# 3) Application boundaries
 [[tool.importlinter.contracts]]
 name = "Application boundaries"
 type = "forbidden"
-source_modules = [
-    "shortener_app.application",
-]
+source_modules = ["shortener_app.application"]
 forbidden_modules = [
     "shortener_app.presentation",
     "shortener_app.infrastructures",
     "shortener_app.config",
     "shortener_app.generated",
-    # The application must not pull web/db directly.
+    "shortener_app.consumers",
     "fastapi",
     "starlette",
     "sqlalchemy",
     "alembic",
     "grpc",
+    "faststream",
 ]
 
-# 4) Presentation must not go directly to infrastructure (only to application)
+# 4) Presentation must not import infrastructure
 [[tool.importlinter.contracts]]
 name = "Presentation does not import infrastructure"
 type = "forbidden"
-source_modules = [
-    "shortener_app.presentation",
-]
-forbidden_modules = [
-    "shortener_app.infrastructures",
-]
+source_modules = ["shortener_app.presentation"]
+forbidden_modules = ["shortener_app.infrastructures"]
 
 # 5) Infrastructure must not import presentation
 [[tool.importlinter.contracts]]
 name = "Infrastructure does not import presentation"
 type = "forbidden"
-source_modules = [
-    "shortener_app.infrastructures",
-]
-forbidden_modules = [
-    "shortener_app.presentation",
+source_modules = ["shortener_app.infrastructures"]
+forbidden_modules = ["shortener_app.presentation"]
+
+# 6) Presentation must not import config
+[[tool.importlinter.contracts]]
+name = "Presentation does not import config"
+type = "forbidden"
+source_modules = ["shortener_app.presentation"]
+forbidden_modules = ["shortener_app.config"]
+
+# 7) Infrastructure must not import config (with exceptions for migrations env)
+[[tool.importlinter.contracts]]
+name = "Infrastructure does not import config"
+type = "forbidden"
+source_modules = ["shortener_app.infrastructures"]
+forbidden_modules = ["shortener_app.config"]
+
+# allow alembic env to access settings/logging configuration
+ignore_imports = [
+    "shortener_app.infrastructures.db.migrations.env -> shortener_app.config.settings.loader",
+    "shortener_app.infrastructures.db.migrations.env -> shortener_app.config.settings.logging",
 ]
 
-# 6) Internal use_cases/internal must not be imported from outside the application.
+# 8) Consumers are entrypoints: they must not import presentation
+[[tool.importlinter.contracts]]
+name = "Consumers do not import presentation"
+type = "forbidden"
+source_modules = ["shortener_app.consumers"]
+forbidden_modules = ["shortener_app.presentation"]
+
+# 9) Internal application modules are private (direct imports forbidden, indirect allowed)
 [[tool.importlinter.contracts]]
 name = "Application internals are private"
 type = "forbidden"
@@ -175,11 +190,13 @@ source_modules = [
     "shortener_app.presentation",
     "shortener_app.infrastructures",
     "shortener_app.domain",
-    "shortener_app.config",
+    "shortener_app.consumers",
 ]
-forbidden_modules = [
-    "shortener_app.application.use_cases.internal",
-]
+forbidden_modules = ["shortener_app.application.use_cases.internal"]
+
+# Allow internal modules to be imported indirectly via public application modules.
+allow_indirect_imports = true
+
 
 
 
