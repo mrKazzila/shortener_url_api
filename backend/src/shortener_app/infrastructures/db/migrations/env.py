@@ -1,56 +1,56 @@
 import asyncio
+import os
 
 from alembic import context
-from sqlalchemy.engine import URL
-from sqlalchemy.engine.url import make_url
+from sqlalchemy.engine.url import URL, make_url
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy.pool import NullPool
 
-from shortener_app.config.settings.loader import get_settings
 from shortener_app.config.settings.logging import setup_logging
 from shortener_app.infrastructures.db.models import Base
 
-settings = get_settings()
 config = context.config
 target_metadata = Base.metadata
 
 
 def _setup_structlog_for_alembic() -> None:
-    setup_logging(
-        level=settings.log_level,
-        json_format=True,
-    )
+    level = os.getenv("LOG_LEVEL", "INFO")
+    setup_logging(level=level, json_format=True)
 
 
 _setup_structlog_for_alembic()
 
 
 def get_sqlalchemy_url() -> URL:
-    url = make_url(settings.database_url)
+    """
+    Источник истины для миграций — sqlalchemy.url из alembic config.
 
-    if url.drivername in {"postgresql", "postgres"}:
+    В тестах ты задаёшь его через:
+      cfg.set_main_option("sqlalchemy.url", "...")
+
+    В docker/compose — через alembic.ini или env подстановку.
+    """
+    raw = config.get_main_option("sqlalchemy.url")
+    if not raw:
+        raise RuntimeError(
+            "alembic sqlalchemy.url is not set. "
+            "Set it in alembic.ini or via Config.set_main_option('sqlalchemy.url', ...)."
+        )
+
+    url = make_url(raw)
+
+    # Твои миграции запускаются в async режиме — нужен async драйвер
+    if url.drivername in {"postgresql", "postgres", "postgresql+psycopg", "postgresql+psycopg2"}:
         url = url.set(drivername="postgresql+asyncpg")
 
     return url
 
 
 def run_migrations_offline() -> None:
-    """
-    Run migrations in 'offline' mode.
-
-    This configures the context with just a URL
-    and not an Engine, though an Engine is acceptable
-    here as well.  By skipping the Engine creation
-    we don't even need a DBAPI to be available.
-
-    Calls to context.execute() here emit the given string to the
-    script output.
-
-    """
     url = get_sqlalchemy_url()
 
     context.configure(
-        url=url,
+        url=str(url),
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -75,13 +75,6 @@ def do_run_migrations(connection) -> None:
 
 
 async def run_async_migrations() -> None:
-    """
-    Run migrations in 'online' mode.
-
-    In this scenario we need to create an Engine
-    and associate a connection with the context.
-
-    """
     connectable: AsyncEngine = create_async_engine(
         get_sqlalchemy_url(),
         poolclass=NullPool,

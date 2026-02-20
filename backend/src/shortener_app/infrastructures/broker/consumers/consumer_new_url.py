@@ -7,7 +7,7 @@ from dishka import AsyncContainer
 from faststream import FastStream
 from pydantic import BaseModel
 
-from shortener_app.application.use_cases.process_new_url import (
+from shortener_app.application.use_cases.process_new_url_event import (
     ProcessNewUrlUseCase,
 )
 from shortener_app.domain.entities.url import UrlEntity

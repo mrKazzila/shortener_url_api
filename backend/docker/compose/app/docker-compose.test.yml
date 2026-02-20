@@ -1,0 +1,14 @@
+services:
+  tests:
+    build:
+      context: .
+      dockerfile: docker/dockerfiles/Test.dockerfile
+    image: shortener-app-tests
+    environment:
+      APP_ENV_FILE: ""
+    env_file:
+      - env/.env.test
+    networks:
+      - global_net
+    working_dir: /app
+    restart: "no"
