@@ -1,65 +1,16 @@
-import re
-from collections.abc import Generator
-from typing import Any
+from __future__ import annotations
+
+import os
 
 import psycopg
 import pytest
 from alembic.config import Config
-from testcontainers.postgres import PostgresContainer
 
-
-@pytest.fixture(scope="session")
-def pg_container() -> Generator[PostgresContainer, Any]:
-    with PostgresContainer("postgres:16") as pg:
-        yield pg
-
-
-@pytest.fixture
-def alembic_cfg(pg_container: PostgresContainer) -> Config:
-    raw_url = pg_container.get_connection_url()
-
-    psycopg_uri = _to_psycopg_uri(raw_url)
-    sqlalchemy_url = _to_sqlalchemy_url(raw_url)
-
-    _reset_public_schema(psycopg_uri)
-    return _alembic_config(sqlalchemy_url)
-
-
-@pytest.fixture(scope="session")
-def alembic_cfg_nodb() -> Config:
-    cfg = Config("alembic.ini")
-    configuration = (
-        ("script_location", "src/shortener_app/infrastructures/db/migrations"),
-        ("sqlalchemy.url", "postgresql+psycopg://user:pass@localhost/dbname"),
-    )
-
-    [cfg.set_main_option(name, value) for name, value in configuration]
-
-    return cfg
-
-
-def _to_psycopg_uri(url: str) -> str:
-    """
-    psycopg v3 accepts URIs of the form postgresql://...
-    testcontainers sometimes returns postgresql+psycopg2://..., which psycopg does not understand.
-    """
-    url = url.replace("postgres://", "postgresql://")
-    url = re.sub(r"^postgresql\+[^:]+://", "postgresql://", url)
-    return url
-
-
-def _to_sqlalchemy_url(url: str) -> str:
-    """
-    For Alembic/SQLAlchemy, you need a URL like postgresql+psycopg://...
-    """
-    url = url.replace("postgres://", "postgresql://")
-    url = re.sub(r"^postgresql\+[^:]+://", "postgresql://", url)
-    url = url.replace("postgresql://", "postgresql+psycopg://", 1)
-    return url
+pytestmark = pytest.mark.migrations
 
 
 def _reset_public_schema(psycopg_uri: str) -> None:
-    with psycopg.connect(psycopg_uri, autocommit=True) as conn:
+    with psycopg.connect(psycopg_uri, autocommit=True, connect_timeout=5) as conn:
         with conn.cursor() as cur:
             cur.execute("DROP SCHEMA IF EXISTS public CASCADE;")
             cur.execute("CREATE SCHEMA public;")
@@ -67,13 +18,46 @@ def _reset_public_schema(psycopg_uri: str) -> None:
             cur.execute("GRANT ALL ON SCHEMA public TO public;")
 
 
-def _alembic_config(sqlalchemy_url: str) -> Config:
+@pytest.fixture(scope="session")
+def alembic_cfg_nodb() -> Config:
     cfg = Config("alembic.ini")
-    configuration = (
-        ("script_location", "src/shortener_app/infrastructures/db/migrations"),
-        ("sqlalchemy.url", sqlalchemy_url),
+    cfg.set_main_option(
+        "script_location",
+        "src/shortener_app/infrastructures/db/migrations",
     )
-
-    [cfg.set_main_option(name, value) for name, value in configuration]
-
+    cfg.set_main_option("sqlalchemy.url", "postgresql+psycopg://u:p@localhost/db")
     return cfg
+
+
+@pytest.fixture(scope="session")
+def db_sync_dsn() -> str:
+    sync_dsn = os.environ.get("DATABASE_DSN_SYNC")
+    if not sync_dsn:
+        pytest.skip("DATABASE_DSN_SYNC is not set in env")
+
+    psycopg_uri = sync_dsn.replace("postgresql+psycopg://", "postgresql://", 1)
+    try:
+        with psycopg.connect(psycopg_uri, connect_timeout=5) as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1;")
+    except Exception as e:
+        pytest.skip(f"Postgres not reachable: {e!r}")
+
+    return sync_dsn
+
+
+@pytest.fixture
+def alembic_cfg(db_sync_dsn: str) -> Config:
+    cfg = Config("alembic.ini")
+    cfg.set_main_option(
+        "script_location",
+        "src/shortener_app/infrastructures/db/migrations",
+    )
+    cfg.set_main_option("sqlalchemy.url", db_sync_dsn)
+    return cfg
+
+
+@pytest.fixture(autouse=True)
+def clean_db(db_sync_dsn: str) -> None:
+    psycopg_uri = db_sync_dsn.replace("postgresql+psycopg://", "postgresql://", 1)
+    _reset_public_schema(psycopg_uri)

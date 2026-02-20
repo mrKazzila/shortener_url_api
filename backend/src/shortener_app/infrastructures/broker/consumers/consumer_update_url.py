@@ -7,7 +7,7 @@ from dishka import AsyncContainer
 from faststream import FastStream
 from pydantic import BaseModel
 
-from shortener_app.application.use_cases.apply_click_events import (
+from shortener_app.application.use_cases.process_click_url_events import (
     ApplyClickEventsUseCase,
 )
 from shortener_app.infrastructures.broker.consumers.common import (
