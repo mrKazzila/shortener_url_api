@@ -1,6 +1,7 @@
 __all__ = ("GRPC_ONLY_PROVIDERS",)
 
 from collections.abc import AsyncIterator
+from random import SystemRandom
 from uuid import UUID
 
 import structlog
@@ -42,6 +43,7 @@ from shortener_app.application.use_cases.update_url import UpdateUrlUseCase
 from shortener_app.config.ioc.adapters.new_url_publish_queue import (
     NewUrlPublishQueueAdapter,
 )
+from shortener_app.config.settings import Settings
 from shortener_app.domain.services.key_generator import RandomKeyGenerator
 from shortener_app.infrastructures.broker.new_url_publish_queue import (
     NewUrlPublishQueue,
@@ -63,8 +65,14 @@ logger = structlog.get_logger(__name__)
 
 class RandomKeyGeneratorProvider(Provider):
     @provide(scope=Scope.APP)
-    def get_random_key_generator(self) -> RandomKeyGenerator:
-        return RandomKeyGenerator()
+    def get_random_key_generator(
+        self,
+        settings: Settings,
+    ) -> RandomKeyGenerator:
+        return RandomKeyGenerator(
+            length=settings.app.key_length,
+            random=SystemRandom(),
+        )
 
 
 class NewUrlPublishQueueProvider(Provider):
