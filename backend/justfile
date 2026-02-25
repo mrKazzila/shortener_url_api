@@ -1,4 +1,4 @@
-# Main entrypoint: show available commands
+[doc('show available commands')]
 default:
     @just --list
 

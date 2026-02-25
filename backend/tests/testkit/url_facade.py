@@ -9,7 +9,9 @@ from shortener_app.domain.entities.url import UrlEntity
 @dataclass
 class SpyUrlDtoFacade:
     return_entity: UrlEntity | None = None
-    to_entity_from_cache_calls: list[UrlCacheRecordDTO] = field(default_factory=list)
+    to_entity_from_cache_calls: list[UrlCacheRecordDTO] = field(
+        default_factory=list,
+    )
 
     return_publish_dto: PublishUrlDTO | None = None
     return_created_dto: CreatedUrlDTO | None = None

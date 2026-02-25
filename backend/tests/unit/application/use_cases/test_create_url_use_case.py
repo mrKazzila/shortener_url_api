@@ -8,7 +8,9 @@ from shortener_app.application.dtos.urls.urls_events import PublishUrlDTO
 from shortener_app.application.dtos.urls.urls_requests import CreateUrlDTO
 from shortener_app.application.dtos.urls.urls_responses import CreatedUrlDTO
 from shortener_app.application.mappers.url_dto_facade import UrlDtoFacade
-from shortener_app.application.use_cases.create_short_url import CreateUrlUseCase
+from shortener_app.application.use_cases.create_short_url import (
+    CreateUrlUseCase,
+)
 from shortener_app.application.use_cases.internal.create_uniq_key_in_cache import (
     CreateUniqKeyUseCase,
 )
@@ -19,7 +21,10 @@ from tests.testkit.url_facade import SpyUrlDtoFacade
 pytestmark = pytest.mark.unit
 
 
-def make_create_dto(*, target_url: str = "https://example.com") -> CreateUrlDTO:
+def make_create_dto(
+    *,
+    target_url: str = "https://example.com",
+) -> CreateUrlDTO:
     return CreateUrlDTO(
         target_url=target_url,
         user_id=uuid4(),
@@ -27,7 +32,9 @@ def make_create_dto(*, target_url: str = "https://example.com") -> CreateUrlDTO:
 
 
 @pytest.mark.asyncio
-async def test_execute_happy_path_generates_key_publishes_and_returns_created_dto() -> None:
+async def test_execute_happy_path_generates_key_publishes_and_returns_created_dto() -> (
+    None
+):
     dto = make_create_dto(target_url="https://example.com")
 
     key_uc = FakeCreateUniqKeyUseCase(return_key="Ab12Z")
@@ -89,8 +96,16 @@ async def test_execute_does_not_enqueue_if_key_generation_fails() -> None:
     key_uc = FakeCreateUniqKeyUseCase(exc=RuntimeError("keygen down"))
 
     mapper = SpyUrlDtoFacade(
-        return_publish_dto=PublishUrlDTO(key="xxxxx", target_url=dto.target_url, user_id=dto.user_id),
-        return_created_dto=CreatedUrlDTO(key="xxxxx", target_url=dto.target_url, user_id=dto.user_id),
+        return_publish_dto=PublishUrlDTO(
+            key="xxxxx",
+            target_url=dto.target_url,
+            user_id=dto.user_id,
+        ),
+        return_created_dto=CreatedUrlDTO(
+            key="xxxxx",
+            target_url=dto.target_url,
+            user_id=dto.user_id,
+        ),
     )
 
     queue = SpyNewUrlPublishQueue()
@@ -111,15 +126,28 @@ async def test_execute_does_not_enqueue_if_key_generation_fails() -> None:
 
 
 @pytest.mark.asyncio
-async def test_execute_propagates_queue_error_and_does_not_build_created_dto() -> None:
+async def test_execute_propagates_queue_error_and_does_not_build_created_dto() -> (
+    None
+):
     dto = make_create_dto()
 
     key_uc = FakeCreateUniqKeyUseCase(return_key="Ab12Z")
 
-    publish_dto = PublishUrlDTO(key="Ab12Z", target_url=dto.target_url, user_id=dto.user_id)
-    created_dto = CreatedUrlDTO(key="Ab12Z", target_url=dto.target_url, user_id=dto.user_id)
+    publish_dto = PublishUrlDTO(
+        key="Ab12Z",
+        target_url=dto.target_url,
+        user_id=dto.user_id,
+    )
+    created_dto = CreatedUrlDTO(
+        key="Ab12Z",
+        target_url=dto.target_url,
+        user_id=dto.user_id,
+    )
 
-    mapper = SpyUrlDtoFacade(return_publish_dto=publish_dto, return_created_dto=created_dto)
+    mapper = SpyUrlDtoFacade(
+        return_publish_dto=publish_dto,
+        return_created_dto=created_dto,
+    )
     queue = SpyNewUrlPublishQueue(exc=RuntimeError("queue down"))
 
     uc = CreateUrlUseCase(

@@ -133,7 +133,9 @@ async def test_apply_click_events_ignores_duplicate_event_id(session) -> None:
     event_id = uuid4()
 
     async with uow:
-        inserted = await repo.apply_click_events(events=[(event_id, key), (event_id, key)])
+        inserted = await repo.apply_click_events(
+            events=[(event_id, key), (event_id, key)],
+        )
         assert inserted == 1
 
     found = await repo.get(reference={"key": key})
