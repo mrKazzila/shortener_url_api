@@ -220,6 +220,7 @@ filterwarnings = [
 ]
 
 markers = [
+    "asyncio: async tests (pytest-asyncio)",
     "unit: fast unit tests",
     "integration: tests with db/redis/etc",
     "e2e: end-to-end tests",

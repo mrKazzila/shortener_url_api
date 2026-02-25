@@ -8,6 +8,10 @@ INFRA := "docker compose --project-directory docker/compose/infra --env-file env
 MON := "docker compose --project-directory docker/compose/monitoring --env-file env/.env -p shortener_app-mon -f docker/compose/monitoring/docker-compose.yml"
 MIGRATION := "docker run --rm --network global_net --env-file env/.env shortener-app-migrate"
 
+
+INFRA_TEST := "docker compose --project-directory docker/compose/infra --env-file env/.env.test -p shortener_app-infra-test -f docker/compose/infra/infra.yml"
+APP_TEST := "docker compose --project-directory . --env-file env/.env.test -p shortener_app-app-test -f docker/compose/app/docker-compose.yml -f docker/compose/app/docker-compose.test.yml"
+
 # =====================
 # Imports
 # =====================
@@ -21,6 +25,7 @@ import 'all.just'
 import 'convenience.just'
 import 'docs.just'
 import 'prepare.just'
+import 'test.just'
 
 # Local commands (don't commit)
 import? 'local.just'

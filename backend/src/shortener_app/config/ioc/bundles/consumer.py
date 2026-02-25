@@ -6,10 +6,10 @@ from dishka import Provider, Scope, provide
 from shortener_app.application.interfaces.uow import (
     UnitOfWorkProtocol,
 )
-from shortener_app.application.use_cases.apply_click_events import (
+from shortener_app.application.use_cases.process_click_url_events import (
     ApplyClickEventsUseCase,
 )
-from shortener_app.application.use_cases.process_new_url import (
+from shortener_app.application.use_cases.process_new_url_event import (
     ProcessNewUrlUseCase,
 )
 
