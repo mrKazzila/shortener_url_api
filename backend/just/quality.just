@@ -23,7 +23,7 @@ semgrep:
     @echo "Running Semgrep..."
     @semgrep scan \
         --config=p/python \
-        --config=.semgrep.yml \
+        --config=.semgrep/project-rules.yml \
         --error \
         --quiet
 
@@ -34,5 +34,6 @@ semgrep-save-results:
         --config=p/python \
         --config=p/fastapi \
         --config=p/flask \
+        --config=.semgrep/project-rules.yml \
         --json \
         --output=semgrep-results.json
