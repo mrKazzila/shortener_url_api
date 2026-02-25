@@ -1,5 +1,5 @@
-# Choose just command
 [group('Help')]
+[doc('Choose just command')]
 choose:
     @if command -v fzf >/dev/null 2>&1; then \
         just --choose; \
