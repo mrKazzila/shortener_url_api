@@ -49,7 +49,9 @@ async def test_cache_hit_decodes_maps_and_skips_db() -> None:
     mapped_entity = make_entity(key=key, target_url=cache_dto.target_url)
     mapper_spy = SpyUrlDtoFacade(return_entity=mapped_entity)
 
-    repo = FakeRepository(get_result=make_entity(key=key, target_url="https://db.example"))
+    repo = FakeRepository(
+        get_result=make_entity(key=key, target_url="https://db.example"),
+    )
     uow = FakeUnitOfWork(repository=repo)
 
     uc = GetTargetByKeyUseCase(
@@ -75,7 +77,12 @@ async def test_cache_miss_fetches_from_repository() -> None:
     cache = FakeCache()
     codec = SpyDtoCodec(return_value={"ignored": "x"})
 
-    mapper_spy = SpyUrlDtoFacade(return_entity=make_entity(key=key, target_url="https://mapped.example"))
+    mapper_spy = SpyUrlDtoFacade(
+        return_entity=make_entity(
+            key=key,
+            target_url="https://mapped.example",
+        ),
+    )
 
     db_entity = make_entity(key=key, target_url="https://db.example")
     repo = FakeRepository(get_result=db_entity)
@@ -103,7 +110,12 @@ async def test_cache_miss_returns_none_when_repo_returns_none() -> None:
 
     cache = FakeCache()
     codec = SpyDtoCodec(return_value={"ignored": "x"})
-    mapper_spy = SpyUrlDtoFacade(return_entity=make_entity(key=key, target_url="https://mapped.example"))
+    mapper_spy = SpyUrlDtoFacade(
+        return_entity=make_entity(
+            key=key,
+            target_url="https://mapped.example",
+        ),
+    )
 
     repo = FakeRepository(get_result=None)
     uow = FakeUnitOfWork(repository=repo)

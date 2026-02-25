@@ -17,8 +17,16 @@ async def test_execute_batch_calls_broker_with_same_dtos_list() -> None:
     uc = PublishUrlToBrokerUseCase(message_broker=broker)
 
     dtos = [
-        PublishUrlDTO(key="Ab12Z", target_url="https://a.example", user_id=uuid4()),
-        PublishUrlDTO(key="Qw34E", target_url="https://b.example", user_id=uuid4()),
+        PublishUrlDTO(
+            key="Ab12Z",
+            target_url="https://a.example",
+            user_id=uuid4(),
+        ),
+        PublishUrlDTO(
+            key="Qw34E",
+            target_url="https://b.example",
+            user_id=uuid4(),
+        ),
     ]
 
     await uc.execute_batch(dtos=dtos)
@@ -34,7 +42,13 @@ async def test_execute_batch_propagates_broker_error() -> None:
     )
     uc = PublishUrlToBrokerUseCase(message_broker=broker)
 
-    dtos = [PublishUrlDTO(key="Ab12Z", target_url="https://a.example", user_id=uuid4())]
+    dtos = [
+        PublishUrlDTO(
+            key="Ab12Z",
+            target_url="https://a.example",
+            user_id=uuid4(),
+        ),
+    ]
 
     with pytest.raises(RuntimeError, match="broker down"):
         await uc.execute_batch(dtos=dtos)

@@ -10,7 +10,11 @@ class FakeRepository(RepositoryProtocol):
     get_result: UrlEntity | None = None
     get_calls: list[dict[str, str | int | UUID]] = field(default_factory=list)
 
-    async def get(self, *, reference: dict[str, str | int | UUID]) -> UrlEntity | None:
+    async def get(
+        self,
+        *,
+        reference: dict[str, str | int | UUID],
+    ) -> UrlEntity | None:
         self.get_calls.append(reference)
         return self.get_result
 
@@ -35,5 +39,9 @@ class FakeRepository(RepositoryProtocol):
     async def delete(self, *, entity: UrlEntity) -> None:
         raise NotImplementedError
 
-    async def apply_click_events(self, *, events: list[tuple[UUID, str]]) -> int:
+    async def apply_click_events(
+        self,
+        *,
+        events: list[tuple[UUID, str]],
+    ) -> int:
         raise NotImplementedError

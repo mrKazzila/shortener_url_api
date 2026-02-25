@@ -1,13 +1,22 @@
 from dataclasses import dataclass, field
 
-from shortener_app.application.dtos.urls.urls_events import PublishUrlDTO, UrlClickedEventDTO
-from shortener_app.application.interfaces.broker import MessageBrokerPublisherProtocol
+from shortener_app.application.dtos.urls.urls_events import (
+    PublishUrlDTO,
+    UrlClickedEventDTO,
+)
+from shortener_app.application.interfaces.broker import (
+    MessageBrokerPublisherProtocol,
+)
 
 
 @dataclass
 class FakeMessageBrokerPublisher(MessageBrokerPublisherProtocol):
-    publish_new_urls_batch_calls: list[list[PublishUrlDTO]] = field(default_factory=list)
-    publish_update_url_calls: list[UrlClickedEventDTO] = field(default_factory=list)
+    publish_new_urls_batch_calls: list[list[PublishUrlDTO]] = field(
+        default_factory=list,
+    )
+    publish_update_url_calls: list[UrlClickedEventDTO] = field(
+        default_factory=list,
+    )
 
     raise_on_publish_new_urls_batch: Exception | None = None
     raise_on_publish_update_url: Exception | None = None

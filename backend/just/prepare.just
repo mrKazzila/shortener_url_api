@@ -1,5 +1,5 @@
-# Setup .git hooks (commit-msg, pre-commit, pre-push)
 [group('Prepare')]
+[doc('Setup .git hooks (commit-msg, pre-commit, pre-push)')]
 hooks:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -25,8 +25,8 @@ hooks:
     echo "✅ Git hooks enabled"
     echo "   core.hooksPath = $(git config --local --get core.hooksPath)"
 
-# Reset git hooks (commit-msg, pre-commit, pre-push)
 [group('Prepare')]
+[doc('Reset git hooks (commit-msg, pre-commit, pre-push)')]
 hooks-reset:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -34,8 +34,8 @@ hooks-reset:
     git config --local --unset core.hooksPath || true
     echo "✅ Git hooks disabled (core.hooksPath unset)"
 
-# Check git hooks status
 [group('Prepare')]
+[doc('Check git hooks status')]
 hooks-status:
     #!/usr/bin/env bash
     set -euo pipefail

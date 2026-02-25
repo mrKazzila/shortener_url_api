@@ -1,5 +1,5 @@
-# Create kafka topics if not exist
 [group('Kafka')]
+[doc('Create kafka topics if not exist')]
 kafka-topics partitions:
     @echo "[broker] Creating Kafka topics with {{partitions}} partitions..."
     @{{INFRA}} exec -T kafka /opt/kafka/bin/kafka-topics.sh \
@@ -12,8 +12,8 @@ kafka-topics partitions:
 
     @echo "[broker] Kafka topics created."
 
-# Scaling kafka consumers
 [group('Kafka')]
+[doc('Scaling kafka consumers')]
 consumers-scale replicas:
     @echo "[app] Scaling consumers to {{replicas}} replicas..."
     {{APP}} up -d \
