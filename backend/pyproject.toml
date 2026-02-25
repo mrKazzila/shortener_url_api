@@ -54,6 +54,7 @@ dev = [
     "ty>=0.0.13",
     "testcontainers[postgresql]>=4.14.1",
     "psycopg[binary]>=3.3.2",
+    "semgrep>=1.79.0",
 ]
 
 

@@ -11,6 +11,7 @@ logs/
 /backend/src/shortener_app.egg-info/
 /backend/src/shortener.egg-info/
 /backend/.import_linter_cache/
+/backend/semgrep-results.json
 
 
 # ===== cache data =====

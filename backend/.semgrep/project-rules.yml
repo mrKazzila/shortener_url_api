@@ -1,0 +1,31 @@
+rules:
+  # Ban on print() in main code (excluding scripts and tests)
+  - id: no-print-in-library-code
+    languages:
+      - python
+    message: Use logging module instead of print() for production code
+    pattern: print(...)
+    paths:
+      exclude:
+        - "tests/"
+    severity: WARNING
+
+  # Too broad except with error logging
+  - id: overbroad-except-with-logging
+    languages:
+      - python
+    message: |
+      Catching too broad exception. Consider catching specific exceptions
+      even if you log them.
+    pattern-either:
+      - pattern: |
+          try:
+              ...
+          except Exception as $E:
+              logger.error(...)
+      - pattern: |
+          try:
+              ...
+          except Exception as $E:
+              log.error(...)
+    severity: INFO
