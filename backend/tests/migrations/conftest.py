@@ -10,7 +10,11 @@ pytestmark = pytest.mark.migrations
 
 
 def _reset_public_schema(psycopg_uri: str) -> None:
-    with psycopg.connect(psycopg_uri, autocommit=True, connect_timeout=5) as conn:
+    with psycopg.connect(
+        psycopg_uri,
+        autocommit=True,
+        connect_timeout=5,
+    ) as conn:
         with conn.cursor() as cur:
             cur.execute("DROP SCHEMA IF EXISTS public CASCADE;")
             cur.execute("CREATE SCHEMA public;")
@@ -25,7 +29,10 @@ def alembic_cfg_nodb() -> Config:
         "script_location",
         "src/shortener_app/infrastructures/db/migrations",
     )
-    cfg.set_main_option("sqlalchemy.url", "postgresql+psycopg://u:p@localhost/db")
+    cfg.set_main_option(
+        "sqlalchemy.url",
+        "postgresql+psycopg://u:p@localhost/db",
+    )
     return cfg
 
 
@@ -59,5 +66,9 @@ def alembic_cfg(db_sync_dsn: str) -> Config:
 
 @pytest.fixture(autouse=True)
 def clean_db(db_sync_dsn: str) -> None:
-    psycopg_uri = db_sync_dsn.replace("postgresql+psycopg://", "postgresql://", 1)
+    psycopg_uri = db_sync_dsn.replace(
+        "postgresql+psycopg://",
+        "postgresql://",
+        1,
+    )
     _reset_public_schema(psycopg_uri)

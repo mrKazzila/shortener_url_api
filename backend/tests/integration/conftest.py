@@ -8,9 +8,16 @@ import psycopg
 import pytest
 from alembic import command
 from alembic.config import Config
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+)
 
-from shortener_app.infrastructures.db.session import engine_factory, get_session_factory
+from shortener_app.infrastructures.db.session import (
+    engine_factory,
+    get_session_factory,
+)
 
 pytestmark = pytest.mark.integration
 
@@ -37,13 +44,21 @@ def _build_dsn_from_parts() -> tuple[str, str]:
     if "+asyncpg" in sync_dsn:
         sync_dsn = sync_dsn.replace("+asyncpg", "+psycopg", 1)
     elif "postgresql://" in sync_dsn:
-        sync_dsn = sync_dsn.replace("postgresql://", "postgresql+psycopg://", 1)
+        sync_dsn = sync_dsn.replace(
+            "postgresql://",
+            "postgresql+psycopg://",
+            1,
+        )
 
     return async_dsn, sync_dsn
 
 
 def _reset_public_schema(psycopg_uri: str) -> None:
-    with psycopg.connect(psycopg_uri, autocommit=True, connect_timeout=5) as conn:
+    with psycopg.connect(
+        psycopg_uri,
+        autocommit=True,
+        connect_timeout=5,
+    ) as conn:
         with conn.cursor() as cur:
             cur.execute("DROP SCHEMA IF EXISTS public CASCADE;")
             cur.execute("CREATE SCHEMA public;")
@@ -107,7 +122,7 @@ def migrated_db(db_urls: dict[str, str]) -> None:
 
 
 @pytest.fixture
-async def engine(db_urls: dict[str, str]) -> AsyncGenerator[AsyncEngine, None]:
+async def engine(db_urls: dict[str, str]) -> AsyncGenerator[AsyncEngine]:
     eng = engine_factory(db_urls["asyncpg"], is_echo=False)
     try:
         yield eng
@@ -123,6 +138,6 @@ def session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:
 @pytest.fixture
 async def session(
     session_factory: async_sessionmaker[AsyncSession],
-) -> AsyncGenerator[AsyncSession, None]:
+) -> AsyncGenerator[AsyncSession]:
     async with session_factory() as s:
         yield s

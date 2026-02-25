@@ -1,7 +1,9 @@
 from dataclasses import dataclass, field
 
 from shortener_app.application.dtos.urls.urls_events import PublishUrlDTO
-from shortener_app.application.interfaces.publish_queue import NewUrlPublishQueueProtocol
+from shortener_app.application.interfaces.publish_queue import (
+    NewUrlPublishQueueProtocol,
+)
 
 
 @dataclass
