@@ -19,7 +19,7 @@ logger = structlog.get_logger(__name__)
 @dataclass(slots=True, kw_only=True)
 class UnitOfWork(UnitOfWorkProtocol):
     session: AsyncSession
-    repository: RepositoryProtocol
+    url_repository: RepositoryProtocol
 
     tx: AsyncSessionTransaction | None = None
 

@@ -15,7 +15,7 @@ pytestmark = pytest.mark.integration
 def _make_repo_and_uow(session):
     mapper = UrlDBMapper()
     repo = SQLAlchemyRepository(mapper=mapper, session=session)
-    uow = UnitOfWork(session=session, repository=repo)
+    uow = UnitOfWork(session=session, url_repository=repo)
     return repo, uow
 
 
