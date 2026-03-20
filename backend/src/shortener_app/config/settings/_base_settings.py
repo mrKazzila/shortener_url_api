@@ -6,7 +6,7 @@ from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-@lru_cache
+@lru_cache(1)
 def _env_file_path() -> Path:
     return Path(__file__).resolve().parents[4].joinpath("env/.env")
 

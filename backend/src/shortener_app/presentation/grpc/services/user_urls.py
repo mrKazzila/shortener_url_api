@@ -5,10 +5,6 @@ from uuid import UUID
 
 import grpc
 from dishka.integrations.grpcio import FromDishka, inject
-from shortener_app.generated.user_urls.v1 import (
-    user_urls_pb2,
-    user_urls_pb2_grpc,
-)
 
 from shortener_app.application.dtos.users.user_requests import (
     GetUserUrlsDTO,
@@ -16,6 +12,10 @@ from shortener_app.application.dtos.users.user_requests import (
 )
 from shortener_app.application.use_cases.get_user_urls import (
     GetUserUrlsUseCase,
+)
+from shortener_app.generated.user_urls.v1 import (
+    user_urls_pb2,
+    user_urls_pb2_grpc,
 )
 from shortener_app.presentation.mappers.user_mapper import (
     UserPresentationMapper,

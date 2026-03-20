@@ -12,9 +12,6 @@ readme = "README.md"
 requires-python = ">=3.13,<3.14"
 
 dependencies = [
-    "fastapi==0.125.0",
-    "prometheus-fastapi-instrumentator==7.1.0",
-    "uvicorn==0.38.0",
     "sqlalchemy==2.0.45",
     "alembic==1.17.2",
     "asyncpg==0.31.0",
@@ -23,11 +20,6 @@ dependencies = [
     "redis==7.1.0",
     "structlog==25.5.0",
     "faststream[cli,kafka]==0.6.4",
-    "opentelemetry-api==1.39.1",
-    "opentelemetry-sdk==1.39.1",
-    "opentelemetry-instrumentation-fastapi==0.60b1",
-    "opentelemetry-exporter-otlp==1.39.1",
-    "prometheus-client==0.23.1",
     "pydantic==2.12.5",
     "pydantic-settings==2.12.0",
     "grpcio==1.76.0",
@@ -43,6 +35,7 @@ dev = [
     "coverage==7.13.0",
     "httpx==0.28.1",
     "ruff==0.14.9",
+    "ty==0.0.13",
     "grpcio-tools==1.76.0",
     "mkdocs-material>=9.7.1",
     "mkdocstrings[python]>=1.0.2",
@@ -51,7 +44,6 @@ dev = [
     "mkdocs-section-index>=0.3.10",
     "mkdocs-autorefs>=1.4.3",
     "import-linter>=2.9",
-    "ty>=0.0.13",
     "testcontainers[postgresql]>=4.14.1",
     "psycopg[binary]>=3.3.2",
     "semgrep>=1.79.0",
@@ -59,9 +51,9 @@ dev = [
 
 
 [project.scripts]
-shortener-app = "shortener_app.__main__:main"
-shortener-consumer-new-url = "shortener_app.consumers.new_url.__main__:main"
-shortener-consumer-update-url = "shortener_app.consumers.update_url.__main__:main"
+shortener-app = "shortener_app.entrypoints.application.__main__:main"
+shortener-consumer-new-url = "shortener_app.entrypoints.consumers.new_url.__main__:main"
+shortener-consumer-update-url = "shortener_app.entrypoints.consumers.update_url.__main__:main"
 
 
 # ===== TOOLS SETTINGS =====
@@ -172,7 +164,6 @@ forbidden_modules = ["shortener_app.config"]
 
 # allow alembic env to access settings/logging configuration
 ignore_imports = [
-    "shortener_app.infrastructures.db.migrations.env -> shortener_app.config.settings.loader",
     "shortener_app.infrastructures.db.migrations.env -> shortener_app.config.settings.logging",
 ]
 
@@ -286,7 +277,7 @@ indent-style = "space"
 split-on-trailing-comma = true
 combine-as-imports = true
 lines-between-types = 0
-known-first-party = ["shortener_app"]
+known-first-party = ["shortener_app", "tests"]
 
 [tool.ruff.lint.flake8-quotes]
 inline-quotes = "double"

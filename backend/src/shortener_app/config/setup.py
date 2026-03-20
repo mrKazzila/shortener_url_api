@@ -41,11 +41,12 @@ async def server(
     server_.add_insecure_port(address)
 
     await server_.start()
-    logger.info("[gRPC] server started on %s", address)
+    logger.info("grpc_server_started", address=address)
 
     stop_event = asyncio.Event()
 
-    def _graceful_shutdown(*_):
+    def _graceful_shutdown() -> None:
+        logger.info("grpc_shutdown_requested")
         stop_event.set()
 
     loop = asyncio.get_running_loop()
@@ -57,8 +58,9 @@ async def server(
             pass
 
     await stop_event.wait()
-    logger.info("[gRPC] shutting down...")
+    logger.info("grpc_server_stopping", grace_seconds=5)
     await server_.stop(grace=5)
+    logger.info("grpc_server_stopped")
 
 
 def _get_address() -> str:

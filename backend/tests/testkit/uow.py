@@ -6,7 +6,7 @@ from tests.testkit.repository import FakeRepository
 
 @dataclass
 class FakeUnitOfWork(UnitOfWorkProtocol):
-    repository: FakeRepository
+    url_repository: FakeRepository
     commit_calls: int = 0
     rollback_calls: int = 0
 

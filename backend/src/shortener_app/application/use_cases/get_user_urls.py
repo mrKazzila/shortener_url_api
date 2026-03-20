@@ -36,7 +36,7 @@ class GetUserUrlsUseCase:
         self,
         user_dto: "GetUserUrlsDTO",
     ) -> GetUserUrlsResultDTO:
-        entities = await self.uow.repository.get_all(
+        entities = await self.uow.url_repository.get_all(
             reference={"user_id": user_dto.user_id},
             limit=user_dto.pagination_data.limit,
             last_id=user_dto.pagination_data.last_id,
