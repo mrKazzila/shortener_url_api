@@ -7,7 +7,4 @@ from shortener_app.config.settings._base_settings import BaseAppSettings
 
 @final
 class BrokerSettings(BaseAppSettings):
-    broker_url: str = Field(
-        ...,
-        validation_alias="BROKER_URL",
-    )
+    broker_url: str = Field(..., validation_alias="BROKER_URL")

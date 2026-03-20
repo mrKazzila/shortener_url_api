@@ -8,7 +8,7 @@ from faststream import FastStream
 from pydantic import BaseModel
 
 from shortener_app.application.use_cases.process_click_url_events import (
-    ApplyClickEventsUseCase,
+    ProcessClickEventsUseCase,
 )
 from shortener_app.infrastructures.broker.consumers.common import (
     init_dependencies,
@@ -26,7 +26,7 @@ async def run_subscriber(container: AsyncContainer) -> None:
     async with container() as app_container:
         broker, update_uc = await init_dependencies(
             container=app_container,
-            uc=ApplyClickEventsUseCase,
+            uc=ProcessClickEventsUseCase,
         )
         app = FastStream(broker)
 

@@ -7,7 +7,7 @@ from shortener_app.application.interfaces.repository import RepositoryProtocol
 
 
 class UnitOfWorkProtocol(Protocol):
-    repository: RepositoryProtocol
+    url_repository: RepositoryProtocol
 
     async def __aenter__(self) -> Self: ...
 

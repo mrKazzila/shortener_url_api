@@ -4,14 +4,13 @@ from dataclasses import dataclass
 from typing import final
 from uuid import UUID
 
-from shortener_app.generated.shortener.v1 import shortener_pb2
-
 from shortener_app.application.dtos.urls.urls_requests import (
     CreateUrlDTO,
     DeleteUrlDTO,
     UpdateUrlDTO,
 )
 from shortener_app.application.dtos.urls.urls_responses import CreatedUrlDTO
+from shortener_app.generated.shortener.v1 import shortener_pb2
 
 
 @final

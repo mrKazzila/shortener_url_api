@@ -5,10 +5,6 @@ from uuid import UUID
 
 import grpc
 from dishka.integrations.grpcio import FromDishka, inject
-from shortener_app.generated.shortener.v1 import (
-    shortener_pb2,
-    shortener_pb2_grpc,
-)
 
 from shortener_app.application.use_cases.create_short_url import (
     CreateUrlUseCase,
@@ -18,6 +14,10 @@ from shortener_app.application.use_cases.redirect_to_original_url import (
     RedirectToOriginalUrlUseCase,
 )
 from shortener_app.application.use_cases.update_url import UpdateUrlUseCase
+from shortener_app.generated.shortener.v1 import (
+    shortener_pb2,
+    shortener_pb2_grpc,
+)
 from shortener_app.presentation.mappers.url_mapper import UrlPresentationMapper
 
 

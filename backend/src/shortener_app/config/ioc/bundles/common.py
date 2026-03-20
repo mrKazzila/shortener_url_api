@@ -25,7 +25,7 @@ from shortener_app.application.mappers.components import (
     UrlRedirectedMapper,
     UrlToUserUrlItemMapper,
 )
-from shortener_app.config.settings import Settings
+from shortener_app.config.settings.base import Settings
 from shortener_app.infrastructures.broker import (
     KafkaPublisher,
 )
@@ -126,7 +126,7 @@ class UnitOfWorkProvider(Provider):
     ) -> UnitOfWorkProtocol:
         return UnitOfWork(
             session=session,
-            repository=repository,
+            url_repository=repository,
         )
 
 

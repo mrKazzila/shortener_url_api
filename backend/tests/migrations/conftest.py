@@ -38,7 +38,8 @@ def alembic_cfg_nodb() -> Config:
 
 @pytest.fixture(scope="session")
 def db_sync_dsn() -> str:
-    sync_dsn = os.environ.get("DATABASE_DSN_SYNC")
+    sync_dsn = os.environ.get("DATABASE_DSN")
+
     if not sync_dsn:
         pytest.skip("DATABASE_DSN_SYNC is not set in env")
 

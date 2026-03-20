@@ -5,11 +5,11 @@ from datetime import UTC, datetime
 from typing import final
 
 from google.protobuf.timestamp_pb2 import Timestamp  # noqa
-from shortener_app.generated.user_urls.v1 import user_urls_pb2
 
 from shortener_app.application.dtos.users.user_responses import (
     GetUserUrlsResultDTO,
 )
+from shortener_app.generated.user_urls.v1 import user_urls_pb2
 
 
 @final
