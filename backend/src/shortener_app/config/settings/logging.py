@@ -10,12 +10,8 @@ def setup_logging(
     level: str | int = "INFO",
     json_format: bool = False,
 ) -> None:
-    if isinstance(level, str):
-        level = getattr(logging, level.upper(), logging.INFO)
-
-    base_processors = _build_default_processors(
-        json_format=json_format,
-    )
+    level = _get_log_level(level=level)
+    base_processors = _build_default_processors(json_format=json_format)
 
     _configure_structlog(base_processors=base_processors)
     _configure_default_logging(
@@ -23,11 +19,22 @@ def setup_logging(
         level=level,
         json_format=json_format,
     )
+    _tune_noisy_loggers()
+
+
+def _get_log_level(level: str | int) -> int:
+    return (
+        getattr(logging, level.upper(), logging.INFO)
+        if isinstance(level, str)
+        else level
+    )
 
 
 def _configure_structlog(*, base_processors: list) -> None:
-    processors = base_processors.copy()
-    processors.append(structlog.stdlib.ProcessorFormatter.wrap_for_formatter)
+    processors = [
+        *base_processors,
+        structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
+    ]
 
     structlog.configure_once(
         processors=processors,
@@ -65,27 +72,35 @@ def _configure_default_logging(
     root.setLevel(level)
 
 
+def _tune_noisy_loggers() -> None:
+    logging.getLogger("aiokafka").setLevel(logging.WARNING)
+    logging.getLogger("kafka").setLevel(logging.WARNING)
+    logging.getLogger("faststream").setLevel(logging.INFO)
+
+
 def _build_default_processors(*, json_format: bool) -> list:
     processors = [
         structlog.stdlib.add_log_level,
         structlog.stdlib.add_logger_name,
         structlog.processors.TimeStamper(fmt="iso"),
         structlog.contextvars.merge_contextvars,
-        structlog.processors.CallsiteParameterAdder(
-            {
-                structlog.processors.CallsiteParameter.PATHNAME,
-                structlog.processors.CallsiteParameter.FILENAME,
-                structlog.processors.CallsiteParameter.MODULE,
-                structlog.processors.CallsiteParameter.FUNC_NAME,
-                structlog.processors.CallsiteParameter.THREAD,
-                structlog.processors.CallsiteParameter.THREAD_NAME,
-                structlog.processors.CallsiteParameter.PROCESS,
-                structlog.processors.CallsiteParameter.PROCESS_NAME,
-            },
-        ),
     ]
 
     if json_format:
+        processors.append(
+            structlog.processors.CallsiteParameterAdder(
+                {
+                    structlog.processors.CallsiteParameter.PATHNAME,
+                    structlog.processors.CallsiteParameter.FILENAME,
+                    structlog.processors.CallsiteParameter.MODULE,
+                    structlog.processors.CallsiteParameter.FUNC_NAME,
+                    structlog.processors.CallsiteParameter.THREAD,
+                    structlog.processors.CallsiteParameter.THREAD_NAME,
+                    structlog.processors.CallsiteParameter.PROCESS,
+                    structlog.processors.CallsiteParameter.PROCESS_NAME,
+                },
+            ),
+        )
         processors.append(structlog.processors.format_exc_info)
 
     return processors

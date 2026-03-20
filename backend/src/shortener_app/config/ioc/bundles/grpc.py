@@ -42,7 +42,7 @@ from shortener_app.application.use_cases.update_url import UpdateUrlUseCase
 from shortener_app.config.ioc.adapters.new_url_publish_queue import (
     NewUrlPublishQueueAdapter,
 )
-from shortener_app.config.settings import Settings
+from shortener_app.config.settings.base import Settings
 from shortener_app.domain.services.key_generator import RandomKeyGenerator
 from shortener_app.infrastructures.broker import NewUrlPublishQueue
 from shortener_app.infrastructures.codecs.cache.url_redis_hash_codec import (

@@ -59,9 +59,9 @@ dev = [
 
 
 [project.scripts]
-shortener-app = "shortener_app.__main__:main"
-shortener-consumer-new-url = "shortener_app.consumers.new_url.__main__:main"
-shortener-consumer-update-url = "shortener_app.consumers.update_url.__main__:main"
+shortener-app = "shortener_app.entrypoints.application.__main__:main"
+shortener-consumer-new-url = "shortener_app.entrypoints.consumers.new_url.__main__:main"
+shortener-consumer-update-url = "shortener_app.entrypoints.consumers.update_url.__main__:main"
 
 
 # ===== TOOLS SETTINGS =====

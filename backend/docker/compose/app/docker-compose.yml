@@ -20,7 +20,7 @@ services:
   grpc:
     <<: [ *service_defaults, *grpc_build ]
     image: shortener-app-grpc
-    command: [ "shortener_app" ]
+    command: [ "shortener_app.entrypoints.application" ]
     ports:
       - "50051:50051"
     working_dir: /app
@@ -28,13 +28,13 @@ services:
   consumer:
     <<: [ *service_defaults, *consumer_build ]
     image: shortener-app-consumer
-    command: [ "shortener_app.consumers.new_url" ]
+    command: [ "shortener_app.entrypoints.consumers.new_url" ]
     working_dir: /app
 
   consumer-update:
     <<: [ *service_defaults, *consumer_build ]
     image: shortener-app-consumer-update
-    command: [ "shortener_app.consumers.update_url" ]
+    command: [ "shortener_app.entrypoints.consumers.update_url" ]
     working_dir: /app
 
 networks:
