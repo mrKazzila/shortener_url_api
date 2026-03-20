@@ -36,7 +36,7 @@ class RedirectToOriginalUrlUseCase:
         async with self.uow as uow:
             entity = await self.reader_service.get_url_by_key(
                 key=key,
-                repository=uow.repository,
+                repository=uow.url_repository,
             )
 
         if entity is None:

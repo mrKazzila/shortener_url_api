@@ -29,7 +29,7 @@ class ProcessClickEventsUseCase:
         logger.info("Got events from broker", size=len(events))
 
         async with self.uow as uow:
-            inserted = await uow.repository.apply_click_events(
+            inserted = await uow.url_repository.apply_click_events(
                 events=events,
             )
             await uow.commit()

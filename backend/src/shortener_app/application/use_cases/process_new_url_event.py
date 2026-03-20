@@ -20,5 +20,5 @@ class ProcessNewUrlUseCase:
 
     async def execute(self, *, entities: list["UrlEntity"]) -> None:
         async with self.uow as uow:
-            await uow.repository.add_bulk(entities=entities)
+            await uow.url_repository.add_bulk(entities=entities)
             await uow.commit()

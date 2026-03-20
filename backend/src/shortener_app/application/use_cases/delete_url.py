@@ -34,11 +34,11 @@ class DeleteUrlUseCase:
         async with self.uow as uow:
             if entity := await self.reader_service.get_url_by_key(
                 key=dto.key,
-                repository=uow.repository,
+                repository=uow.url_repository,
             ):
                 await self.cache.delete(key=f"short:{entity.key}")
 
-                await uow.repository.delete(entity=entity)
+                await uow.url_repository.delete(entity=entity)
                 await uow.commit()
 
                 return True

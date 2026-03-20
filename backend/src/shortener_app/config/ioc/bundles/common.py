@@ -126,7 +126,7 @@ class UnitOfWorkProvider(Provider):
     ) -> UnitOfWorkProtocol:
         return UnitOfWork(
             session=session,
-            repository=repository,
+            url_repository=repository,
         )
 
 

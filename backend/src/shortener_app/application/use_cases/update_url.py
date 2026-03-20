@@ -32,7 +32,7 @@ class UpdateUrlUseCase:
         async with self.uow as uow:
             if entity := await self.reader_service.get_url_by_key(
                 key=dto.key,
-                repository=uow.repository,
+                repository=uow.url_repository,
             ):
                 # FIXME update cache
                 updated_entity = entity.update(
@@ -40,7 +40,7 @@ class UpdateUrlUseCase:
                     is_active=dto.is_active,
                 )
 
-                await uow.repository.update(entity=updated_entity)
+                await uow.url_repository.update(entity=updated_entity)
                 await uow.commit()
 
                 return True
