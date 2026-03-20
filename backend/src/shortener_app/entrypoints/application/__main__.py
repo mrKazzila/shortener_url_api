@@ -7,16 +7,12 @@ from shortener_app.presentation.grpc import GRPC_INTERCEPTORS, GRPC_SERVICES
 
 
 async def main() -> None:
-    get_server = server(
+    await server(
         is_reflection_enable=True,
         ioc_providers=get_grpc_providers(),
         grpc_interceptors=GRPC_INTERCEPTORS,
         grpc_services=GRPC_SERVICES,
     )
-
-    await get_server
-
-    # asyncio.run(get_server)
 
 
 if __name__ == "__main__":
