@@ -285,7 +285,7 @@ indent-style = "space"
 split-on-trailing-comma = true
 combine-as-imports = true
 lines-between-types = 0
-known-first-party = ["shortener_app"]
+known-first-party = ["shortener_app", "tests"]
 
 [tool.ruff.lint.flake8-quotes]
 inline-quotes = "double"
