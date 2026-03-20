@@ -6,19 +6,20 @@ from sqlalchemy.engine.url import URL, make_url
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy.pool import NullPool
 
-from shortener_app.config.settings.logging import setup_logging
+from shortener_app.config.settings.logging import setup_logging, LoggingConfig
 from shortener_app.infrastructures.db.models import Base
 
 config = context.config
 target_metadata = Base.metadata
 
-
-def _setup_structlog_for_alembic() -> None:
-    level = os.getenv("LOG_LEVEL", "INFO")
-    setup_logging(level=level, json_format=True)
-
-
-_setup_structlog_for_alembic()
+setup_logging(
+    config=LoggingConfig(
+        level="INFO",
+        renderer='console',
+        enable_diagnostics=False,
+        use_utc_timestamps=True,
+    )
+)
 
 
 def get_sqlalchemy_url() -> URL:

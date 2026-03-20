@@ -1,12 +1,12 @@
 import asyncio
 
 from shortener_app.config.ioc.grpc_providers import get_grpc_providers
-from shortener_app.config.settings.logging import setup_logging
+from shortener_app.config.settings.logging import LoggingConfig, setup_logging
 from shortener_app.config.setup import server
 from shortener_app.presentation.grpc import GRPC_INTERCEPTORS, GRPC_SERVICES
 
 
-def main() -> None:
+async def main() -> None:
     get_server = server(
         is_reflection_enable=True,
         ioc_providers=get_grpc_providers(),
@@ -14,12 +14,19 @@ def main() -> None:
         grpc_services=GRPC_SERVICES,
     )
 
-    asyncio.run(get_server)
+    await get_server
+
+    # asyncio.run(get_server)
 
 
 if __name__ == "__main__":
     setup_logging(
-        json_format=False,
-        level="INFO",
+        config=LoggingConfig(
+            level="INFO",
+            renderer="console",
+            enable_diagnostics=False,
+            use_utc_timestamps=True,
+        ),
     )
-    main()
+
+    asyncio.run(main())
