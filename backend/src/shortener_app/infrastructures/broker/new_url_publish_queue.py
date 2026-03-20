@@ -6,6 +6,9 @@ from typing import Final
 import structlog
 
 from shortener_app.application.dtos.urls.urls_events import PublishUrlDTO
+from shortener_app.application.services.urls.url_publisher import (
+    UrlBrokerPublishService,
+)
 
 logger = structlog.get_logger(__name__)
 
@@ -21,7 +24,7 @@ class NewUrlPublishQueue:
     def __init__(
         self,
         *,
-        publish_uc,
+        broker_publish_service: UrlBrokerPublishService,
         maxsize: int = 10_000,
         workers: int = 4,
         enqueue_timeout_sec: float = 0.01,
@@ -31,7 +34,7 @@ class NewUrlPublishQueue:
         batch_size: int = 200,
         batch_window_sec: float = 0.2,
     ) -> None:
-        self._publish_uc = publish_uc
+        self._broker_publish_service = broker_publish_service
         self._q: asyncio.Queue[object] = asyncio.Queue(maxsize=maxsize)
 
         self._workers = workers
@@ -235,7 +238,9 @@ class NewUrlPublishQueue:
         for attempt in range(1, self._max_retries + 1):
             t0 = time.perf_counter()
             try:
-                await self._publish_uc.execute_batch(dtos=entities)
+                await self._broker_publish_service.publish_new_urls_batch(
+                    dtos=entities,
+                )
 
                 dt_ms = (time.perf_counter() - t0) * 1000.0
                 self._publish_calls += 1

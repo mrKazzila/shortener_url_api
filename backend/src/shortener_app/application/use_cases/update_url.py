@@ -10,9 +10,10 @@ if TYPE_CHECKING:
     from shortener_app.application.interfaces import (
         UnitOfWorkProtocol,
     )
-    from shortener_app.application.use_cases.internal.get_target_url_by_key import (
-        GetTargetByKeyUseCase,
+    from shortener_app.application.services.urls.url_reader import (
+        UrlReaderService,
     )
+
 
 logger = structlog.get_logger(__name__)
 
@@ -20,7 +21,7 @@ logger = structlog.get_logger(__name__)
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class UpdateUrlUseCase:
-    get_target_url_by_key_uc: "GetTargetByKeyUseCase"
+    reader_service: "UrlReaderService"
     uow: "UnitOfWorkProtocol"
 
     async def execute(
@@ -28,15 +29,20 @@ class UpdateUrlUseCase:
         *,
         dto: "UpdateUrlDTO",
     ) -> bool:
-        if entity := await self.get_target_url_by_key_uc.execute(key=dto.key):
-            # FIXME update cache
-            async with self.uow:
+        async with self.uow as uow:
+            if entity := await self.reader_service.get_url_by_key(
+                key=dto.key,
+                repository=uow.repository,
+            ):
+                # FIXME update cache
                 updated_entity = entity.update(
                     name=dto.name,
                     is_active=dto.is_active,
                 )
-                await self.uow.repository.update(entity=updated_entity)
-                await self.uow.commit()
+
+                await uow.repository.update(entity=updated_entity)
+                await uow.commit()
+
                 return True
 
-        return False
+            return False

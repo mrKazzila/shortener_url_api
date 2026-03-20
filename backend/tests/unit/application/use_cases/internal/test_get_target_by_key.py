@@ -2,12 +2,12 @@ from typing import cast
 from uuid import uuid4
 
 import pytest
-
-from shortener_app.application.dtos.urls.urls_cache import UrlCacheRecordDTO
-from shortener_app.application.mappers.url_dto_facade import UrlDtoFacade
 from shortener_app.application.use_cases.internal.get_target_url_by_key import (
     GetTargetByKeyUseCase,
 )
+
+from shortener_app.application.dtos.urls.urls_cache import UrlCacheRecordDTO
+from shortener_app.application.mappers.url_dto_facade import UrlDtoFacade
 from shortener_app.domain.entities.url import UrlEntity
 from tests.testkit.cache import FakeCache
 from tests.testkit.codec import SpyDtoCodec

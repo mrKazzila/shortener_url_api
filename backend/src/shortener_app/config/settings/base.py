@@ -30,11 +30,11 @@ class Settings(BaseAppSettings):
 
     @property
     def database_url(self) -> str:
-        return str(self.database.database_url)
+        return self.database.database_dsn
 
     @property
     def redis_url(self) -> str:
-        return str(self.redis.redis_url)
+        return str(self.redis.redis_dsn)
 
     @property
     def redis_cache_ttl(self) -> int:

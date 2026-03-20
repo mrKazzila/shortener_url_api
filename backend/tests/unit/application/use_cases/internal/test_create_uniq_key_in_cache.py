@@ -2,13 +2,13 @@ from typing import cast
 from uuid import uuid4
 
 import pytest
+from shortener_app.application.use_cases.internal.create_uniq_key_in_cache import (
+    CreateUniqKeyUseCase,
+)
 
 from shortener_app.application.dtos.urls.urls_cache import (
     UrlCacheRecordDTO,
     UrlCacheSeedDTO,
-)
-from shortener_app.application.use_cases.internal.create_uniq_key_in_cache import (
-    CreateUniqKeyUseCase,
 )
 from shortener_app.domain.services.key_generator import RandomKeyGenerator
 from tests.testkit.cache import FakeCache

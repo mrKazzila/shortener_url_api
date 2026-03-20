@@ -2,6 +2,9 @@ from typing import cast
 from uuid import uuid4
 
 import pytest
+from shortener_app.application.use_cases.internal.create_uniq_key_in_cache import (
+    CreateUniqKeyUseCase,
+)
 
 from shortener_app.application.dtos.urls.urls_cache import UrlCacheSeedDTO
 from shortener_app.application.dtos.urls.urls_events import PublishUrlDTO
@@ -10,9 +13,6 @@ from shortener_app.application.dtos.urls.urls_responses import CreatedUrlDTO
 from shortener_app.application.mappers.url_dto_facade import UrlDtoFacade
 from shortener_app.application.use_cases.create_short_url import (
     CreateUrlUseCase,
-)
-from shortener_app.application.use_cases.internal.create_uniq_key_in_cache import (
-    CreateUniqKeyUseCase,
 )
 from tests.testkit.internal_uc import FakeCreateUniqKeyUseCase
 from tests.testkit.publish_queue import SpyNewUrlPublishQueue

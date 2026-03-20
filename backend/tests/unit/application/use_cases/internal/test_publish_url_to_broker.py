@@ -1,11 +1,11 @@
 from uuid import uuid4
 
 import pytest
-
-from shortener_app.application.dtos.urls.urls_events import PublishUrlDTO
 from shortener_app.application.use_cases.internal.publish_data_to_broker import (
     PublishUrlToBrokerUseCase,
 )
+
+from shortener_app.application.dtos.urls.urls_events import PublishUrlDTO
 from tests.testkit.broker import FakeMessageBrokerPublisher
 
 pytestmark = pytest.mark.unit

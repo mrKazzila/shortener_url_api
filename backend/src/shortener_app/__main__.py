@@ -1,8 +1,8 @@
 import asyncio
 
-from shortener_app.config import server
 from shortener_app.config.ioc.grpc_providers import get_grpc_providers
 from shortener_app.config.settings.logging import setup_logging
+from shortener_app.config.setup import server
 from shortener_app.presentation.grpc import GRPC_INTERCEPTORS, GRPC_SERVICES
 
 

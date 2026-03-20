@@ -7,7 +7,7 @@ from shortener_app.application.interfaces.uow import (
     UnitOfWorkProtocol,
 )
 from shortener_app.application.use_cases.process_click_url_events import (
-    ApplyClickEventsUseCase,
+    ProcessClickEventsUseCase,
 )
 from shortener_app.application.use_cases.process_new_url_event import (
     ProcessNewUrlUseCase,
@@ -28,8 +28,8 @@ class UseCaseProvider(Provider):
     def update_url_use_case(
         self,
         uow: UnitOfWorkProtocol,
-    ) -> ApplyClickEventsUseCase:
-        return ApplyClickEventsUseCase(uow=uow)
+    ) -> ProcessClickEventsUseCase:
+        return ProcessClickEventsUseCase(uow=uow)
 
 
 CONSUMER_ONLY_PROVIDERS: tuple[Provider, ...] = (UseCaseProvider(),)

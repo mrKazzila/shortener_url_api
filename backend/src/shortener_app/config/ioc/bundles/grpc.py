@@ -17,24 +17,23 @@ from shortener_app.application.interfaces.publish_queue import (
 )
 from shortener_app.application.interfaces.uow import UnitOfWorkProtocol
 from shortener_app.application.mappers.url_dto_facade import UrlDtoFacade
+from shortener_app.application.services.urls.key_reservation import (
+    UrlKeyReservationService,
+)
+from shortener_app.application.services.urls.url_cache import UrlCacheService
+from shortener_app.application.services.urls.url_enqueue import (
+    UrlPublishEnqueueService,
+)
+from shortener_app.application.services.urls.url_publisher import (
+    UrlBrokerPublishService,
+)
+from shortener_app.application.services.urls.url_reader import UrlReaderService
 from shortener_app.application.use_cases.create_short_url import (
     CreateUrlUseCase,
 )
 from shortener_app.application.use_cases.delete_url import DeleteUrlUseCase
 from shortener_app.application.use_cases.get_user_urls import (
     GetUserUrlsUseCase,
-)
-from shortener_app.application.use_cases.internal.create_uniq_key_in_cache import (
-    CreateUniqKeyUseCase,
-)
-from shortener_app.application.use_cases.internal.get_target_url_by_key import (
-    GetTargetByKeyUseCase,
-)
-from shortener_app.application.use_cases.internal.publish_data_to_broker import (
-    PublishUrlToBrokerUseCase,
-)
-from shortener_app.application.use_cases.internal.publish_to_broker_for_update import (
-    PublishUrlToBrokerForUpdateUseCase,
 )
 from shortener_app.application.use_cases.redirect_to_original_url import (
     RedirectToOriginalUrlUseCase,
@@ -45,9 +44,7 @@ from shortener_app.config.ioc.adapters.new_url_publish_queue import (
 )
 from shortener_app.config.settings import Settings
 from shortener_app.domain.services.key_generator import RandomKeyGenerator
-from shortener_app.infrastructures.broker.new_url_publish_queue import (
-    NewUrlPublishQueue,
-)
+from shortener_app.infrastructures.broker import NewUrlPublishQueue
 from shortener_app.infrastructures.codecs.cache.url_redis_hash_codec import (
     UrlCacheRedisHashCodec,
 )
@@ -61,36 +58,6 @@ from shortener_app.presentation.mappers import (
 )
 
 logger = structlog.get_logger(__name__)
-
-
-class RandomKeyGeneratorProvider(Provider):
-    @provide(scope=Scope.APP)
-    def get_random_key_generator(
-        self,
-        settings: Settings,
-    ) -> RandomKeyGenerator:
-        return RandomKeyGenerator(
-            length=settings.app.key_length,
-            random=SystemRandom(),
-        )
-
-
-class NewUrlPublishQueueProvider(Provider):
-    @provide(scope=Scope.APP)
-    async def get_new_url_publish_queue(
-        self,
-        publish_uc: PublishUrlToBrokerUseCase,
-    ) -> AsyncIterator[NewUrlPublishQueueProtocol]:
-        impl = NewUrlPublishQueue(
-            publish_uc=publish_uc,
-            maxsize=10_000,
-            workers=2,
-        )
-        await impl.start()
-        try:
-            yield NewUrlPublishQueueAdapter(impl)
-        finally:
-            await impl.stop(drain=True, timeout_sec=10.0)
 
 
 class AuthProvider(Provider):
@@ -112,77 +79,120 @@ class AuthProvider(Provider):
             raise InvalidUserIdMetadata("invalid x-user-id metadata") from e
 
 
-class UseCaseProvider(Provider):
+class RandomKeyGeneratorProvider(Provider):
     @provide(scope=Scope.APP)
-    def get_publish_url_to_broker_use_case(
+    def get_random_key_generator(
         self,
-        message_broker: MessageBrokerPublisherProtocol,
-    ) -> PublishUrlToBrokerUseCase:
-        return PublishUrlToBrokerUseCase(
-            message_broker=message_broker,
+        settings: Settings,
+    ) -> RandomKeyGenerator:
+        return RandomKeyGenerator(
+            length=settings.app.key_length,
+            random=SystemRandom(),
         )
 
-    @provide(scope=Scope.REQUEST)
-    def get_create_uniq_key_use_case(
+
+class NewUrlPublishQueueProvider(Provider):
+    @provide(scope=Scope.APP)
+    async def get_new_url_publish_queue(
         self,
-        key_generator: RandomKeyGenerator,
+        broker_publish_service: UrlBrokerPublishService,
+    ) -> AsyncIterator[NewUrlPublishQueueProtocol]:
+        impl = NewUrlPublishQueue(
+            broker_publish_service=broker_publish_service,
+            maxsize=10_000,
+            workers=2,
+        )
+        await impl.start()
+        try:
+            yield NewUrlPublishQueueAdapter(impl)
+        finally:
+            await impl.stop(drain=True, timeout_sec=10.0)
+
+
+class PresentationMapperProvider(Provider):
+    @provide(scope=Scope.APP)
+    def get_url_presentation_mapper(self) -> UrlPresentationMapper:
+        return UrlPresentationMapper()
+
+    @provide(scope=Scope.APP)
+    def get_user_presentation_mapper(self) -> UserPresentationMapper:
+        return UserPresentationMapper()
+
+
+class ServiceProvider(Provider):
+    @provide(scope=Scope.APP)
+    def get_cache_service(
+        self,
         cache: CacheProtocol,
+        mapper: UrlDtoFacade,
         codec: UrlCacheRedisHashCodec,
-    ) -> CreateUniqKeyUseCase:
-        return CreateUniqKeyUseCase(
-            key_generator=key_generator,
+    ) -> UrlCacheService:
+        return UrlCacheService(
             cache=cache,
+            mapper=mapper,
             codec=codec,
         )
 
+    @provide(scope=Scope.APP)
+    def get_key_reservation_service(
+        self,
+        key_generator: RandomKeyGenerator,
+        cache_service: UrlCacheService,
+    ) -> UrlKeyReservationService:
+        return UrlKeyReservationService(
+            key_generator=key_generator,
+            cache_service=cache_service,
+        )
+
+    @provide(scope=Scope.APP)
+    def get_publish_enqueue_service(
+        self,
+        new_urls_queue: NewUrlPublishQueueProtocol,
+    ) -> UrlPublishEnqueueService:
+        return UrlPublishEnqueueService(new_urls_queue=new_urls_queue)
+
+    @provide(scope=Scope.APP)
+    def get_url_broker_publish_service(
+        self,
+        message_broker: MessageBrokerPublisherProtocol,
+    ) -> UrlBrokerPublishService:
+        return UrlBrokerPublishService(message_broker=message_broker)
+
+    @provide(scope=Scope.APP)
+    def get_url_reader_service(
+        self,
+        cache_service: UrlCacheService,
+    ) -> UrlReaderService:
+        return UrlReaderService(cache_service=cache_service)
+
+
+class UseCaseProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def get_create_url_use_case(
         self,
-        create_uniq_key_uc: CreateUniqKeyUseCase,
-        queue: NewUrlPublishQueueProtocol,
+        key_reservation_service: UrlKeyReservationService,
+        publish_enqueue_service: UrlPublishEnqueueService,
         mapper: UrlDtoFacade,
     ) -> CreateUrlUseCase:
         return CreateUrlUseCase(
-            create_uniq_key_uc=create_uniq_key_uc,
-            publish_url_queue=queue,
+            key_reservation_service=key_reservation_service,
+            publish_enqueue_service=publish_enqueue_service,
             mapper=mapper,
-        )
-
-    @provide(scope=Scope.REQUEST)
-    def get_target_url_by_key_use_case(
-        self,
-        cache: CacheProtocol,
-        uow: UnitOfWorkProtocol,
-        mapper: UrlDtoFacade,
-        codec: UrlCacheRedisHashCodec,
-    ) -> GetTargetByKeyUseCase:
-        return GetTargetByKeyUseCase(
-            cache=cache,
-            uow=uow,
-            mapper=mapper,
-            codec=codec,
-        )
-
-    @provide(scope=Scope.REQUEST)
-    def get_publish_url_to_broker_for_update_use_case(
-        self,
-        message_broker: MessageBrokerPublisherProtocol,
-    ) -> PublishUrlToBrokerForUpdateUseCase:
-        return PublishUrlToBrokerForUpdateUseCase(
-            message_broker=message_broker,
         )
 
     @provide(scope=Scope.REQUEST)
     def redirect_to_target_url_use_case(
         self,
-        get_target_url_by_key_uc: GetTargetByKeyUseCase,
-        get_publish_url_to_broker_uc: PublishUrlToBrokerForUpdateUseCase,
+        reader_service: UrlReaderService,
+        broker_publish_service: UrlBrokerPublishService,
         mapper: UrlDtoFacade,
+        uow: UnitOfWorkProtocol,
     ) -> RedirectToOriginalUrlUseCase:
         return RedirectToOriginalUrlUseCase(
-            get_target_url_by_key_uc=get_target_url_by_key_uc,
-            publish_url_to_broker_for_update_uc=get_publish_url_to_broker_uc,
+            reader_service=reader_service,
+            broker_publish_service=broker_publish_service,
             mapper=mapper,
+            uow=uow,
         )
 
     @provide(scope=Scope.REQUEST)
@@ -199,12 +209,12 @@ class UseCaseProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def delete_url_use_case(
         self,
-        get_target_url_by_key_uc: GetTargetByKeyUseCase,
+        reader_service: UrlReaderService,
         cache: CacheProtocol,
         uow: UnitOfWorkProtocol,
     ) -> DeleteUrlUseCase:
         return DeleteUrlUseCase(
-            get_target_url_by_key_uc=get_target_url_by_key_uc,
+            reader_service=reader_service,
             cache=cache,
             uow=uow,
         )
@@ -212,29 +222,20 @@ class UseCaseProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def update_url_use_case(
         self,
-        get_target_url_by_key_uc: GetTargetByKeyUseCase,
+        reader_service: UrlReaderService,
         uow: UnitOfWorkProtocol,
     ) -> UpdateUrlUseCase:
         return UpdateUrlUseCase(
-            get_target_url_by_key_uc=get_target_url_by_key_uc,
+            reader_service=reader_service,
             uow=uow,
         )
 
 
-class PresentationMapperProvider(Provider):
-    @provide(scope=Scope.APP)
-    def get_url_presentation_mapper(self) -> UrlPresentationMapper:
-        return UrlPresentationMapper()
-
-    @provide(scope=Scope.APP)
-    def get_user_presentation_mapper(self) -> UserPresentationMapper:
-        return UserPresentationMapper()
-
-
 GRPC_ONLY_PROVIDERS: tuple[Provider, ...] = (
-    RandomKeyGeneratorProvider(),
     AuthProvider(),
-    UseCaseProvider(),
+    RandomKeyGeneratorProvider(),
     NewUrlPublishQueueProvider(),
     PresentationMapperProvider(),
+    ServiceProvider(),
+    UseCaseProvider(),
 )

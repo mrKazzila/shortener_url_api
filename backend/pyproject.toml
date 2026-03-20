@@ -172,7 +172,6 @@ forbidden_modules = ["shortener_app.config"]
 
 # allow alembic env to access settings/logging configuration
 ignore_imports = [
-    "shortener_app.infrastructures.db.migrations.env -> shortener_app.config.settings.loader",
     "shortener_app.infrastructures.db.migrations.env -> shortener_app.config.settings.logging",
 ]
 

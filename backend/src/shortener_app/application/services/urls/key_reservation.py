@@ -1,4 +1,4 @@
-__all__ = ("CreateUniqKeyUseCase",)
+__all__ = ("UrlKeyReservationService",)
 
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, final
@@ -9,22 +9,26 @@ from shortener_app.application.dtos.urls.urls_cache import (
 )
 
 if TYPE_CHECKING:
-    from shortener_app.application.interfaces import CacheProtocol
-    from shortener_app.application.interfaces.dto_codec import DtoCodecProtocol
-    from shortener_app.domain.services import RandomKeyGenerator
+    from shortener_app.application.services.urls.url_cache import (
+        UrlCacheService,
+    )
+    from shortener_app.domain.services.key_generator import RandomKeyGenerator
 
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
-class CreateUniqKeyUseCase:
+class UrlKeyReservationService:
     key_generator: "RandomKeyGenerator"
-    cache: "CacheProtocol"
-    codec: "DtoCodecProtocol"
+    cache_service: "UrlCacheService"
 
     max_attempts: int = 50
     ttl_seconds: int | None = None
 
-    async def execute(self, *, seed: UrlCacheSeedDTO) -> str:
+    async def reserve(
+        self,
+        *,
+        seed: UrlCacheSeedDTO,
+    ) -> str:
         for _ in range(self.max_attempts):
             key = self.key_generator()
 
@@ -36,10 +40,9 @@ class CreateUniqKeyUseCase:
                 is_active=seed.is_active,
             )
 
-            if await self.cache.set_nx(
-                key=f"short:{key}",
-                value=self.codec.encode(dto=record),
-                ttl_seconds=self.ttl_seconds,
+            if await self.cache_service.set_new_url(
+                key=key,
+                dto=record,
             ):
                 return key
 

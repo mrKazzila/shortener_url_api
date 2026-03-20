@@ -22,24 +22,16 @@ _setup_structlog_for_alembic()
 
 
 def get_sqlalchemy_url() -> URL:
-    """
-    Источник истины для миграций — sqlalchemy.url из alembic config.
+    raw = os.getenv("DATABASE_DSN") or config.get_main_option("sqlalchemy.url")
 
-    В тестах ты задаёшь его через:
-      cfg.set_main_option("sqlalchemy.url", "...")
-
-    В docker/compose — через alembic.ini или env подстановку.
-    """
-    raw = config.get_main_option("sqlalchemy.url")
     if not raw:
         raise RuntimeError(
-            "alembic sqlalchemy.url is not set. "
-            "Set it in alembic.ini or via Config.set_main_option('sqlalchemy.url', ...)."
+            "DATABASE_DSN is not set. "
+            "Set it via environment variable or alembic.ini"
         )
 
     url = make_url(raw)
 
-    # Твои миграции запускаются в async режиме — нужен async драйвер
     if url.drivername in {"postgresql", "postgres", "postgresql+psycopg", "postgresql+psycopg2"}:
         url = url.set(drivername="postgresql+asyncpg")
 

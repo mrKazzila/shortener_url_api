@@ -1,4 +1,4 @@
-__all__ = ("ApplyClickEventsUseCase",)
+__all__ = ("ProcessClickEventsUseCase",)
 
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, final
@@ -14,7 +14,7 @@ logger = structlog.get_logger(__name__)
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
-class ApplyClickEventsUseCase:
+class ProcessClickEventsUseCase:
     uow: "UnitOfWorkProtocol"
 
     async def execute(
@@ -22,12 +22,20 @@ class ApplyClickEventsUseCase:
         *,
         events: list[tuple[UUID, str]],
     ) -> None:
-        logger.info("GOT events from broker", size=len(events))
+        if not events:
+            logger.info("No click events to process")
+            return
 
-        async with self.uow:
-            inserted = await self.uow.repository.apply_click_events(
+        logger.info("Got events from broker", size=len(events))
+
+        async with self.uow as uow:
+            inserted = await uow.repository.apply_click_events(
                 events=events,
             )
-            await self.uow.commit()
+            await uow.commit()
 
-        logger.info("APPLIED events", inserted=inserted, received=len(events))
+        logger.info(
+            "Applied events",
+            inserted=inserted,
+            received=len(events),
+        )

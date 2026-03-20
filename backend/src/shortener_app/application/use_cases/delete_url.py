@@ -12,8 +12,8 @@ if TYPE_CHECKING:
         CacheProtocol,
         UnitOfWorkProtocol,
     )
-    from shortener_app.application.use_cases.internal.get_target_url_by_key import (
-        GetTargetByKeyUseCase,
+    from shortener_app.application.services.urls.url_reader import (
+        UrlReaderService,
     )
 
 logger = structlog.get_logger(__name__)
@@ -22,7 +22,7 @@ logger = structlog.get_logger(__name__)
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class DeleteUrlUseCase:
-    get_target_url_by_key_uc: "GetTargetByKeyUseCase"
+    reader_service: "UrlReaderService"
     cache: "CacheProtocol"
     uow: "UnitOfWorkProtocol"
 
@@ -31,10 +31,16 @@ class DeleteUrlUseCase:
         *,
         dto: DeleteUrlDTO,
     ) -> bool:
-        if entity := await self.get_target_url_by_key_uc.execute(key=dto.key):
-            await self.cache.delete(key=f"short:{entity.key}")
-            await self.uow.repository.delete(entity=entity)
-            await self.uow.commit()
-            return True
+        async with self.uow as uow:
+            if entity := await self.reader_service.get_url_by_key(
+                key=dto.key,
+                repository=uow.repository,
+            ):
+                await self.cache.delete(key=f"short:{entity.key}")
 
-        return False
+                await uow.repository.delete(entity=entity)
+                await uow.commit()
+
+                return True
+
+            return False
